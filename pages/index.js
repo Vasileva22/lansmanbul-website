@@ -4,7 +4,7 @@ import Script from 'next/script'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabaseClient'
 
-// Переиспользуемые компоненты
+// Импортируем созданные компоненты
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
@@ -32,12 +32,11 @@ const mapProperty = (item) => {
 }
 
 const SVGS = {
-  location: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle text-slate-400" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
-  bed: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle text-slate-400" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
-  search: <svg className="dropdown-search-icon absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 fill-none stroke-slate-400 stroke-[2.5]" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
-  grid: <svg className="toggle-icon w-[18px] h-[18px] fill-current" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>,
-  list: <svg className="toggle-icon w-[18px] h-[18px] fill-current" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
-  arrowRight: <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
+  location: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
+  bed: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
+  search: <svg className="dropdown-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+  grid: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>,
+  list: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
 }
 
 export default function Home({ properties, initialError }) {
@@ -46,7 +45,7 @@ export default function Home({ properties, initialError }) {
 
   const [layout, setLayout] = useState('grid')
 
-  // Фильтры и списки поиска
+  // Фильтры и селекторы поиска в Hero
   const [activeHeroDropdown, setActiveHeroDropdown] = useState(null) // 'location' | 'room' | 'status'
   const [selectedDistricts, setSelectedDistricts] = useState([])
   const [selectedRooms, setSelectedRooms] = useState([])
@@ -55,7 +54,7 @@ export default function Home({ properties, initialError }) {
   // Строка поиска внутри выпадающего списка районов
   const [searchDistrictQuery, setSearchDistrictQuery] = useState('')
 
-  // Слайдеры-диапазоны Сайдбара
+  // Слайдеры-диапазоны Сайдбара (Числа)
   const [minArea, setMinArea] = useState(0)
   const [maxArea, setMaxArea] = useState(500)
   const [minFloor, setMinFloor] = useState(0)
@@ -74,13 +73,13 @@ export default function Home({ properties, initialError }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = useMemo(() => (layout === 'grid' ? 12 : 8), [layout])
 
-  // Карта
+  // Карта Яндекса
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
   const mappedList = useMemo(() => properties.map(mapProperty), [properties])
 
-  // Опции для выпадающих списков
+  // Динамические списки опций на основе реальных данных из базы
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
   const roomOptions = useMemo(() => [...new Set(mappedList.map(p => p.rooms).filter(Boolean))].sort(), [mappedList])
   const statusOptions = useMemo(() => {
@@ -112,7 +111,7 @@ export default function Home({ properties, initialError }) {
     return () => window.removeEventListener('click', handleOutsideClick)
   }, [])
 
-  // Реагирование на изменение URL
+  // Реагирование на изменение URL (через Shallow Router Шапки/Подвала)
   useEffect(() => {
     if (status) {
       setSelectedStatuses([status])
@@ -177,7 +176,7 @@ export default function Home({ properties, initialError }) {
     }
   }
 
-  // Карта
+  // Обновление Яндекс Карт
   const initMap = () => {
     if (typeof window !== 'undefined' && window.ymaps) {
       window.ymaps.ready(() => {
@@ -730,7 +729,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda только rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -755,8 +754,11 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* Глобальные стили */}
-      <style jsx global>{`
+      {/* 
+        ИСПОЛЬЗУЕМ dangerouslySetInnerHTML ДЛЯ ВНЕДРЕНИЯ КРИТИЧЕСКИХ СТИЛЕЙ.
+        Этот подход гарантирует 100% запуск стилей из Tilda в React без конфликтов с бандлом Next.js.
+      */}
+      <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
           --primary-hover: #00898B;
@@ -776,7 +778,7 @@ export default function Home({ properties, initialError }) {
           background-color: #ffffff;
         }
 
-        /* ----- ИСПРАВЛЕНИЕ НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ ----- */
+        /* ----- ИСПРАВЛЕНИЕ СЕТКИ И НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ ----- */
         @media (min-width: 1025px) {
           #custom-catalog-search {
             display: flex !important;
@@ -794,6 +796,11 @@ export default function Home({ properties, initialError }) {
             width: 310px !important;
             display: block !important;
             box-sizing: border-box !important;
+            background: #fff !important;
+            border: 1.5px solid var(--border-soft) !important;
+            border-radius: 24px !important;
+            padding: 24px !important;
+            box-shadow: var(--shadow-premium) !important;
           }
           #catalog-content-wrapper {
             margin-left: 0 !important;
@@ -802,7 +809,7 @@ export default function Home({ properties, initialError }) {
           }
         }
 
-        /* ----- ИСПРАВЛЕНИЕ ВИДИМОСТИ ДРОПДАУНОВ ----- */
+        /* ----- ИСПРАВЛЕНИЕ ОТОБРАЖЕНИЯ И ВИДИМОСТИ ДРОПДАУНОВ ----- */
         @media (min-width: 1025px) {
           .search-panel-card, 
           .search-inputs-row-wrapper, 
@@ -845,7 +852,7 @@ export default function Home({ properties, initialError }) {
           }
         }
 
-        /* БАЗОВАЯ СТИЛИЗАЦИЯ ИЗ ТИЛЬДЫ */
+        /* ОРИГИНАЛЬНЫЕ ШАБЛОННЫЕ КЛАССЫ ИЗ ВЕРСТКИ ТИЛЬДЫ */
         .modern-header {
           position: fixed !important;
           top: 0 !important;
@@ -899,64 +906,193 @@ export default function Home({ properties, initialError }) {
           line-height: 1.3;
           text-align: center;
         }
-
-        .luxe-sidebar-map {
+        .search-panel-card {
           width: 100%;
-          height: 125px;
-          border-radius: 14px;
-          margin-bottom: 20px;
-          overflow: hidden;
+          background-color: #fff;
+          border-radius: 20px;
           border: 1px solid var(--border-soft);
+          box-shadow: var(--shadow-premium);
+          padding: 24px 30px 32px 30px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          box-sizing: border-box;
         }
-
-        .luxe-tag-item {
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          padding: 8px 14px !important;
-          background-color: #fff !important;
-          border: 1px solid var(--border-soft) !important;
-          border-radius: 20px !important;
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: var(--dark-slate) !important;
-          cursor: pointer !important;
-          transition: all .2s ease !important;
-          user-select: none !important;
+        .search-tabs-header {
+          display: flex;
+          gap: 24px;
+          border-bottom: 1px solid var(--border-soft);
+          padding-bottom: 12px;
+          margin-bottom: 4px;
         }
-        .luxe-tag-item.active {
-          background-color: var(--primary) !important;
-          color: #fff !important;
-          border-color: var(--primary) !important;
-        }
-
-        .luxe-radio-dot {
-          width: 18px;
-          height: 18px;
-          border: 1.5px solid var(--border-soft);
-          border-radius: 50%;
+        .city-tab-item {
           display: flex;
           align-items: center;
-          justify-content: center;
-          background-color: #fff;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--text-muted);
+          cursor: pointer;
+          position: relative;
+          padding-bottom: 12px;
+          margin-bottom: -13px;
+          transition: color .2s ease;
         }
-        .luxe-checkbox-item.checked .luxe-radio-dot {
-          border-color: var(--primary);
-          background-color: var(--primary);
+        .city-tab-item.active {
+          color: var(--primary);
         }
-        .luxe-radio-dot::after {
+        .city-tab-item.active::after {
           content: '';
-          width: 6px;
-          height: 6px;
-          background-color: #fff;
-          border-radius: 50%;
-          display: none;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: var(--primary);
+          border-radius: 3px 3px 0 0;
         }
-        .luxe-checkbox-item.checked .luxe-radio-dot::after {
-          display: block;
+        .search-inputs-row-wrapper {
+          display: flex;
+          gap: 16px;
+          width: 100%;
+          align-items: center;
+        }
+        .search-input-field {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border: 1.5px solid var(--border-soft);
+          border-radius: 10px;
+          height: 60px;
+          padding: 0 16px;
+          background-color: #F8FAFC;
+          transition: border-color .2s, background-color .2s, box-shadow .2s;
+          cursor: pointer;
+          user-select: none;
+        }
+        .search-input-field:hover, .search-input-field.active-field {
+          border-color: var(--primary) !important;
+          background-color: #fff !important;
+          box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;
+        }
+        .input-double-label {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          text-align: left;
+          overflow: hidden;
+          width: 100%;
+        }
+        .input-double-label .sub-label {
+          font-size: 11px;
+          font-weight: 800;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: .5px;
+        }
+        .input-double-label .main-label {
+          font-size: 16px;
+          font-weight: 800;
+          color: #3F536C;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .search-submit-btn {
+          background-color: var(--primary);
+          color: #fff;
+          border: none;
+          height: 60px;
+          padding: 0 40px;
+          border-radius: 30px;
+          font-size: 18px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: background-color .2s, transform .1s, box-shadow .2s;
+          flex-shrink: 0;
+          box-shadow: 0 4px 14px rgba(0, 164, 166, 0.2);
+        }
+        .search-submit-btn:hover {
+          background-color: var(--primary-hover);
         }
 
-        /* GRID / LIST CSS */
+        .custom-dropdown {
+          background-color: #fff;
+          border: 1px solid var(--border-soft);
+          border-radius: 12px;
+          box-shadow: var(--shadow-dropdown);
+          box-sizing: border-box;
+          display: none;
+        }
+        .dropdown-mobile-header {
+          display: none;
+        }
+        .dropdown-search-wrapper {
+          padding: 12px;
+          border-bottom: 1px solid var(--border-soft);
+          position: relative;
+        }
+        .dropdown-search-input {
+          width: 100%;
+          height: 40px;
+          border: 1px solid var(--border-soft);
+          border-radius: 8px;
+          padding: 0 12px 0 40px;
+          font-size: 14px;
+          outline: none;
+        }
+        .dropdown-select-all {
+          padding: 10px 16px;
+          border-bottom: 1px solid var(--border-soft);
+          cursor: pointer;
+        }
+        .dropdown-select-all-text {
+          font-size: 12px;
+          font-weight: 800;
+          color: var(--primary);
+        }
+        .dropdown-items-scroll {
+          max-height: 240px;
+          overflow-y: auto;
+        }
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 16px;
+          cursor: pointer;
+          border-bottom: 1px solid #F1F5F9;
+        }
+        .dropdown-item:hover, .dropdown-item.selected {
+          background-color: #F8FAFC;
+        }
+        .dropdown-item-left svg {
+          width: 18px;
+          height: 18px;
+          fill: var(--text-muted);
+        }
+        .dropdown-item.selected .dropdown-item-left svg {
+          fill: var(--primary);
+        }
+        .dropdown-item-content {
+          display: flex;
+          flex-direction: column;
+          text-align: left;
+        }
+        .dropdown-item-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--dark-slate);
+        }
+        .dropdown-item-subtitle {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+        .dropdown-mobile-footer {
+          display: none;
+        }
+
+        /* GRID / LIST */
         .grid-layout {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -997,7 +1133,6 @@ export default function Home({ properties, initialError }) {
           width: 100%;
         }
 
-        /* ABOUT US */
         .v1-section {
           background-color: var(--bg-light);
           border-radius: var(--radius-bubble);
@@ -1035,7 +1170,6 @@ export default function Home({ properties, initialError }) {
           margin-bottom: 25px;
         }
 
-        /* RESPONSIVE */
         @media (max-width: 1024px) {
           .modern-header {
             height: 70px !important;
@@ -1096,7 +1230,7 @@ export default function Home({ properties, initialError }) {
             margin-left: 0 !important;
           }
         }
-      `}</style>
+      `}} />
     </>
   )
 }
