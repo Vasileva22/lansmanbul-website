@@ -16,18 +16,18 @@ const mapProperty = (item) => {
     title: f.title || f.testproje || '',
     price: f.price || f.Fiyat || 0,
     description: f.description || f["Açıklama"] || f.Aciklama || '',
-    district: f.district || f["İlçe/Semt"] || '',
-    rooms: f.rooms || f["card odalar"] || '',
-    status: f.status || f.konutcesit || '',
-    area: parseInt(f.area || f["card-area"]) || 0,
-    images: f.images || f.Foto || f["Kapak Fotoğrafı"] || [],
+    district: f.district || f.district_name || f["İlçe/Semt"] || '',
+    rooms: f.rooms || f.card_odalar || f["card odalar"] || '',
+    status: f.status || f.konutcesit || f.konut_cesit || '',
+    area: parseInt(f.area || f.card_area || f["card-area"]) || 0,
+    images: f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"] || [],
     whatsapp: f.whatsapp || f.WhatsApp || '',
-    amenities: f.amenities || f["Özellikler"] || [],
+    amenities: f.amenities || f.ozellikler || f["Özellikler"] || [],
     coordinates: f.coordinates || f["Koordinat"] || '',
     kat_sayisi: parseInt(f.kat_sayisi || f["Kat Sayısı"] || f.Kat_Sayisi || f.KatSayisi) || 0,
-    kredi: f.kredi || f["Kredi_Durumu"] || f.Kredi_Durumu || '',
-    vade: f.vade || f["Vade_Secenegi"] || f.Vade_Secenegi || '',
-    downPayment: f.downPayment || f["Ilk_Pesinat"] || f.Ilk_Pesinat || '',
+    kredi: f.kredi || f.kredi_durumu || f["Kredi_Durumu"] || f.Kredi_Durumu || '',
+    vade: f.vade || f.vade_secenegi || f["Vade_Secenegi"] || f.Vade_Secenegi || '',
+    downPayment: f.downPayment || f.ilk_pesinat || f.down_payment || f["Ilk_Pesinat"] || f.Ilk_Pesinat || '',
   }
 }
 
@@ -95,8 +95,13 @@ export default function Home({ properties, initialError }) {
     setCurrentPage(1)
   }
 
+  // Более надежный обработчик закрытия списков вне зоны клика
   useEffect(() => {
-    const handleOutsideClick = () => setActiveHeroDropdown(null)
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.search-input-field')) {
+        setActiveHeroDropdown(null)
+      }
+    }
     window.addEventListener('click', handleOutsideClick)
     return () => window.removeEventListener('click', handleOutsideClick)
   }, [])
@@ -267,6 +272,12 @@ export default function Home({ properties, initialError }) {
         
         {/* ШАПКА */}
         <Header />
+
+        {/* Задний фон на мобильных для списков */}
+        <div 
+          className={`modal-backdrop-overlay ${activeHeroDropdown !== null ? 'show' : ''}`} 
+          onClick={() => setActiveHeroDropdown(null)} 
+        />
 
         {/* HERO ПОИСК */}
         <section id="custom-hero-search" className="hero-search-container">
@@ -499,10 +510,10 @@ export default function Home({ properties, initialError }) {
               </div>
               <div className="luxe-divider" />
 
-              {/* МЕТРАЖ */}
+              {/* МЕТРАЖ С КАСТОМНЫМ ДВОЙНЫМ СЛАЙДЕРОМ */}
               <div className="luxe-group">
                 <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Metrekare (m²)</span>
-                <div className="luxe-range-inputs-row flex gap-2 items-center">
+                <div className="luxe-range-inputs-row flex gap-2 items-center mb-3">
                   <input 
                     type="number" 
                     value={minArea} 
@@ -513,17 +524,49 @@ export default function Home({ properties, initialError }) {
                   <input 
                     type="number" 
                     value={maxArea} 
-                    onChange={(e) => { setMaxArea(Math.min(1000, parseInt(e.target.value) || 1000)); setCurrentPage(1); }}
+                    onChange={(e) => { setMaxArea(Math.min(500, parseInt(e.target.value) || 500)); setCurrentPage(1); }}
                     className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                  />
+                </div>
+                {/* Двойной диапазон */}
+                <div className="dual-range-slider-container">
+                  <div 
+                    className="dual-range-track"
+                    style={{
+                      left: `${(minArea / 500) * 100}%`,
+                      width: `${((maxArea - minArea) / 500) * 100}%`
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="500" 
+                    value={minArea}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxArea);
+                      setMinArea(val);
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="500" 
+                    value={maxArea}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minArea);
+                      setMaxArea(val);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
               </div>
               <div className="luxe-divider" />
 
-              {/* ЭТАЖНОСТЬ */}
+              {/* ЭТАЖНОСТЬ С КАСТОМНЫМ ДВОЙНЫМ СЛАЙДЕРОМ */}
               <div className="luxe-group">
                 <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Kat sayısı</span>
-                <div className="luxe-range-inputs-row flex gap-2 items-center">
+                <div className="luxe-range-inputs-row flex gap-2 items-center mb-3">
                   <input 
                     type="number" 
                     value={minFloor} 
@@ -534,24 +577,99 @@ export default function Home({ properties, initialError }) {
                   <input 
                     type="number" 
                     value={maxFloor} 
-                    onChange={(e) => { setMaxFloor(Math.min(100, parseInt(e.target.value) || 100)); setCurrentPage(1); }}
+                    onChange={(e) => { setMaxFloor(Math.min(40, parseInt(e.target.value) || 40)); setCurrentPage(1); }}
                     className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                  />
+                </div>
+                {/* Двойной диапазон этажей */}
+                <div className="dual-range-slider-container">
+                  <div 
+                    className="dual-range-track"
+                    style={{
+                      left: `${(minFloor / 40) * 100}%`,
+                      width: `${((maxFloor - minFloor) / 40) * 100}%`
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="40" 
+                    value={minFloor}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxFloor);
+                      setMinFloor(val);
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="40" 
+                    value={maxFloor}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minFloor);
+                      setMaxFloor(val);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
               </div>
               <div className="luxe-divider" />
 
-              {/* ЦЕНЫ */}
+              {/* ЦЕНЫ С ДИНАМИЧЕСКИМ И КРАСИВЫМ ПОЛЗУНКОМ */}
               <div className="luxe-group">
                 <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Fiyat</span>
+                <div className="price-live-display text-sm font-bold text-[#00A4A6] mb-3">
+                  <span>{minPrice.toLocaleString('tr-TR')} TL</span> — <span>{maxPrice.toLocaleString('tr-TR')} TL</span>
+                </div>
+                
+                {/* Слайдер цены */}
+                <div className="dual-range-slider-container">
+                  <div 
+                    className="dual-range-track"
+                    style={{
+                      left: `${(minPrice / 50000000) * 100}%`,
+                      width: `${((maxPrice - minPrice) / 50000000) * 100}%`
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="50000000" 
+                    step="100000"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxPrice);
+                      setMinPrice(val);
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="50000000" 
+                    step="100000"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minPrice);
+                      setMaxPrice(val);
+                      setCurrentPage(1);
+                    }}
+                  />
+                </div>
+
                 <div className="price-inputs-container flex flex-col gap-3">
                   <div className="price-input-box border rounded-lg p-2 bg-slate-50 flex flex-col gap-1">
                     <span className="price-box-label text-[10px] text-slate-400 font-bold">En Düşük</span>
                     <div className="price-box-input-wrap flex justify-between items-center text-sm font-bold text-slate-600">
                       <input 
-                        type="number" 
-                        value={minPrice} 
-                        onChange={(e) => { setMinPrice(Math.max(0, parseInt(e.target.value) || 0)); setCurrentPage(1); }}
+                        type="text" 
+                        value={minPrice.toLocaleString('tr-TR')} 
+                        onChange={(e) => { 
+                          const val = Math.max(0, parseInt(e.target.value.replace(/\D/g, '')) || 0);
+                          setMinPrice(val); 
+                          setCurrentPage(1); 
+                        }}
                         className="price-box-input w-full bg-transparent outline-none"
                       />
                       <span className="price-currency">TL</span>
@@ -561,9 +679,13 @@ export default function Home({ properties, initialError }) {
                     <span className="price-box-label text-[10px] text-slate-400 font-bold">En Yüksek</span>
                     <div className="price-box-input-wrap flex justify-between items-center text-sm font-bold text-slate-600">
                       <input 
-                        type="number" 
-                        value={maxPrice} 
-                        onChange={(e) => { setMaxPrice(Math.max(0, parseInt(e.target.value) || 0)); setCurrentPage(1); }}
+                        type="text" 
+                        value={maxPrice.toLocaleString('tr-TR')} 
+                        onChange={(e) => { 
+                          const val = Math.max(0, parseInt(e.target.value.replace(/\D/g, '')) || 0);
+                          setMaxPrice(val); 
+                          setCurrentPage(1); 
+                        }}
                         className="price-box-input w-full bg-transparent outline-none"
                       />
                       <span className="price-currency">TL</span>
@@ -714,7 +836,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
+                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
                   </div>
 
                   <div className="v1-card">
@@ -747,7 +869,7 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* ОРИГИНАЛЬНЫЙ CSS С TILDA — ИМПОРТИРОВАН ПОЛНОСТЬЮ */}
+      {/* ОРИГИНАЛЬНЫЙ CSS С TILDA — ИМПОРТИРОВАН И АДАПТИРОВАН */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -795,6 +917,107 @@ export default function Home({ properties, initialError }) {
           fill: var(--primary) !important;
         }
 
+        /* СТИЛИ ДЛЯ ВЫПАДАЮЩИХ СПИСКОВ И ТРИГГЕРОВ */
+        .search-input-field {
+          position: relative !important; /* Важно для позиционирования абсолютных дочерних элементов */
+        }
+
+        .custom-dropdown {
+          position: absolute !important;
+          background-color: #fff !important;
+          border-radius: 16px !important;
+          box-shadow: var(--shadow-dropdown) !important;
+          border: 1.5px solid var(--border-soft) !important;
+          padding: 0 !important;
+          z-index: 99999 !important;
+          display: none !important; /* Скрыты по умолчанию */
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          top: 100% !important;
+          left: 0 !important;
+          width: 100% !important;
+          margin-top: 4px !important;
+        }
+
+        /* При активации на десктопе */
+        .custom-dropdown.active-desktop {
+          display: block !important;
+        }
+
+        /* Задний фон на мобильных для затемнения */
+        .modal-backdrop-overlay {
+          display: none !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: rgba(15, 23, 42, .6) !important;
+          z-index: 99999998 !important;
+          opacity: 0 !important;
+          transition: opacity .3s ease-in-out !important;
+          pointer-events: none !important;
+        }
+        .modal-backdrop-overlay.show {
+          display: block !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
+
+        /* КАСТОМНЫЕ СТИЛИ ДЛЯ ПОЛЗУНКОВ СЛАЙДЕРОВ (Visual Slider styling) */
+        .dual-range-slider-container {
+          position: relative !important;
+          width: 100% !important;
+          height: 4px !important;
+          background-color: var(--border-soft) !important;
+          margin: 15px 0 25px 0 !important;
+          border-radius: 2px !important;
+        }
+        .dual-range-track {
+          position: absolute !important;
+          height: 100% !important;
+          background: linear-gradient(90deg, #B2EBF2 0%, #00A4A6 100%) !important;
+          border-radius: 2px !important;
+        }
+        .dual-range-slider-container input[type="range"] {
+          position: absolute !important;
+          width: 100% !important;
+          height: 4px !important;
+          background: transparent !important;
+          appearance: none !important;
+          pointer-events: none !important;
+          outline: none !important;
+          margin: 0 !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+        .dual-range-slider-container input[type="range"]::-webkit-slider-thumb {
+          appearance: none !important;
+          pointer-events: auto !important;
+          width: 18px !important;
+          height: 18px !important;
+          border-radius: 50% !important;
+          border: 2.5px solid var(--primary) !important;
+          background-color: #fff !important;
+          box-shadow: 0 2px 5px rgba(0,0,0,.1) !important;
+          cursor: pointer !important;
+          transition: transform .15s, box-shadow .15s !important;
+        }
+        .dual-range-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+          transform: scale(1.1) !important;
+          box-shadow: 0 0 0 6px rgba(0,164,166,.12) !important;
+        }
+        .dual-range-slider-container input[type="range"]::-moz-range-thumb {
+          pointer-events: auto !important;
+          width: 18px !important;
+          height: 18px !important;
+          border-radius: 50% !important;
+          border: 2.5px solid var(--primary) !important;
+          background-color: #fff !important;
+          box-shadow: 0 2px 5px rgba(0,0,0,.1) !important;
+          cursor: pointer !important;
+        }
+
         /* ИСПРАВЛЕНИЕ СЕТКИ И НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ */
         @media (min-width: 1025px) {
           #custom-catalog-search {
@@ -806,7 +1029,7 @@ export default function Home({ properties, initialError }) {
           }
           .luxe-sidebar {
             position: sticky !important;
-            top: 110px !important;
+            top: 100px !important;
             left: auto !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
@@ -827,6 +1050,10 @@ export default function Home({ properties, initialError }) {
         }
 
         /* ОСТАЛЬНЫЕ ОРИГИНАЛЬНЫЕ СТИЛИ ИЗ TILDA */
+        .mobile-only-title {
+          display: none !important; /* По умолчанию скрыто на десктопе */
+        }
+
         .hero-search-container {
           width: 100%;
           padding: 125px 20px 25px 20px;
@@ -996,18 +1223,6 @@ export default function Home({ properties, initialError }) {
           background-color: var(--primary-hover);
         }
 
-        .custom-dropdown {
-          position: absolute !important;
-          background-color: #fff !important;
-          border-radius: 16px !important;
-          box-shadow: var(--shadow-dropdown) !important;
-          border: 1.5px solid var(--border-soft) !important;
-          padding: 0 !important;
-          z-index: 99999 !important;
-          display: none;
-          box-sizing: border-box !important;
-          overflow: hidden !important;
-        }
         .dropdown-items-scroll {
           max-height: 290px !important;
           overflow-y: auto !important;
@@ -1680,6 +1895,7 @@ export default function Home({ properties, initialError }) {
             height: 70px !important;
           }
           .modern-logo .logo-text { font-size: 18px !important; }
+          
           .hero-search-title { display: none !important; }
           .mobile-only-title {
             display: block !important;
@@ -1734,7 +1950,7 @@ export default function Home({ properties, initialError }) {
             gap: 0 !important;
             border: 1px solid var(--border-soft) !important;
             border-radius: 16px !important;
-            overflow: hidden !important;
+            overflow: visible !important; /* Разрешаем выход выпадающих окон за пределы родителя на мобильных */
             background-color: #fff !important;
             width: 368px !important;
             max-width: 100% !important;
@@ -1797,6 +2013,62 @@ export default function Home({ properties, initialError }) {
             height: 48px !important;
             margin-top: 12px !important;
             border-radius: 12px !important;
+          }
+
+          /* Специфические настройки для мобильных выпадающих окон */
+          .custom-dropdown {
+            position: fixed !important;
+            bottom: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: 0 -10px 40px rgba(15,23,42,0.15) !important;
+            z-index: 100000005 !important;
+            display: none !important;
+            flex-direction: column !important;
+            background-color: #fff !important;
+            border: none !important;
+            transform: translateY(100%);
+            transition: transform .3s cubic-bezier(.16,1,.3,1) !important;
+          }
+
+          .custom-dropdown.active-mobile-modal {
+            display: flex !important;
+            transform: translateY(0) !important;
+          }
+
+          .custom-dropdown::before {
+            content: '' !important;
+            display: block !important;
+            width: 40px !important;
+            height: 4px !important;
+            background-color: #cbd5e1 !important;
+            border-radius: 2px !important;
+            margin: 12px auto 8px auto !important;
+            flex-shrink: 0 !important;
+          }
+
+          .dropdown-mobile-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 12px 20px !important;
+            border-bottom: 1px solid var(--border-soft) !important;
+            flex-shrink: 0 !important;
+          }
+          .dropdown-mobile-title {
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            color: #3F536C !important;
+          }
+          .dropdown-mobile-close {
+            font-size: 24px !important;
+            color: var(--text-muted) !important;
+            cursor: pointer !important;
           }
 
           .luxe-sidebar {
