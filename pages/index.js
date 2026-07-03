@@ -2,14 +2,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
 import { useRouter } from 'next/router'
-import { supabase } from '../supabase'
+import { supabase } from '../lib/supabaseClient'
 
-// Импортируем созданные компоненты
+// Переиспользуемые компоненты
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Адаптер сопоставления полей из Supabase (для совместимости)
 const mapProperty = (item) => {
   const f = item.fields || item
   return {
@@ -33,8 +32,9 @@ const mapProperty = (item) => {
 }
 
 const SVGS = {
-  location: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
-  bed: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
+  location: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle text-slate-400" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
+  bed: <svg className="input-icon-svg icon-fill w-4 h-4 inline-block mr-1 align-middle text-slate-400" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
+  search: <svg className="dropdown-search-icon absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 fill-none stroke-slate-400 stroke-[2.5]" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
   grid: <svg className="toggle-icon w-[18px] h-[18px] fill-current" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>,
   list: <svg className="toggle-icon w-[18px] h-[18px] fill-current" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
   arrowRight: <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
@@ -44,16 +44,18 @@ export default function Home({ properties, initialError }) {
   const router = useRouter()
   const { status } = router.query
 
-  // Настройки отображения
   const [layout, setLayout] = useState('grid')
 
-  // Фильтры и селекторы
-  const [activeHeroDropdown, setActiveHeroDropdown] = useState(null)
+  // Фильтры и списки поиска
+  const [activeHeroDropdown, setActiveHeroDropdown] = useState(null) // 'location' | 'room' | 'status'
   const [selectedDistricts, setSelectedDistricts] = useState([])
   const [selectedRooms, setSelectedRooms] = useState([])
   const [selectedStatuses, setSelectedStatuses] = useState([])
 
-  // Слайдеры-диапазоны Сайдбара (Числа)
+  // Строка поиска внутри выпадающего списка районов
+  const [searchDistrictQuery, setSearchDistrictQuery] = useState('')
+
+  // Слайдеры-диапазоны Сайдбара
   const [minArea, setMinArea] = useState(0)
   const [maxArea, setMaxArea] = useState(500)
   const [minFloor, setMinFloor] = useState(0)
@@ -78,7 +80,7 @@ export default function Home({ properties, initialError }) {
 
   const mappedList = useMemo(() => properties.map(mapProperty), [properties])
 
-  // Динамические списки опций на основе реальных данных из базы
+  // Опции для выпадающих списков
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
   const roomOptions = useMemo(() => [...new Set(mappedList.map(p => p.rooms).filter(Boolean))].sort(), [mappedList])
   const statusOptions = useMemo(() => {
@@ -103,7 +105,14 @@ export default function Home({ properties, initialError }) {
     setCurrentPage(1)
   }
 
-  // Реагирование на изменение URL (через Shallow Router Шапки/Подвала)
+  // Закрытие выпадающих списков по клику в пустую область экрана
+  useEffect(() => {
+    const handleOutsideClick = () => setActiveHeroDropdown(null)
+    window.addEventListener('click', handleOutsideClick)
+    return () => window.removeEventListener('click', handleOutsideClick)
+  }, [])
+
+  // Реагирование на изменение URL
   useEffect(() => {
     if (status) {
       setSelectedStatuses([status])
@@ -123,6 +132,7 @@ export default function Home({ properties, initialError }) {
       if (selectedStatuses.length > 0 && !selectedStatuses.includes(p.status)) return false
       if (p.area < minArea || p.area > maxArea) return false
       if (p.kat_sayisi < minFloor || p.kat_sayisi > maxFloor) return false
+      
       const priceVal = parseInt(String(p.price).replace(/\D/g, '')) || 0
       if (priceVal < minPrice || priceVal > maxPrice) return false
 
@@ -167,7 +177,7 @@ export default function Home({ properties, initialError }) {
     }
   }
 
-  // Обновление Яндекс Карт
+  // Карта
   const initMap = () => {
     if (typeof window !== 'undefined' && window.ymaps) {
       window.ymaps.ready(() => {
@@ -215,7 +225,6 @@ export default function Home({ properties, initialError }) {
     initMap()
   }, [filteredProperties])
 
-  // Вспомогательные хендлеры
   const handleToggleSelect = (item, list, setList) => {
     if (list.includes(item)) {
       setList(list.filter(x => x !== item))
@@ -233,6 +242,10 @@ export default function Home({ properties, initialError }) {
     }
     setCurrentPage(1)
   }
+
+  const filteredDistrictOptions = useMemo(() => {
+    return districtOptions.filter(opt => opt.toLowerCase().includes(searchDistrictQuery.toLowerCase()))
+  }, [districtOptions, searchDistrictQuery])
 
   if (initialError) {
     return (
@@ -289,7 +302,7 @@ export default function Home({ properties, initialError }) {
               <div className="search-inputs-row-wrapper mt-4">
                 <div className="search-inputs-row grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                   
-                  {/* Контур выбора района */}
+                  {/* Район */}
                   <div 
                     className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'location' ? 'active-field' : ''} ${selectedDistricts.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'location' ? null : 'location') }}
@@ -302,30 +315,56 @@ export default function Home({ properties, initialError }) {
                       </span>
                     </div>
 
-                    {activeHeroDropdown === 'location' && (
-                      <div className="absolute left-0 top-[65px] bg-white border border-gray-100 rounded-xl shadow-2xl p-4 z-[9999] w-full max-h-60 overflow-y-auto flex flex-col gap-1 text-left" onClick={(e) => e.stopPropagation()}>
-                        <div 
-                          className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
-                          onClick={() => handleSelectAll(districtOptions, selectedDistricts, setSelectedDistricts)}
-                        >
-                          <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
-                        </div>
-                        {districtOptions.map((opt, i) => (
-                          <label key={i} className="flex items-center gap-2 py-2 px-2 hover:bg-slate-50 rounded text-sm font-semibold cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedDistricts.includes(opt)} 
-                              onChange={() => handleToggleSelect(opt, selectedDistricts, setSelectedDistricts)}
-                              className="accent-[#00A4A6]"
-                            />
-                            <span>{opt}</span>
-                          </label>
+                    {/* Выпадающий список Районов */}
+                    <div 
+                      className={`custom-dropdown ${activeHeroDropdown === 'location' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      data-field="İlçe/Semt"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="dropdown-mobile-header">
+                        <span className="dropdown-mobile-title">İlçe / Semt seçiniz</span>
+                        <span className="dropdown-mobile-close" onClick={() => setActiveHeroDropdown(null)}>&times;</span>
+                      </div>
+                      <div className="dropdown-search-wrapper relative">
+                        <input 
+                          type="text" 
+                          className="dropdown-search-input" 
+                          placeholder="İlçe veya Semt ara..."
+                          value={searchDistrictQuery}
+                          onChange={(e) => setSearchDistrictQuery(e.target.value)}
+                        />
+                        {SVGS.search}
+                      </div>
+                      <div 
+                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        onClick={() => handleSelectAll(districtOptions, selectedDistricts, setSelectedDistricts)}
+                      >
+                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                      </div>
+                      <div className="dropdown-items-scroll">
+                        {filteredDistrictOptions.map((opt, i) => (
+                          <div 
+                            key={i} 
+                            className={`dropdown-item ${selectedDistricts.includes(opt) ? 'selected' : ''}`}
+                            onClick={() => handleToggleSelect(opt, selectedDistricts, setSelectedDistricts)}
+                          >
+                            <div className="dropdown-item-left">
+                              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            </div>
+                            <div className="dropdown-item-content">
+                              <span className="dropdown-item-title">{opt}</span>
+                              <span className="dropdown-item-subtitle">Ankara, Türkiye</span>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    )}
+                      <div className="dropdown-mobile-footer">
+                        <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Контур выбора комнатности */}
+                  {/* Комнатность */}
                   <div 
                     className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'room' ? 'active-field' : ''} ${selectedRooms.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'room' ? null : 'room') }}
@@ -338,30 +377,46 @@ export default function Home({ properties, initialError }) {
                       </span>
                     </div>
 
-                    {activeHeroDropdown === 'room' && (
-                      <div className="absolute left-0 top-[65px] bg-white border border-gray-100 rounded-xl shadow-2xl p-4 z-[9999] w-full max-h-60 overflow-y-auto flex flex-col gap-1 text-left" onClick={(e) => e.stopPropagation()}>
-                        <div 
-                          className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
-                          onClick={() => handleSelectAll(roomOptions, selectedRooms, setSelectedRooms)}
-                        >
-                          <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
-                        </div>
+                    {/* Выпадающий список комнатности */}
+                    <div 
+                      className={`custom-dropdown ${activeHeroDropdown === 'room' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      data-field="card odalar"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="dropdown-mobile-header">
+                        <span className="dropdown-mobile-title">Oda sayısı seçiniz</span>
+                        <span className="dropdown-mobile-close" onClick={() => setActiveHeroDropdown(null)}>&times;</span>
+                      </div>
+                      <div 
+                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        onClick={() => handleSelectAll(roomOptions, selectedRooms, setSelectedRooms)}
+                      >
+                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                      </div>
+                      <div className="dropdown-items-scroll">
                         {roomOptions.map((opt, i) => (
-                          <label key={i} className="flex items-center gap-2 py-2 px-2 hover:bg-slate-50 rounded text-sm font-semibold cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedRooms.includes(opt)} 
-                              onChange={() => handleToggleSelect(opt, selectedRooms, setSelectedRooms)}
-                              className="accent-[#00A4A6]"
-                            />
-                            <span>{opt}</span>
-                          </label>
+                          <div 
+                            key={i} 
+                            className={`dropdown-item ${selectedRooms.includes(opt) ? 'selected' : ''}`}
+                            onClick={() => handleToggleSelect(opt, selectedRooms, setSelectedRooms)}
+                          >
+                            <div className="dropdown-item-left">
+                              <svg viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+                            </div>
+                            <div className="dropdown-item-content">
+                              <span className="dropdown-item-title">{opt}</span>
+                              <span className="dropdown-item-subtitle">Oda sayısı</span>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    )}
+                      <div className="dropdown-mobile-footer">
+                        <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Контур выбора статуса */}
+                  {/* Статус */}
                   <div 
                     className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'status' ? 'active-field' : ''} ${selectedStatuses.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'status' ? null : 'status') }}
@@ -374,27 +429,43 @@ export default function Home({ properties, initialError }) {
                       </span>
                     </div>
 
-                    {activeHeroDropdown === 'status' && (
-                      <div className="absolute left-0 top-[65px] bg-white border border-gray-100 rounded-xl shadow-2xl p-4 z-[9999] w-full max-h-60 overflow-y-auto flex flex-col gap-1 text-left" onClick={(e) => e.stopPropagation()}>
-                        <div 
-                          className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
-                          onClick={() => handleSelectAll(statusOptions, selectedStatuses, setSelectedStatuses)}
-                        >
-                          <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
-                        </div>
+                    {/* Выпадающий список статуса */}
+                    <div 
+                      className={`custom-dropdown ${activeHeroDropdown === 'status' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      data-field="konutcesit"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="dropdown-mobile-header">
+                        <span className="dropdown-mobile-title">Durum seçiniz</span>
+                        <span className="dropdown-mobile-close" onClick={() => setActiveHeroDropdown(null)}>&times;</span>
+                      </div>
+                      <div 
+                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        onClick={() => handleSelectAll(statusOptions, selectedStatuses, setSelectedStatuses)}
+                      >
+                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                      </div>
+                      <div className="dropdown-items-scroll">
                         {statusOptions.map((opt, i) => (
-                          <label key={i} className="flex items-center gap-2 py-2 px-2 hover:bg-slate-50 rounded text-sm font-semibold cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedStatuses.includes(opt)} 
-                              onChange={() => handleToggleSelect(opt, selectedStatuses, setSelectedStatuses)}
-                              className="accent-[#00A4A6]"
-                            />
-                            <span>{opt}</span>
-                          </label>
+                          <div 
+                            key={i} 
+                            className={`dropdown-item ${selectedStatuses.includes(opt) ? 'selected' : ''}`}
+                            onClick={() => handleToggleSelect(opt, selectedStatuses, setSelectedStatuses)}
+                          >
+                            <div className="dropdown-item-left">
+                              <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                            </div>
+                            <div className="dropdown-item-content">
+                              <span className="dropdown-item-title">{opt}</span>
+                              <span className="dropdown-item-subtitle">Yapım Durumu</span>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    )}
+                      <div className="dropdown-mobile-footer">
+                        <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -557,7 +628,7 @@ export default function Home({ properties, initialError }) {
           </aside>
 
           {/* КОНТЕНТ С КАРТОЧКАМИ */}
-          <div id="catalog-content-wrapper" className="md:ml-[330px]">
+          <div id="catalog-content-wrapper">
             
             <div className="catalog-control-bar flex justify-end gap-2 mb-6 pb-3 border-b">
               <div className="layout-toggle bg-slate-100 p-1 rounded-lg flex">
@@ -576,7 +647,7 @@ export default function Home({ properties, initialError }) {
               </div>
             </div>
 
-            {/* СПИСОК КАРТОЧЕК ОБЪЕКТОВ ЧЕРЕЗ .MAP() */}
+            {/* СПИСОК КАРТОЧЕК */}
             <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
               {pageItems.length > 0 ? (
                 pageItems.map((property) => (
@@ -659,7 +730,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda только rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -684,7 +755,7 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* Глобальные стили для поддержки кастомной верстки */}
+      {/* Глобальные стили */}
       <style jsx global>{`
         :root {
           --primary: #00A4A6;
@@ -705,6 +776,76 @@ export default function Home({ properties, initialError }) {
           background-color: #ffffff;
         }
 
+        /* ----- ИСПРАВЛЕНИЕ НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ ----- */
+        @media (min-width: 1025px) {
+          #custom-catalog-search {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 30px !important;
+            align-items: flex-start !important;
+            position: relative !important;
+          }
+          .luxe-sidebar {
+            position: sticky !important;
+            top: 110px !important;
+            left: auto !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+            width: 310px !important;
+            display: block !important;
+            box-sizing: border-box !important;
+          }
+          #catalog-content-wrapper {
+            margin-left: 0 !important;
+            flex-grow: 1 !important;
+            width: auto !important;
+          }
+        }
+
+        /* ----- ИСПРАВЛЕНИЕ ВИДИМОСТИ ДРОПДАУНОВ ----- */
+        @media (min-width: 1025px) {
+          .search-panel-card, 
+          .search-inputs-row-wrapper, 
+          .search-inputs-row {
+            overflow: visible !important;
+            position: relative !important;
+          }
+          .custom-dropdown.active-desktop {
+            display: block !important;
+            position: absolute !important;
+            top: 65px !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 1000000 !important;
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .custom-dropdown {
+            position: fixed !important;
+            bottom: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: 0 -10px 40px rgba(15,23,42,0.15) !important;
+            z-index: 100000005 !important;
+            display: none;
+            flex-direction: column !important;
+            background-color: #fff !important;
+            border: none !important;
+            transform: translateY(100%);
+            transition: transform .3s cubic-bezier(.16,1,.3,1) !important;
+          }
+          .custom-dropdown.active-mobile-modal {
+            display: flex !important;
+            transform: translateY(0) !important;
+          }
+        }
+
+        /* БАЗОВАЯ СТИЛИЗАЦИЯ ИЗ ТИЛЬДЫ */
         .modern-header {
           position: fixed !important;
           top: 0 !important;
@@ -717,7 +858,6 @@ export default function Home({ properties, initialError }) {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          box-sizing: border-box !important;
           box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
         }
         .header-container {
@@ -727,58 +867,22 @@ export default function Home({ properties, initialError }) {
           display: flex !important;
           align-items: center !important;
           justify-content: space-between !important;
-          box-sizing: border-box !important;
         }
-        .modern-logo { display: flex !important; align-items: center !important; text-decoration: none !important; gap: 10px !important; cursor: pointer !important; }
+        .modern-logo { display: flex !important; align-items: center !important; text-decoration: none !important; gap: 10px !important; }
         .logo-icon-box {
           width: 40px !important; height: 40px !important; background-color: rgba(0, 164, 166, 0.08) !important; border-radius: 10px !important;
-          display: flex !important; align-items: center !important; justify-content: center !important; color: var(--primary) !important; transition: transform 0.2s ease !important;
+          display: flex !important; align-items: center !important; justify-content: center !important; color: var(--primary) !important;
         }
-        .modern-logo:hover .logo-icon-box { transform: scale(1.05) !important; }
         .logo-icon-svg { width: 22px !important; height: 22px !important; fill: currentColor !important; }
         .logo-text { font-size: 20px !important; font-weight: 500 !important; color: var(--dark-slate) !important; letter-spacing: -0.5px !important; }
         .logo-text-accent { color: var(--primary) !important; font-weight: 900 !important; }
 
-        .modern-nav { display: flex !important; align-items: center !important; gap: 32px !important; }
-        .nav-item {
-          font-size: 15px !important; font-weight: 600 !important; color: var(--dark-slate) !important; text-decoration: none !important;
-          display: flex !important; align-items: center !important; gap: 6px !important; cursor: pointer !important; transition: color 0.2s ease !important;
-          padding: 8px 0 !important; position: relative !important; user-select: none !important;
-        }
-        .nav-item::after {
-          content: '' !important; position: absolute !important; bottom: 0 !important; left: 0 !important; width: 0 !important; height: 2px !important;
-          background-color: var(--primary) !important; transition: width 0.25s ease !important;
-        }
-        .nav-item:hover { color: var(--primary) !important; }
-        .nav-item:hover::after { width: 100% !important; }
-        .nav-chevron-svg { width: 12px !important; height: 12px !important; stroke: currentColor !important; stroke-width: 2.5 !important; fill: none !important; transition: transform 0.2s ease !important; }
-        .nav-item:hover .nav-chevron-svg { transform: translateY(2px) !important; }
-        .new-ssapkaprojelerimiz.open .nav-chevron-svg { transform: rotate(180deg) !important; stroke: var(--primary) !important; }
-        .new-ssapkaprojelerimiz.open { color: var(--primary) !important; }
-
-        .header-contact { display: flex !important; align-items: center !important; gap: 20px !important; }
-        .contact-phone {
-          display: flex !important; align-items: center !important; gap: 8px !important; text-decoration: none !important;
-          color: var(--dark-slate) !important; font-size: 15px !important; font-weight: 700 !important; transition: color 0.2s ease !important;
-        }
-        .contact-phone:hover { color: var(--primary) !important; }
-        .phone-icon-svg { width: 16px !important; height: 16px !important; fill: currentColor !important; color: var(--primary) !important; }
-        .contact-whatsapp {
-          width: 42px !important; height: 42px !important; background-color: #25D366 !important; border-radius: 50% !important;
-          display: flex !important; align-items: center !important; justify-content: center !important; color: #ffffff !important;
-          text-decoration: none !important; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3) !important; transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-        }
-        .contact-whatsapp:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4) !important; }
-        .wa-icon-svg { width: 22px !important; height: 22px !important; fill: currentColor !important; }
-
-        /* HERO PANEL */
         .hero-search-container {
           width: 100%;
           padding: 125px 20px 25px 20px;
           background-color: var(--bg-light);
           display: flex;
           justify-content: center;
-          box-sizing: border-box;
         }
         .search-width-limiter {
           width: 100%;
@@ -786,7 +890,6 @@ export default function Home({ properties, initialError }) {
           display: flex;
           flex-direction: column;
           align-items: center;
-          box-sizing: border-box;
         }
         .hero-search-title {
           font-size: 36px;
@@ -796,137 +899,7 @@ export default function Home({ properties, initialError }) {
           line-height: 1.3;
           text-align: center;
         }
-        .search-panel-card {
-          width: 100%;
-          background-color: #fff;
-          border-radius: 20px;
-          border: 1px solid var(--border-soft);
-          box-shadow: var(--shadow-premium);
-          padding: 24px 30px 32px 30px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          box-sizing: border-box;
-        }
-        .panel-bottom-gradient {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 4px;
-          background: linear-gradient(to right, #7b1fa2, var(--primary), #ffb300);
-          overflow: hidden;
-          border-radius: 0 0 20px 20px;
-        }
-        .search-tabs-header {
-          display: flex;
-          gap: 24px;
-          border-bottom: 1px solid var(--border-soft);
-          padding-bottom: 12px;
-          margin-bottom: 4px;
-          box-sizing: border-box;
-        }
-        .city-tab-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 16px;
-          font-weight: 800;
-          color: var(--text-muted);
-          cursor: pointer;
-          position: relative;
-          padding-bottom: 12px;
-          margin-bottom: -13px;
-          transition: color .2s ease;
-          user-select: none;
-        }
-        .city-tab-item.active {
-          color: var(--primary);
-        }
-        .city-tab-item.active::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 3px;
-          background-color: var(--primary);
-          border-radius: 3px 3px 0 0;
-        }
-        .tab-badge {
-          font-size: 9px;
-          background-color: #F3F4F6;
-          color: #9CA3AF;
-          padding: 2px 6px;
-          border-radius: 20px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .5px;
-        }
-        .search-inputs-row-wrapper {
-          display: flex;
-          gap: 16px;
-          width: 100%;
-          align-items: center;
-          box-sizing: border-box;
-        }
-        .search-input-field {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border: 1.5px solid var(--border-soft);
-          border-radius: 10px;
-          height: 60px;
-          padding: 0 16px;
-          background-color: #F8FAFC;
-          transition: border-color .2s, background-color .2s, box-shadow .2s;
-          cursor: pointer;
-          user-select: none;
-          box-sizing: border-box;
-        }
-        .search-input-field:hover, .search-input-field.active-field {
-          border-color: var(--primary) !important;
-          background-color: #fff !important;
-          box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;
-        }
-        .input-double-label {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          text-align: left;
-          overflow: hidden;
-          width: 100%;
-        }
-        .input-double-label .sub-label {
-          font-size: 11px;
-          font-weight: 800;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: .5px;
-        }
-        .input-double-label .main-label {
-          font-size: 16px;
-          font-weight: 800;
-          color: #3F536C;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
 
-        /* SIDEBAR */
-        .luxe-sidebar {
-          position: absolute !important;
-          top: 15px !important;
-          left: 20px !important;
-          width: 310px;
-          background: #fff;
-          border: 1.5px solid var(--border-soft);
-          border-radius: 24px;
-          padding: 24px;
-          z-index: 999 !important;
-          box-shadow: var(--shadow-premium);
-          box-sizing: border-box;
-        }
         .luxe-sidebar-map {
           width: 100%;
           height: 125px;
@@ -935,31 +908,55 @@ export default function Home({ properties, initialError }) {
           overflow: hidden;
           border: 1px solid var(--border-soft);
         }
-        .luxe-divider {
-          height: 1px;
-          background-color: var(--border-soft);
-          margin: 20px 0;
+
+        .luxe-tag-item {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          padding: 8px 14px !important;
+          background-color: #fff !important;
+          border: 1px solid var(--border-soft) !important;
+          border-radius: 20px !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          color: var(--dark-slate) !important;
+          cursor: pointer !important;
+          transition: all .2s ease !important;
+          user-select: none !important;
         }
-        .luxe-oval-input {
-          width: 45%;
-          height: 34px;
-          border: 1px solid var(--border-soft);
-          background-color: var(--bg-light);
-          border-radius: 17px;
-          font-size: 13px;
-          font-weight: 700;
-          color: #3F536C !important;
-          text-align: center;
-          outline: none;
-          box-sizing: border-box;
-          transition: border-color .2s, background-color .2s;
-        }
-        .luxe-oval-input:focus {
-          border-color: var(--primary);
-          background-color: #fff;
+        .luxe-tag-item.active {
+          background-color: var(--primary) !important;
+          color: #fff !important;
+          border-color: var(--primary) !important;
         }
 
-        /* GRID / LIST LAYOUTS */
+        .luxe-radio-dot {
+          width: 18px;
+          height: 18px;
+          border: 1.5px solid var(--border-soft);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #fff;
+        }
+        .luxe-checkbox-item.checked .luxe-radio-dot {
+          border-color: var(--primary);
+          background-color: var(--primary);
+        }
+        .luxe-radio-dot::after {
+          content: '';
+          width: 6px;
+          height: 6px;
+          background-color: #fff;
+          border-radius: 50%;
+          display: none;
+        }
+        .luxe-checkbox-item.checked .luxe-radio-dot::after {
+          display: block;
+        }
+
+        /* GRID / LIST CSS */
         .grid-layout {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -999,109 +996,6 @@ export default function Home({ properties, initialError }) {
           transition: transform .3s ease, box-shadow .3s ease;
           width: 100%;
         }
-        @media (max-width: 768px) {
-          .list-layout .custom-card {
-            flex-direction: column !important;
-          }
-        }
-
-        .custom-card .card-content {
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-        }
-        .custom-card .title-price-row {
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 8px;
-        }
-        .custom-card .features-row {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 10px;
-          border-top: 1px solid var(--border-soft);
-          padding-top: 12px;
-        }
-        .custom-card .feat-badge {
-          background: var(--bg-light);
-          padding: 6px 10px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--text-muted);
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .custom-card .olanaklar-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 20px;
-          margin-top: auto;
-        }
-        .custom-card .actions {
-          display: flex;
-          gap: 10px;
-          margin-top: auto;
-          width: 100%;
-        }
-        .custom-card .actions .btn {
-          flex: 1;
-        }
-
-        .btn {
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          transition: all .2s ease;
-          box-sizing: border-box;
-        }
-        .btn-primary {
-          background-color: var(--primary);
-          color: #fff !important;
-          border: 2px solid var(--primary);
-        }
-        .btn-primary:hover {
-          background-color: var(--primary-hover);
-          border-color: var(--primary-hover);
-        }
-        .btn-outline {
-          background-color: transparent;
-          color: #3F536C !important;
-          border: 2px solid var(--border-soft);
-        }
-        .btn-outline:hover {
-          border-color: var(--primary);
-          color: var(--primary) !important;
-        }
-
-        .olanak-tag {
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          color: var(--primary) !important;
-          background-color: rgba(0, 164, 166, 0.06) !important;
-          padding: 4px 10px !important;
-          border-radius: 6px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          box-sizing: border-box !important;
-        }
-        .olanak-tag svg {
-          width: 14px !important;
-          height: 14px !important;
-          fill: currentColor !important;
-          color: var(--primary) !important;
-          flex-shrink: 0 !important;
-        }
 
         /* ABOUT US */
         .v1-section {
@@ -1110,9 +1004,6 @@ export default function Home({ properties, initialError }) {
           padding: 70px 50px;
           box-shadow: var(--shadow-premium);
           border: 1.5px solid var(--border-soft);
-          box-sizing: border-box;
-          width: 100%;
-          position: relative;
         }
         .v1-badge {
           color: var(--primary);
@@ -1131,8 +1022,6 @@ export default function Home({ properties, initialError }) {
           border: 1.5px solid var(--border-soft);
           border-radius: var(--radius-bubble);
           padding: 40px 30px;
-          transition: all .4s cubic-bezier(.165, .84, .44, 1);
-          box-sizing: border-box;
         }
         .v1-icon-box {
           width: 64px;
@@ -1145,233 +1034,6 @@ export default function Home({ properties, initialError }) {
           color: var(--primary);
           margin-bottom: 25px;
         }
-        .v1-card-title {
-          font-size: 20px;
-          font-weight: 850;
-          color: #3F536C;
-          margin-bottom: 12px;
-        }
-        .v1-card-desc {
-          font-size: 14px;
-          color: var(--text-muted);
-          line-height: 1.6;
-        }
-        .kb-btn-wa {
-          background-color: #25D366;
-          color: #fff !important;
-          box-shadow: 0 6px 18px rgba(37, 211, 102, .2);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 14px 30px;
-          border-radius: 30px;
-          font-size: 14px;
-          font-weight: 800;
-          text-decoration: none;
-        }
-
-        /* MOBILE FLOATING FILTER */
-        .mobile-filter-floating-btn {
-          display: none;
-          position: fixed !important;
-          bottom: 20px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          background-color: var(--primary) !important;
-          color: #ffffff !important;
-          font-weight: 800 !important;
-          padding: 14px 28px !important;
-          border-radius: 30px !important;
-          box-shadow: 0 10px 25px rgba(0, 164, 166, 0.3) !important;
-          z-index: 999999 !important;
-          text-transform: uppercase !important;
-          font-size: 13px !important;
-          letter-spacing: 0.5px !important;
-          align-items: center !important;
-          gap: 8px !important;
-          cursor: pointer;
-          border: none !important;
-          white-space: nowrap !important;
-        }
-
-        .mobile-only-title { display: none; }
-
-        /* FOOTER */
-        .v3-footer {
-          font-family: 'Mulish', sans-serif !important;
-          background-color: #f8fafc !important;
-          border-top: 1px solid #e2e8f0 !important;
-          padding: 60px 20px 30px 20px !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
-          color: #334155 !important;
-        }
-        .v3-container {
-          max-width: 1200px !important;
-          margin: 0 auto !important;
-          width: 100% !important;
-        }
-        .v3-grid {
-          display: grid !important;
-          grid-template-columns: 1.5fr 1fr 1fr 1.2fr !important;
-          gap: 30px !important;
-          margin-bottom: 40px !important;
-        }
-        .v3-col {
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: flex-start !important;
-          padding-right: 20px !important;
-        }
-        .v3-col:not(:last-child) {
-          border-right: 1px solid #e2e8f0 !important;
-        }
-        .v3-logo {
-          display: inline-flex !important;
-          align-items: center !important;
-          text-decoration: none !important;
-          gap: 8px !important;
-          margin-bottom: 18px !important;
-        }
-        .v3-logo-icon {
-          width: 34px !important;
-          height: 34px !important;
-          background-color: #007a7c !important;
-          border-radius: 6px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          color: #ffffff !important;
-        }
-        .v3-logo-svg {
-          width: 18px !important;
-          height: 18px !important;
-          fill: currentColor !important;
-        }
-        .v3-logo-text {
-          font-size: 17px !important;
-          font-weight: 500 !important;
-          color: #0f172a !important;
-          letter-spacing: -0.3px !important;
-        }
-        .v3-logo-accent {
-          color: #007a7c !important;
-          font-weight: 900 !important;
-        }
-        .v3-description {
-          font-size: 13px !important;
-          line-height: 1.6 !important;
-          color: #475569 !important;
-        }
-        .v3-title {
-          font-size: 14px !important;
-          font-weight: 800 !important;
-          color: #0f172a !important;
-          margin-top: 0 !important;
-          margin-bottom: 18px !important;
-        }
-        .v3-links {
-          list-style: none !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 12px !important;
-        }
-        .v3-links a {
-          font-size: 13px !important;
-          color: #475569 !important;
-          text-decoration: none !important;
-        }
-        .v3-links a:hover {
-          color: #007a7c !important;
-        }
-        .v3-contacts {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 12px !important;
-          width: 100% !important;
-        }
-        .v3-contact-item {
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 8px !important;
-          font-size: 13px !important;
-          color: #475569 !important;
-          text-decoration: none !important;
-        }
-        .v3-contact-icon {
-          width: 15px !important;
-          height: 15px !important;
-          color: #007a7c !important;
-        }
-        .v3-wa-button {
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 8px !important;
-          background-color: #128c7e !important;
-          color: #ffffff !important;
-          text-decoration: none !important;
-          font-size: 12.5px !important;
-          font-weight: 700 !important;
-          padding: 8px 16px !important;
-          border-radius: 6px !important;
-        }
-
-        .luxe-radio-dot {
-          width: 18px;
-          height: 18px;
-          border: 1.5px solid var(--border-soft);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #fff;
-          transition: all .2s;
-        }
-        .luxe-checkbox-item.checked .luxe-radio-dot {
-          border-color: var(--primary);
-          background-color: var(--primary);
-        }
-        .luxe-radio-dot::after {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background-color: #fff;
-          border-radius: 50%;
-          display: none;
-        }
-        .luxe-checkbox-item.checked .luxe-radio-dot::after {
-          display: block;
-        }
-
-        .luxe-tag-item {
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          padding: 8px 14px !important;
-          background-color: #fff !important;
-          border: 1px solid var(--border-soft) !important;
-          border-radius: 20px !important;
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: var(--dark-slate) !important;
-          cursor: pointer !important;
-          transition: all .2s ease !important;
-          user-select: none !important;
-          box-sizing: border-box !important;
-        }
-        .luxe-tag-item:hover, .luxe-tag-item.active {
-          border-color: var(--primary) !important;
-          background-color: var(--primary-light) !important;
-          color: var(--primary) !important;
-        }
-        .luxe-tag-item.active {
-          background-color: var(--primary) !important;
-          color: #fff !important;
-        }
 
         /* RESPONSIVE */
         @media (max-width: 1024px) {
@@ -1379,21 +1041,18 @@ export default function Home({ properties, initialError }) {
             height: 70px !important;
           }
           .modern-logo .logo-text { font-size: 18px !important; }
-          .modern-nav { display: none !important; }
-          .mobile-burger-btn { display: flex !important; }
           .hero-search-title { display: none !important; }
           .mobile-only-title {
             display: block !important;
             font-size: 20px !important;
             font-weight: 800 !important;
             color: #ffffff !important;
-            text-align: center !important;
-            margin-bottom: 20px !important;
+            text-align: center;
+            margin-bottom: 20px;
           }
           .hero-search-container {
             padding: 110px 20px 24px 20px !important;
             background: linear-gradient(180deg, #00A4A6 0%, #062228 100%) !important;
-            border-radius: 0 !important;
           }
           .search-tabs-header {
             justify-content: center !important;
@@ -1435,30 +1094,6 @@ export default function Home({ properties, initialError }) {
           }
           #catalog-content-wrapper {
             margin-left: 0 !important;
-          }
-          .catalog-control-bar {
-            display: none !important;
-          }
-          .v3-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .v3-col {
-            border-right: none !important;
-          }
-        }
-
-        @media (max-width: 576px) {
-          .v3-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .v3-footer {
-            padding: 40px 15px 25px 15px !important;
-          }
-          .v1-section {
-            padding: 30px 20px !important;
-          }
-          .v1-grid {
-            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
