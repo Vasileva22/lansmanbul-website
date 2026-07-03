@@ -1,4 +1,3 @@
-```jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
@@ -203,9 +202,10 @@ export default function Home({ properties, initialError }) {
                 const lat = parseFloat(parts[0].trim())
                 const lon = parseFloat(parts[1].trim())
                 if (!isNaN(lat) && !isNaN(lon)) {
+                  // ИСПРАВЛЕНО: Безопасное сложение строк вместо обратных кавычек
                   const placemark = new window.ymaps.Placemark([lat, lon], {
-                    balloonContentHeader: `<strong>${p.title}</strong>`,
-                    balloonContentBody: `${formatPriceVal(p.price)}`,
+                    balloonContentHeader: "<strong>" + p.title + "</strong>",
+                    balloonContentBody: formatPriceVal(p.price),
                     hintContent: p.title
                   }, {
                     preset: 'islands#dotIcon',
@@ -710,7 +710,7 @@ export default function Home({ properties, initialError }) {
                     LansmanBul ile <span>Yeni Nesil</span> Konut Keşfi
                   </h2>
                   <p className="v1-desc text-slate-500 text-sm mt-3 leading-relaxed">
-                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
+                    Türkiye'nin önde gelen inşaat firmalarını tek platformда topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
                   </p>
                 </div>
 
@@ -1331,6 +1331,3 @@ export async function getServerSideProps() {
     }
   }
 }
-```
-
----
