@@ -1,4 +1,3 @@
-```jsx
 import React, { useState, useMemo } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -121,11 +120,12 @@ export default function PropertyDetail({ property, initialError }) {
     }).filter(Boolean)
   }, [p.distances])
 
-  const waNum = p.whatsapp ? p.whatsapp.replace(/\D/g, '') : "905459418536"
-  const mainWaMessage = `Merhaba, LansmanBul platformunda yer alan ${p.title} projenizdeki ${p.rooms || 'daire'} tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?`
-  const planWaMessage = `Merhaba, LansmanBul platformunda yer alan ${p.title} projenizin ${p.rooms || 'daire'} planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?`
+  // ИСПРАВЛЕНО: Полностью удалены обратные кавычки, заменены на сложение строк
+  const waNum = p.whatsapp ? p.whatsapp.replace(/\D/g, "") : "905459418536"
+  const mainWaMessage = "Merhaba, LansmanBul platformunda yer alan " + p.title + " projenizdeki " + (p.rooms || "daire") + " tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?"
+  const planWaMessage = "Merhaba, LansmanBul platformunda yer alan " + p.title + " projenizin " + (p.rooms || "daire") + " planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?"
 
-  const badgeColor = p.status?.toLowerCase() === 'lansman' ? '#FF9800' : '#00A4A6'
+  const badgeColor = p.status?.toLowerCase() === "lansman" ? "#FF9800" : "#00A4A6"
 
   const handlePhotoClick = (index) => {
     setLightboxIndex(index)
@@ -145,7 +145,7 @@ export default function PropertyDetail({ property, initialError }) {
     <>
       <Head>
         <title>{p.title} — LansmanBul Proje Detayı</title>
-        <meta name="description" content={`${p.title} projesi Çankaya/Ankara. Detaylı bilgi, fiyatlar, kat planları og ödeme seçenekleri.`} />
+        <meta name="description" content={p.title + " projesi Çankaya/Ankara. Detaylı bilgi, fiyatlar, kat planları ve ödeme seçenekleri."} />
       </Head>
 
       <div className="projeland-card-container bg-gray-50 text-gray-800 antialiased min-h-screen relative pt-[90px] md:pt-[70px]">
@@ -167,11 +167,11 @@ export default function PropertyDetail({ property, initialError }) {
                 )}
                 <h1 className="text-3xl font-black text-gray-900 mt-2">{p.title}</h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
-                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
-                  <span className="break-words max-w-full">{p.address || `${p.district || 'Ankara'}`}</span>
+                  <span className="break-words max-w-full">{p.address || p.district || "Ankara"}</span>
                 </p>
               </div>
               
@@ -186,41 +186,41 @@ export default function PropertyDetail({ property, initialError }) {
             <div id="airbnb-gallery" className="airbnb-gallery w-full relative">
               {photoUrls.length === 1 && (
                 <div className="gallery-layout-1">
-                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[0]}')` }} />
+                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[0] + "')" }} />
                 </div>
               )}
 
               {photoUrls.length === 2 && (
                 <div className="gallery-layout-2">
-                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[0]}')` }} />
-                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[1]}')` }} />
+                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[0] + "')" }} />
+                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[1] + "')" }} />
                 </div>
               )}
 
               {photoUrls.length === 3 && (
                 <div className="gallery-layout-3">
-                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[0]}')` }} />
-                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[1]}')` }} />
-                  <div onClick={() => handlePhotoClick(2)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[2]}')` }} />
+                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[0] + "')" }} />
+                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[1] + "')" }} />
+                  <div onClick={() => handlePhotoClick(2)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[2] + "')" }} />
                 </div>
               )}
 
               {photoUrls.length === 4 && (
                 <div className="gallery-layout-4">
-                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[0]}')` }} />
-                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[1]}')` }} />
-                  <div onClick={() => handlePhotoClick(2)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[2]}')` }} />
-                  <div onClick={() => handlePhotoClick(3)} className="gallery-item" style={{ backgroundImage: `url('${photoUrls[3]}')` }} />
+                  <div onClick={() => handlePhotoClick(0)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[0] + "')" }} />
+                  <div onClick={() => handlePhotoClick(1)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[1] + "')" }} />
+                  <div onClick={() => handlePhotoClick(2)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[2] + "')" }} />
+                  <div onClick={() => handlePhotoClick(3)} className="gallery-item" style={{ backgroundImage: "url('" + photoUrls[3] + "')" }} />
                 </div>
               )}
 
               {photoUrls.length >= 5 && (
                 <div className="gallery-layout-5">
-                  <div onClick={() => handlePhotoClick(0)} className="gallery-item gallery-item-main" style={{ backgroundImage: `url('${photoUrls[0]}')` }} />
-                  <div onClick={() => handlePhotoClick(1)} className="gallery-item gallery-item-top-mid" style={{ backgroundImage: `url('${photoUrls[1]}')` }} />
-                  <div onClick={() => handlePhotoClick(2)} className="gallery-item gallery-item-top-right" style={{ backgroundImage: `url('${photoUrls[2]}')` }} />
-                  <div onClick={() => handlePhotoClick(3)} className="gallery-item gallery-item-bottom-mid" style={{ backgroundImage: `url('${photoUrls[3]}')` }} />
-                  <div onClick={() => handlePhotoClick(4)} className="gallery-item gallery-item-bottom-right relative" style={{ backgroundImage: `url('${photoUrls[4]}')` }}>
+                  <div onClick={() => handlePhotoClick(0)} className="gallery-item gallery-item-main" style={{ backgroundImage: "url('" + photoUrls[0] + "')" }} />
+                  <div onClick={() => handlePhotoClick(1)} className="gallery-item gallery-item-top-mid" style={{ backgroundImage: "url('" + photoUrls[1] + "')" }} />
+                  <div onClick={() => handlePhotoClick(2)} className="gallery-item gallery-item-top-right" style={{ backgroundImage: "url('" + photoUrls[2] + "')" }} />
+                  <div onClick={() => handlePhotoClick(3)} className="gallery-item gallery-item-bottom-mid" style={{ backgroundImage: "url('" + photoUrls[3] + "')" }} />
+                  <div onClick={() => handlePhotoClick(4)} className="gallery-item gallery-item-bottom-right relative" style={{ backgroundImage: "url('" + photoUrls[4] + "')" }}>
                     {photoUrls.length > 5 && (
                       <div className="gallery-overlay" onClick={(e) => { e.stopPropagation(); handlePhotoClick(4); }}>
                         <span className="gallery-overlay-text">+{photoUrls.length - 4}</span>
@@ -323,7 +323,7 @@ export default function PropertyDetail({ property, initialError }) {
 
                     <a 
                       id="whatsapp-plan-btn" 
-                      href={`https://wa.me/${waNum}?text=${encodeURIComponent(planWaMessage)}`} 
+                      href={"https://wa.me/" + waNum + "?text=" + encodeURIComponent(planWaMessage)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="mt-4 px-6 py-3.5 bg-[#00A4A6] hover:bg-[#00898B] rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-200 w-full md:w-auto uppercase tracking-wider"
@@ -339,13 +339,13 @@ export default function PropertyDetail({ property, initialError }) {
 
               {constructionUrls.length > 0 && (
                 <div id="block-construction" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2 id="construction-title">Şantiye Günlüğü {p.santiyeTarihi ? `(${p.santiyeTarihi})` : ''}</h2>
+                  <h2 id="construction-title">Şantiye Günlüğü {p.santiyeTarihi ? "(" + p.santiyeTarihi + ")" : ""}</h2>
                   <div className="grid grid-cols-2 gap-3" id="construction-photos">
                     {constructionUrls.slice(0, 2).map((url, idx) => (
                       <div 
                         key={idx} 
                         className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition construction-photo-item" 
-                        style={{ backgroundImage: `url('${url}')` }}
+                        style={{ backgroundImage: "url('" + url + "')" }}
                         onClick={() => handlePhotoClick(-2 - idx)}
                       />
                     ))}
@@ -386,7 +386,7 @@ export default function PropertyDetail({ property, initialError }) {
                     <span className="text-gray-500 font-medium mr-2">Kredi Durumu</span>
                     <span 
                       id="project-credit-status" 
-                      className={`font-bold text-right shrink-0 ${p.kredi?.toLowerCase().includes('uygun değil') ? 'text-red-500' : 'text-emerald-600'}`}
+                      className={"font-bold text-right shrink-0 " + (p.kredi?.toLowerCase().includes("uygun değil") ? "text-red-500" : "text-emerald-600")}
                     >
                       {p.kredi || "Krediye Uygun Değil"}
                     </span>
@@ -396,7 +396,7 @@ export default function PropertyDetail({ property, initialError }) {
                 <div className="space-y-2">
                   <a 
                     id="whatsapp-btn" 
-                    href={`https://wa.me/${waNum}?text=${encodeURIComponent(mainWaMessage)}`} 
+                    href={"https://wa.me/" + waNum + "?text=" + encodeURIComponent(mainWaMessage)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-full py-4 px-4 bg-[#00A4A6] hover:bg-[#00898B] rounded-xl flex items-center justify-center gap-3 shadow-sm transition-all duration-200"
@@ -663,4 +663,3 @@ export async function getServerSideProps(context) {
     }
   }
 }
-```
