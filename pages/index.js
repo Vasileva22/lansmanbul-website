@@ -269,7 +269,7 @@ export default function Home({ properties = [], initialError }) {
           <div style={{ padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '12px', textAlign: 'left', fontSize: '13px', color: '#374151' }}>
             <strong>💡 Detaylı Kontrol Adımları:</strong>
             <ul style={{ listStyleType: 'decimal', marginLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li><strong>RLS Policy:</strong> Перейдите во вкладку Authentication -> Policies в Supabase и разрешите публичный SELECT для <code>properties</code>.</li>
+              <li><strong>RLS Policy:</strong> Перейдите во вкладку Authentication → Policies в Supabase и разрешите публичный SELECT для <code>properties</code>.</li>
               <li><strong>Переменные .env:</strong> Убедитесь, что <code>.env.local</code> содержит правильные URL и Ключ.</li>
               <li>Если ошибка связана с импортом Supabase, проверьте файл <code>supabase.js</code>.</li>
             </ul>
@@ -872,7 +872,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
+                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
                   </div>
 
                   <div className="v1-card">
@@ -880,7 +880,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda только проверенные строительные компании с успешными кейсами и сильной репутацией.</p>
                   </div>
                 </div>
 
