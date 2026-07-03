@@ -1,4 +1,6 @@
+```jsx
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 
 const SVGS = {
   location: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
@@ -132,9 +134,9 @@ export default function PropertyCard({ property, layout }) {
           </div>
 
           <div className="actions">
-            <a href={`/stranickakartocki?id=${property.id}`} className="btn btn-outline detay-btn">
+            <Link href={`/properties/${property.id}`} className="btn btn-outline detay-btn">
               Detaylar
-            </a>
+            </Link>
             <a 
               href={`https://wa.me/${property.whatsapp ? property.whatsapp.replace(/\D/g,'') : '905459418536'}?text=${encodeURIComponent(`Merhaba, LansmanBul platformunda yer alan ${property.title} projenizdeki ${property.rooms || 'daire'} tipi ile ilgileniyorum. Bilgi alabilir miyim?`)}`} 
               target="_blank" 
@@ -147,7 +149,6 @@ export default function PropertyCard({ property, layout }) {
         </div>
       </div>
 
-      {/* КРИТИЧЕСКИ ВАЖНЫЕ СТИЛИ КАРТОЧЕК С ЖЕСТКИМ ОГРАНИЧЕНИЕМ СТРЕЛОК И ИКОНОК */}
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-card .slider-arrow {
           position: absolute !important;
@@ -187,3 +188,4 @@ export default function PropertyCard({ property, layout }) {
     </>
   )
 }
+```
