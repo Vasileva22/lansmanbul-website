@@ -8,20 +8,38 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
+// Функция безопасного преобразования строки ("havuz fitness" или "havuz, fitness") в массив
+const ensureArray = (val) => {
+  if (!val) return []
+  if (Array.isArray(val)) return val
+  if (typeof val === 'string') {
+    const clean = val.trim()
+    // Если слова записаны через запятую — делим по запятым
+    if (clean.includes(',')) {
+      return clean.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    // Если запятых нет, но есть пробелы — делим по пробелам
+    return clean.split(/\s+/).map(s => s.trim()).filter(Boolean)
+  }
+  return []
+}
+
 const mapProperty = (item) => {
+  if (!item) return {}
   const f = item.fields || item
   return {
-    id: item.id || item["Номер"] || '', // Безопасно связываем id с вашей колонкой "Номер"
-    title: f.title || f.testproje || f.adress || '', // Если названия нет, выводим адрес
+    id: item.id || item["Номер"] || '', // Связываем id с вашей колонкой "Номер"
+    title: f.title || f.testproje || f.adress || 'Başlıksız Proje', 
     price: f.price || f.Fiyat || 0,
     description: f.description || f["Açıklama"] || f.Aciklama || '',
     district: f.district || f.district_name || f["İlçe/Semt"] || '',
     rooms: f.rooms || f.card_odalar || f["card odalar"] || '',
     status: f.status || f.konutcesit || f.konut_cesit || '',
-    area: parseInt(f.area || f.card_area || f["card-area"]) || 0, // Безопасно берем площадь
-    images: f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"] || [],
+    area: parseInt(f.area || f.card_area || f["card-area"]) || 0, 
+    images: ensureArray(f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"]),
     whatsapp: f.whatsapp || f.WhatsApp || '',
-    amenities: f.amenities || f.ozellikler || f["Özellikler"] || [],
+    // Читаем особенности напрямую из вашей колонки "Siteiçerisinde"
+    amenities: ensureArray(f.Siteiçerisinde || f.Siteicerisinde || f.amenities || f.ozellikler || f["Özellikler"]),
     coordinates: f.coordinates || f["Koordinat"] || '',
     kat_sayisi: parseInt(f.kat_sayisi || f["Kat Sayısı"] || f.Kat_Sayisi || f.KatSayisi) || 0,
     kredi: f.kredi || f.kredi_durumu || f["Kredi_Durumu"] || f.Kredi_Durumu || '',
@@ -38,7 +56,7 @@ const SVGS = {
   list: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
 }
 
-export default function Home({ properties, initialError }) {
+export default function Home({ properties = [], initialError }) {
   const router = useRouter()
   const { status } = router.query
 
@@ -68,6 +86,7 @@ export default function Home({ properties, initialError }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
+  // Преобразуем сырые записи из базы данных через безопасную функцию mapProperty
   const mappedList = useMemo(() => (properties || []).map(mapProperty), [properties])
 
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
@@ -244,14 +263,15 @@ export default function Home({ properties, initialError }) {
   if (initialError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
-        <div style={{ padding: '24px', maxWidth: '600px' }}>
+        <div style={{ padding: '24px', maxWidth: '600px', fontFamily: 'sans-serif' }}>
           <p className="font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '22px', marginBottom: '8px' }}>Veri Yükleme Hatası</p>
           <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>{initialError}</p>
           <div style={{ padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '12px', textAlign: 'left', fontSize: '13px', color: '#374151' }}>
-            <strong>💡 Çözüm adımları:</strong>
+            <strong>💡 Detaylı Kontrol Adımları:</strong>
             <ul style={{ listStyleType: 'decimal', marginLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li>Supabase panelinizde <code>properties</code> tablosunda <strong>RLS Policy</strong> eklediğinizden emin olun (Enable read access policies).</li>
-              <li><code>.env.local</code> dosyasındaki bağlantı bilgilerinin doğruluğunu kontrol edin.</li>
+              <li><strong>RLS Policy:</strong> Перейдите во вкладку Authentication -> Policies в Supabase и разрешите публичный SELECT для <code>properties</code>.</li>
+              <li><strong>Переменные .env:</strong> Убедитесь, что <code>.env.local</code> содержит правильные URL и Ключ.</li>
+              <li>Если ошибка связана с импортом Supabase, проверьте файл <code>supabase.js</code>.</li>
             </ul>
           </div>
         </div>
@@ -852,7 +872,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
                   </div>
 
                   <div className="v1-card">
@@ -904,6 +924,14 @@ export default function Home({ properties, initialError }) {
         .tilda-catalog-wrapper, .tilda-catalog-wrapper * {
           font-family: 'Mulish', sans-serif !important;
           box-sizing: border-box !important;
+        }
+
+        /* ПОЛНОЕ СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ НА ДЕСКТОПЕ */
+        .dropdown-mobile-header, .dropdown-mobile-footer {
+          display: none !important;
+        }
+        .mobile-filter-floating-btn {
+          display: none !important;
         }
 
         /* ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
@@ -1982,7 +2010,6 @@ export default function Home({ properties, initialError }) {
           }
           .search-inputs-row-wrapper {
             flex-direction: column !important;
-            gap: 12px !important;
           }
           .search-inputs-row {
             display: grid !important;
@@ -2221,7 +2248,7 @@ export async function getServerSideProps() {
       .from('properties')
       .select('*')
 
-    // Безопасная сортировка записей на стороне сервера Next.js
+    // Безопасная сортировка записей на сервере Next.js
     const sortedProperties = properties ? [...properties].sort((a, b) => {
       const idA = parseInt(a.id || a["Номер"]) || 0;
       const idB = parseInt(b.id || b["Номер"]) || 0;
@@ -2242,7 +2269,6 @@ export async function getServerSideProps() {
     }
   } catch (err) {
     console.error('❌ Supabase Veri Cekme Hatasi:', err);
-    // Безопасное чтение сообщения об ошибке
     const errMsg = err && typeof err === 'object' ? err.message || JSON.stringify(err) : String(err);
     return {
       props: {
