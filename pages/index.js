@@ -1,3 +1,4 @@
+```jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
@@ -46,7 +47,7 @@ export default function Home({ properties, initialError }) {
   const [layout, setLayout] = useState('grid')
 
   // Фильтры и селекторы поиска в Hero
-  const [activeHeroDropdown, setActiveHeroDropdown] = useState(null) // 'location' | 'room' | 'status'
+  const [activeHeroDropdown, setActiveHeroDropdown] = useState(null)
   const [selectedDistricts, setSelectedDistricts] = useState([])
   const [selectedRooms, setSelectedRooms] = useState([])
   const [selectedStatuses, setSelectedStatuses] = useState([])
@@ -54,7 +55,7 @@ export default function Home({ properties, initialError }) {
   // Строка поиска внутри выпадающего списка районов
   const [searchDistrictQuery, setSearchDistrictQuery] = useState('')
 
-  // Слайдеры-диапазоны Сайдбара (Числа)
+  // Слайдеры-диапазоны Сайдбара
   const [minArea, setMinArea] = useState(0)
   const [maxArea, setMaxArea] = useState(500)
   const [minFloor, setMinFloor] = useState(0)
@@ -111,7 +112,7 @@ export default function Home({ properties, initialError }) {
     return () => window.removeEventListener('click', handleOutsideClick)
   }, [])
 
-  // Реагирование на изменение URL (через Shallow Router Шапки/Подвала)
+  // Реагирование на изменение URL
   useEffect(() => {
     if (status) {
       setSelectedStatuses([status])
@@ -176,6 +177,12 @@ export default function Home({ properties, initialError }) {
     }
   }
 
+  const formatPriceVal = (val) => {
+    if (!val) return "";
+    let numOnly = String(val).replace(/[^0-9]/g, "");
+    return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
+  }
+
   // Обновление Яндекс Карт
   const initMap = () => {
     if (typeof window !== 'undefined' && window.ymaps) {
@@ -198,7 +205,7 @@ export default function Home({ properties, initialError }) {
                 if (!isNaN(lat) && !isNaN(lon)) {
                   const placemark = new window.ymaps.Placemark([lat, lon], {
                     balloonContentHeader: `<strong>${p.title}</strong>`,
-                    balloonContentBody: `${formatPrice(p.price)}`,
+                    balloonContentBody: `${formatPriceVal(p.price)}`,
                     hintContent: p.title
                   }, {
                     preset: 'islands#dotIcon',
@@ -299,11 +306,11 @@ export default function Home({ properties, initialError }) {
               </div>
 
               <div className="search-inputs-row-wrapper mt-4">
-                <div className="search-inputs-row grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                <div className="search-inputs-row">
                   
                   {/* Район */}
                   <div 
-                    className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'location' ? 'active-field' : ''} ${selectedDistricts.length > 0 ? 'has-value' : ''}`}
+                    className={`search-input-field flex-wide field-trigger-location ${activeHeroDropdown === 'location' ? 'active-field' : ''} ${selectedDistricts.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'location' ? null : 'location') }}
                   >
                     {SVGS.location}
@@ -365,7 +372,7 @@ export default function Home({ properties, initialError }) {
 
                   {/* Комнатность */}
                   <div 
-                    className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'room' ? 'active-field' : ''} ${selectedRooms.length > 0 ? 'has-value' : ''}`}
+                    className={`search-input-field flex-standard field-trigger-room ${activeHeroDropdown === 'room' ? 'active-field' : ''} ${selectedRooms.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'room' ? null : 'room') }}
                   >
                     {SVGS.bed}
@@ -417,7 +424,7 @@ export default function Home({ properties, initialError }) {
 
                   {/* Статус */}
                   <div 
-                    className={`search-input-field flex items-center gap-3 relative ${activeHeroDropdown === 'status' ? 'active-field' : ''} ${selectedStatuses.length > 0 ? 'has-value' : ''}`}
+                    className={`search-input-field flex-standard field-trigger-durum ${activeHeroDropdown === 'status' ? 'active-field' : ''} ${selectedStatuses.length > 0 ? 'has-value' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'status' ? null : 'status') }}
                   >
                     <svg className="input-icon-svg icon-stroke w-5 h-5 fill-none stroke-slate-400 stroke-[2]" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
@@ -469,7 +476,7 @@ export default function Home({ properties, initialError }) {
 
                 </div>
 
-                <button onClick={handleSearchSubmit} className="search-submit-btn w-full md:w-auto shrink-0 py-4 px-8 bg-[#00A4A6] hover:bg-[#00898B] text-white rounded-full font-extrabold text-lg transition duration-200 shadow-md">
+                <button onClick={handleSearchSubmit} className="search-submit-btn">
                   Ara
                 </button>
               </div>
@@ -754,10 +761,7 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* 
-        ИСПОЛЬЗУЕМ dangerouslySetInnerHTML ДЛЯ ВНЕДРЕНИЯ КРИТИЧЕСКИХ СТИЛЕЙ.
-        Этот подход гарантирует 100% запуск стилей из Tilda в React без конфликтов с бандлом Next.js.
-      */}
+      {/* ОРИГИНАЛЬНЫЙ CSS С ПЛАТФОРМЫ TILDA С ПОЛНОЙ АДАПТИВНОСТЬЮ И СЕТКАМИ */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -773,12 +777,13 @@ export default function Home({ properties, initialError }) {
           --radius-bubble: 36px;
         }
 
-        body {
+        body, html {
           font-family: 'Mulish', sans-serif !important;
           background-color: #ffffff;
+          overflow-x: hidden !important;
+          width: 100% !important;
         }
 
-        /* ----- ИСПРАВЛЕНИЕ СЕТКИ И НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ ----- */
         @media (min-width: 1025px) {
           #custom-catalog-search {
             display: flex !important;
@@ -809,7 +814,6 @@ export default function Home({ properties, initialError }) {
           }
         }
 
-        /* ----- ИСПРАВЛЕНИЕ ОТОБРАЖЕНИЯ И ВИДИМОСТИ ДРОПДАУНОВ ----- */
         @media (min-width: 1025px) {
           .search-panel-card, 
           .search-inputs-row-wrapper, 
@@ -852,44 +856,13 @@ export default function Home({ properties, initialError }) {
           }
         }
 
-        /* ОРИГИНАЛЬНЫЕ ШАБЛОННЫЕ КЛАССЫ ИЗ ВЕРСТКИ ТИЛЬДЫ */
-        .modern-header {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 90px !important;
-          background-color: #ffffff !important;
-          border-bottom: 1px solid #E2E8F0 !important;
-          z-index: 99999 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
-        }
-        .header-container {
-          width: 100% !important;
-          max-width: 1200px !important;
-          padding: 0 20px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-        }
-        .modern-logo { display: flex !important; align-items: center !important; text-decoration: none !important; gap: 10px !important; }
-        .logo-icon-box {
-          width: 40px !important; height: 40px !important; background-color: rgba(0, 164, 166, 0.08) !important; border-radius: 10px !important;
-          display: flex !important; align-items: center !important; justify-content: center !important; color: var(--primary) !important;
-        }
-        .logo-icon-svg { width: 22px !important; height: 22px !important; fill: currentColor !important; }
-        .logo-text { font-size: 20px !important; font-weight: 500 !important; color: var(--dark-slate) !important; letter-spacing: -0.5px !important; }
-        .logo-text-accent { color: var(--primary) !important; font-weight: 900 !important; }
-
         .hero-search-container {
           width: 100%;
           padding: 125px 20px 25px 20px;
           background-color: var(--bg-light);
           display: flex;
           justify-content: center;
+          box-sizing: border-box;
         }
         .search-width-limiter {
           width: 100%;
@@ -957,6 +930,12 @@ export default function Home({ properties, initialError }) {
           width: 100%;
           align-items: center;
         }
+        .search-inputs-row {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          flex: 1;
+        }
         .search-input-field {
           display: flex;
           align-items: center;
@@ -969,12 +948,16 @@ export default function Home({ properties, initialError }) {
           transition: border-color .2s, background-color .2s, box-shadow .2s;
           cursor: pointer;
           user-select: none;
+          box-sizing: border-box;
         }
         .search-input-field:hover, .search-input-field.active-field {
           border-color: var(--primary) !important;
           background-color: #fff !important;
           box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;
         }
+        .search-input-field.flex-wide { flex: 1.5 !important; }
+        .search-input-field.flex-standard { flex: 1 !important; }
+
         .input-double-label {
           display: flex;
           flex-direction: column;
@@ -1191,7 +1174,26 @@ export default function Home({ properties, initialError }) {
           .search-tabs-header {
             justify-content: center !important;
             gap: 8px !important;
+            margin-bottom: 16px !important;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
           }
+          .city-tab-item {
+            padding: 8px 16px !important;
+            border-radius: 20px !important;
+            background-color: rgba(255,255,255,0.12) !important;
+            color: #fff !important;
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            margin-bottom: 0 !important;
+          }
+          .city-tab-item.active {
+            background-color: #fff !important;
+            color: var(--primary) !important;
+          }
+          .city-tab-item.active::after { display: none !important; }
+          .city-tab-item.disabled { display: none !important; }
+
           .search-panel-card {
             border: none !important;
             box-shadow: none !important;
@@ -1200,11 +1202,80 @@ export default function Home({ properties, initialError }) {
           }
           .search-inputs-row-wrapper {
             flex-direction: column !important;
+            gap: 12px !important;
+          }
+          .search-inputs-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-rows: auto auto !important;
+            gap: 0 !important;
+            border: 1px solid var(--border-soft) !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            background-color: #fff !important;
+            width: 368px !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            margin: 0 auto !important;
           }
           .search-input-field {
             background-color: #fff !important;
+            border: none !important;
+            border-radius: 0 !important;
+            height: 44px !important;
+            padding: 0 12px !important;
             width: 100% !important;
+            box-shadow: none !important;
           }
+          .field-trigger-location {
+            grid-column: span 2 !important;
+            border-bottom: 1px solid var(--border-soft) !important;
+          }
+          .field-trigger-room {
+            grid-column: span 1 !important;
+            border-right: 1px solid var(--border-soft) !important;
+          }
+          .field-trigger-durum {
+            grid-column: span 1 !important;
+          }
+
+          .input-double-label {
+            position: relative !important;
+            height: 100% !important;
+          }
+          .input-double-label .sub-label {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 15px !important;
+            text-transform: none !important;
+            font-weight: 600 !important;
+            transition: opacity 0.25s ease !important;
+          }
+          .input-double-label .main-label {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            opacity: 0 !important;
+            transition: opacity 0.25s ease !important;
+          }
+          .search-input-field.has-value .input-double-label .sub-label {
+            opacity: 0 !important;
+          }
+          .search-input-field.has-value .input-double-label .main-label {
+            opacity: 1 !important;
+          }
+
+          .search-submit-btn {
+            width: 368px !important;
+            max-width: 100% !important;
+            height: 48px !important;
+            margin-top: 12px !important;
+            border-radius: 12px !important;
+          }
+
           .luxe-sidebar {
             position: fixed !important;
             top: 0 !important;
@@ -1235,7 +1306,6 @@ export default function Home({ properties, initialError }) {
   )
 }
 
-// Запрос к Supabase
 export async function getServerSideProps() {
   try {
     const { data: properties, error } = await supabase
@@ -1261,3 +1331,6 @@ export async function getServerSideProps() {
     }
   }
 }
+```
+
+---
