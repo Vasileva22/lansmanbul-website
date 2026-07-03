@@ -11,14 +11,14 @@ import PropertyCard from '../components/PropertyCard'
 const mapProperty = (item) => {
   const f = item.fields || item
   return {
-    id: item.id || item["Номер"] || '', // Читаем ID из вашей колонки "Номер"
-    title: f.title || f.testproje || f.adress || '', // Если названия нет, берем адрес из базы
+    id: item.id || item["Номер"] || '', // Безопасно связываем id с вашей колонкой "Номер"
+    title: f.title || f.testproje || f.adress || '', // Если названия нет, выводим адрес
     price: f.price || f.Fiyat || 0,
     description: f.description || f["Açıklama"] || f.Aciklama || '',
     district: f.district || f.district_name || f["İlçe/Semt"] || '',
     rooms: f.rooms || f.card_odalar || f["card odalar"] || '',
     status: f.status || f.konutcesit || f.konut_cesit || '',
-    area: parseInt(f.area || f.card_area || f["card-area"]) || 0, // Читаем площадь из вашей колонки "card-area"
+    area: parseInt(f.area || f.card_area || f["card-area"]) || 0, // Безопасно берем площадь
     images: f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"] || [],
     whatsapp: f.whatsapp || f.WhatsApp || '',
     amenities: f.amenities || f.ozellikler || f["Özellikler"] || [],
@@ -68,7 +68,7 @@ export default function Home({ properties, initialError }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
-  const mappedList = useMemo(() => properties.map(mapProperty), [properties])
+  const mappedList = useMemo(() => (properties || []).map(mapProperty), [properties])
 
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
   const roomOptions = useMemo(() => [...new Set(mappedList.map(p => p.rooms).filter(Boolean))].sort(), [mappedList])
@@ -244,10 +244,16 @@ export default function Home({ properties, initialError }) {
   if (initialError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
-        <div>
-          <p className="text-red-500 font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '20px' }}>Veri Yükleme Hatası (Supabase Bağlantı Hatası)</p>
-          <p className="text-gray-500 text-sm mt-1" style={{ color: '#6b7280', fontSize: '14px', marginTop: '8px' }}>{initialError}</p>
-          <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '12px' }}>Lütfen .env.local dosyasındaki Supabase anahtarlarınızı и таблицу properties проверьте.</p>
+        <div style={{ padding: '24px', maxWidth: '600px' }}>
+          <p className="font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '22px', marginBottom: '8px' }}>Veri Yükleme Hatası</p>
+          <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>{initialError}</p>
+          <div style={{ padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '12px', textAlign: 'left', fontSize: '13px', color: '#374151' }}>
+            <strong>💡 Çözüm adımları:</strong>
+            <ul style={{ listStyleType: 'decimal', marginLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li>Supabase panelinizde <code>properties</code> tablosunda <strong>RLS Policy</strong> eklediğinizden emin olun (Enable read access policies).</li>
+              <li><code>.env.local</code> dosyasındaki bağlantı bilgilerinin doğruluğunu kontrol edin.</li>
+            </ul>
+          </div>
         </div>
       </div>
     )
@@ -360,7 +366,7 @@ export default function Home({ properties, initialError }) {
                             </div>
                           ))
                         ) : (
-                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı (Supabase boş).</div>
+                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı.</div>
                         )}
                       </div>
                       <div className="dropdown-mobile-footer">
@@ -828,7 +834,7 @@ export default function Home({ properties, initialError }) {
                     LansmanBul ile <span>Yeni Nesil</span> Konut Keşfi
                   </h2>
                   <p className="v1-desc text-slate-500 text-sm mt-3 leading-relaxed">
-                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı洍 sağlıyoruz.
+                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
                   </p>
                 </div>
 
@@ -854,7 +860,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -898,14 +904,6 @@ export default function Home({ properties, initialError }) {
         .tilda-catalog-wrapper, .tilda-catalog-wrapper * {
           font-family: 'Mulish', sans-serif !important;
           box-sizing: border-box !important;
-        }
-
-        /* ПОЛНОЕ СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ НА ДЕСКТОПЕ */
-        .dropdown-mobile-header, .dropdown-mobile-footer {
-          display: none !important;
-        }
-        .mobile-filter-floating-btn {
-          display: none !important;
         }
 
         /* ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
@@ -1074,6 +1072,14 @@ export default function Home({ properties, initialError }) {
             display: none !important;
           }
           .sidebar-mobile-close-btn {
+            display: none !important;
+          }
+          
+          /* СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ В ВЫПАДАЮЩЕМ СПИСКЕ НА ПК */
+          .dropdown-mobile-header {
+            display: none !important;
+          }
+          .dropdown-mobile-footer {
             display: none !important;
           }
         }
@@ -2214,26 +2220,34 @@ export async function getServerSideProps() {
     const { data: properties, error } = await supabase
       .from('properties')
       .select('*')
-      .order('id', { ascending: false })
+
+    // Безопасная сортировка записей на стороне сервера Next.js
+    const sortedProperties = properties ? [...properties].sort((a, b) => {
+      const idA = parseInt(a.id || a["Номер"]) || 0;
+      const idB = parseInt(b.id || b["Номер"]) || 0;
+      return idB - idA;
+    }) : [];
 
     console.log("=== DEBUG SUPABASE DATA FETCHING ===");
-    console.log("Returned Rows count:", properties ? properties.length : 0);
+    console.log("Returned Rows count:", sortedProperties.length);
     console.log("Returned Error:", error);
 
     if (error) throw error
 
     return {
       props: {
-        properties: properties || [],
+        properties: sortedProperties,
         initialError: null,
       },
     }
   } catch (err) {
-    console.error('❌ Supabase Veri Cekme Hatasi:', err.message)
+    console.error('❌ Supabase Veri Cekme Hatasi:', err);
+    // Безопасное чтение сообщения об ошибке
+    const errMsg = err && typeof err === 'object' ? err.message || JSON.stringify(err) : String(err);
     return {
       props: {
         properties: [],
-        initialError: err.message || 'Supabase connection failed',
+        initialError: errMsg || 'Supabase connection failed',
       },
     }
   }
