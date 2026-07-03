@@ -1,4 +1,3 @@
-```jsx
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 
@@ -58,6 +57,11 @@ export default function PropertyCard({ property, layout }) {
 
   const badgeColor = property.status?.toLowerCase() === 'lansman' ? '#FF9800' : 'var(--primary)'
 
+  // ИСПРАВЛЕНО: Безопасное формирование ссылок вместо обратных кавычек
+  const waCleanNum = property.whatsapp ? property.whatsapp.replace(/\D/g, "") : "905459418536"
+  const waMsgText = "Merhaba, LansmanBul platformunda yer alan " + property.title + " projenizdeki " + (property.rooms || "daire") + " tipi ile ilgileniyorum. Bilgi alabilir miyim?"
+  const waLink = "https://wa.me/" + waCleanNum + "?text=" + encodeURIComponent(waMsgText)
+
   return (
     <>
       <div className="custom-card" data-id={property.id}>
@@ -66,7 +70,7 @@ export default function PropertyCard({ property, layout }) {
             <div className="w-full h-full relative group">
               <div 
                 className="w-full h-full bg-cover bg-center transition-all duration-300"
-                style={{ backgroundImage: `url('${photoUrls[currentSlide]}')` }}
+                style={{ backgroundImage: "url('" + photoUrls[currentSlide] + "')" }}
               />
               {photoUrls.length > 1 && (
                 <>
@@ -78,7 +82,7 @@ export default function PropertyCard({ property, layout }) {
           ) : (
             <div 
               className="w-full h-full bg-cover bg-center"
-              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')` }}
+              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')" }}
             />
           )}
           
@@ -134,11 +138,11 @@ export default function PropertyCard({ property, layout }) {
           </div>
 
           <div className="actions">
-            <Link href={`/properties/${property.id}`} className="btn btn-outline detay-btn">
+            <Link href={"/properties/" + property.id} className="btn btn-outline detay-btn">
               Detaylar
             </Link>
             <a 
-              href={`https://wa.me/${property.whatsapp ? property.whatsapp.replace(/\D/g,'') : '905459418536'}?text=${encodeURIComponent(`Merhaba, LansmanBul platformunda yer alan ${property.title} projenizdeki ${property.rooms || 'daire'} tipi ile ilgileniyorum. Bilgi alabilir miyim?`)}`} 
+              href={waLink} 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary wa-btn"
@@ -149,43 +153,7 @@ export default function PropertyCard({ property, layout }) {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .custom-card .slider-arrow {
-          position: absolute !important;
-          top: 50% !important;
-          transform: translateY(-50%) !important;
-          background: rgba(0, 164, 166, 0.85) !important;
-          color: #fff !important;
-          border: none !important;
-          width: 34px !important;
-          height: 34px !important;
-          border-radius: 50% !important;
-          cursor: pointer !important;
-          opacity: 0.8 !important;
-          transition: opacity 0.2s ease, background-color 0.2s ease !important;
-          z-index: 99 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          font-size: 15px !important;
-          font-weight: 900 !important;
-          user-select: none;
-        }
-        .custom-card .slider-arrow.arrow-left { left: 8px !important; }
-        .custom-card .slider-arrow.arrow-right { right: 8px !important; }
-        .custom-card:hover .slider-arrow { opacity: 1 !important; background: var(--primary) !important; }
-
-        .card-svg-icon {
-          width: 14px !important;
-          height: 14px !important;
-          fill: currentColor !important;
-          display: inline-block !important;
-          vertical-align: middle !important;
-          margin-right: 5px !important;
-          flex-shrink: 0 !important;
-        }
-      ` }} />
+      <style dangerouslySetInnerHTML={{ __html: ".custom-card .slider-arrow { position: absolute !important; top: 50% !important; transform: translateY(-50%) !important; background: rgba(0, 164, 166, 0.85) !important; color: #fff !important; border: none !important; width: 34px !important; height: 34px !important; border-radius: 50% !important; cursor: pointer !important; opacity: 0.8 !important; transition: opacity 0.2s ease, background-color 0.2s ease !important; z-index: 99 !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 15px !important; font-weight: 900 !important; user-select: none; } .custom-card .slider-arrow.arrow-left { left: 8px !important; } .custom-card .slider-arrow.arrow-right { right: 8px !important; } .custom-card:hover .slider-arrow { opacity: 1 !important; background: var(--primary) !important; } .card-svg-icon { width: 14px !important; height: 14px !important; fill: currentColor !important; display: inline-block !important; vertical-align: middle !important; margin-right: 5px !important; flex-shrink: 0 !important; }" }} />
     </>
   )
 }
-```
