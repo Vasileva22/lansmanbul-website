@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
 import { useRouter } from 'next/router'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../supabase'
 
 // Импортируем созданные компоненты
 import Header from '../components/Header'
