@@ -1,3 +1,4 @@
+```jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
@@ -8,17 +9,14 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Функция безопасного преобразования строки ("havuz fitness" или "havuz, fitness") в массив
 const ensureArray = (val) => {
   if (!val) return []
   if (Array.isArray(val)) return val
   if (typeof val === 'string') {
     const clean = val.trim()
-    // Если слова записаны через запятую — делим по запятым
     if (clean.includes(',')) {
       return clean.split(',').map(s => s.trim()).filter(Boolean)
     }
-    // Если запятых нет, но есть пробелы — делим по пробелам
     return clean.split(/\s+/).map(s => s.trim()).filter(Boolean)
   }
   return []
@@ -28,7 +26,7 @@ const mapProperty = (item) => {
   if (!item) return {}
   const f = item.fields || item
   return {
-    id: item.id || item["Номер"] || '', // Связываем id с вашей колонкой "Номер"
+    id: item.id || item["Номер"] || '',
     title: f.title || f.testproje || f.adress || 'Başlıksız Proje', 
     price: f.price || f.Fiyat || 0,
     description: f.description || f["Açıklama"] || f.Aciklama || '',
@@ -38,7 +36,6 @@ const mapProperty = (item) => {
     area: parseInt(f.area || f.card_area || f["card-area"]) || 0, 
     images: ensureArray(f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"]),
     whatsapp: f.whatsapp || f.WhatsApp || '',
-    // Читаем особенности напрямую из вашей колонки "Siteiçerisinde"
     amenities: ensureArray(f.Siteiçerisinde || f.Siteicerisinde || f.amenities || f.ozellikler || f["Özellikler"]),
     coordinates: f.coordinates || f["Koordinat"] || '',
     kat_sayisi: parseInt(f.kat_sayisi || f["Kat Sayısı"] || f.Kat_Sayisi || f.KatSayisi) || 0,
@@ -80,13 +77,14 @@ export default function Home({ properties = [], initialError }) {
   const [selectedPayments, setSelectedPayments] = useState([])
 
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false)
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false) // Новое состояние для скрытия сайдбара на десктопе
+  
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = useMemo(() => (layout === 'grid' ? 12 : 8), [layout])
 
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
-  // Преобразуем сырые записи из базы данных через безопасную функцию mapProperty
   const mappedList = useMemo(() => (properties || []).map(mapProperty), [properties])
 
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
@@ -266,14 +264,6 @@ export default function Home({ properties = [], initialError }) {
         <div style={{ padding: '24px', maxWidth: '600px', fontFamily: 'sans-serif' }}>
           <p className="font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '22px', marginBottom: '8px' }}>Veri Yükleme Hatası</p>
           <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>{initialError}</p>
-          <div style={{ padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '12px', textAlign: 'left', fontSize: '13px', color: '#374151' }}>
-            <strong>💡 Detaylı Kontrol Adımları:</strong>
-            <ul style={{ listStyleType: 'decimal', marginLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <li><strong>RLS Policy:</strong> Перейдите во вкладку Authentication → Policies в Supabase и разрешите публичный SELECT для <code>properties</code>.</li>
-              <li><strong>Переменные .env:</strong> Убедитесь, что <code>.env.local</code> содержит правильные URL и Ключ.</li>
-              <li>Если ошибка связана с импортом Supabase, проверьте файл <code>supabase.js</code>.</li>
-            </ul>
-          </div>
         </div>
       </div>
     )
@@ -282,8 +272,8 @@ export default function Home({ properties = [], initialError }) {
   return (
     <>
       <Head>
-        <title>LansmanBul — Агрегатор недвижимости в Анкаре</title>
-        <meta name="description" content="Поиск и анализ запусков недвижимости в Анкаре напрямую от застройщиков." />
+        <title>LansmanBul — Ankara Konut Projeleri</title>
+        <meta name="description" content="Komisyonsuz, doğrudan müteahhitten konut keşfedin." />
       </Head>
 
       <Script 
@@ -294,10 +284,9 @@ export default function Home({ properties = [], initialError }) {
 
       <div className="bg-white min-h-screen relative text-slate-800 pt-[90px] md:pt-[90px] tilda-catalog-wrapper">
         
-        {/* ШАПКА */}
         <Header />
 
-        {/* Задний фон на мобильных для списков */}
+        {/* Gray Backdrop Overlay — Срабатывает только на мобильных за счет CSS block/hidden */}
         <div 
           className={`modal-backdrop-overlay ${activeHeroDropdown !== null || isSidebarMobileOpen ? 'show' : ''}`} 
           onClick={() => { setActiveHeroDropdown(null); setIsSidebarMobileOpen(false); }} 
@@ -363,10 +352,10 @@ export default function Home({ properties = [], initialError }) {
                         {SVGS.search}
                       </div>
                       <div 
-                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        className="dropdown-select-all"
                         onClick={() => handleSelectAll(districtOptions, selectedDistricts, setSelectedDistricts)}
                       >
-                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                        <span className="dropdown-select-all-text">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
                         {filteredDistrictOptions.length > 0 ? (
@@ -419,10 +408,10 @@ export default function Home({ properties = [], initialError }) {
                         <span className="dropdown-mobile-close" onClick={() => setActiveHeroDropdown(null)}>&times;</span>
                       </div>
                       <div 
-                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        className="dropdown-select-all"
                         onClick={() => handleSelectAll(roomOptions, selectedRooms, setSelectedRooms)}
                       >
-                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                        <span className="dropdown-select-all-text">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
                         {roomOptions.length > 0 ? (
@@ -475,10 +464,10 @@ export default function Home({ properties = [], initialError }) {
                         <span className="dropdown-mobile-close" onClick={() => setActiveHeroDropdown(null)}>&times;</span>
                       </div>
                       <div 
-                        className="dropdown-select-all flex justify-between py-1.5 px-2 hover:bg-slate-50 rounded cursor-pointer"
+                        className="dropdown-select-all"
                         onClick={() => handleSelectAll(statusOptions, selectedStatuses, setSelectedStatuses)}
                       >
-                        <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
+                        <span className="dropdown-select-all-text">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
                         {statusOptions.length > 0 ? (
@@ -530,41 +519,41 @@ export default function Home({ properties = [], initialError }) {
           <div className={`sidebar-mobile-overlay ${isSidebarMobileOpen ? 'show' : ''}`} onClick={() => setIsSidebarMobileOpen(false)} />
 
           {/* САЙДБАP (ФИЛЬТРЫ) */}
-          <aside className={`luxe-sidebar ${isSidebarMobileOpen ? 'sidebar-mobile-show' : ''}`} id="custom-sidebar">
+          <aside className={`luxe-sidebar ${isSidebarMobileOpen ? 'sidebar-mobile-show' : ''} ${isSidebarHidden ? 'sidebar-hidden' : ''}`} id="custom-sidebar">
             <span className="sidebar-mobile-close-btn" onClick={() => setIsSidebarMobileOpen(false)}>&times;</span>
             
             <div className="luxe-sidebar-scrollable-body">
               <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map mb-4 bg-slate-100 rounded-xl" />
               
-              <div className="luxe-sidebar-header flex justify-between items-center">
-                <div className="luxe-sidebar-sub-count text-sm text-slate-500 font-semibold">
-                  <span className="orange-count text-orange-500 font-black">{filteredProperties.length} Proje</span> Listeleniyor
+              <div className="luxe-sidebar-header">
+                <div className="luxe-sidebar-sub-count">
+                  <span className="orange-count"><span id="live-proj-count">{filteredProperties.length}</span> Proje</span> Listeleniyor
                 </div>
-                <span onClick={() => handleResetFilters()} className="clear-filters-btn clear-link text-xs font-bold text-[#00A4A6] hover:text-[#00898B] underline cursor-pointer">
-                  Temizle
+                <span onClick={() => handleResetFilters()} className="clear-link clear-filters-btn">
+                  Filtreleri Temizle
                 </span>
               </div>
               <div className="luxe-divider" />
 
               {/* МЕТРАЖ С ДВОЙНЫМ СЛАЙДЕРОМ */}
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Metrekare (m²)</span>
-                <div className="luxe-range-inputs-row flex gap-2 items-center mb-3">
+                <span className="luxe-group-label">Metrekare (m²)</span>
+                <div className="luxe-range-inputs-row">
                   <input 
                     type="number" 
                     value={minArea} 
                     onChange={(e) => { setMinArea(Math.max(0, parseInt(e.target.value) || 0)); setCurrentPage(1); }}
-                    className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                    className="luxe-oval-input"
                   />
-                  <span className="luxe-range-separator text-gray-400">—</span>
+                  <span className="luxe-range-separator">—</span>
                   <input 
                     type="number" 
                     value={maxArea} 
                     onChange={(e) => { setMaxArea(Math.min(500, parseInt(e.target.value) || 500)); setCurrentPage(1); }}
-                    className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                    className="luxe-oval-input"
                   />
                 </div>
-                {/* Двойной диапазон */}
+                
                 <div className="dual-range-slider-container">
                   <div 
                     className="dual-range-track"
@@ -601,23 +590,23 @@ export default function Home({ properties = [], initialError }) {
 
               {/* ЭТАЖНОСТЬ */}
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Kat sayısı</span>
-                <div className="luxe-range-inputs-row flex gap-2 items-center mb-3">
+                <span className="luxe-group-label">Kat sayısı</span>
+                <div className="luxe-range-inputs-row">
                   <input 
                     type="number" 
                     value={minFloor} 
                     onChange={(e) => { setMinFloor(Math.max(0, parseInt(e.target.value) || 0)); setCurrentPage(1); }}
-                    className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                    className="luxe-oval-input"
                   />
-                  <span className="luxe-range-separator text-gray-400">—</span>
+                  <span className="luxe-range-separator">—</span>
                   <input 
                     type="number" 
                     value={maxFloor} 
                     onChange={(e) => { setMaxFloor(Math.min(40, parseInt(e.target.value) || 40)); setCurrentPage(1); }}
-                    className="luxe-oval-input w-24 text-center border rounded-full py-1 text-sm font-semibold"
+                    className="luxe-oval-input"
                   />
                 </div>
-                {/* Двойной диапазон этажей */}
+                
                 <div className="dual-range-slider-container">
                   <div 
                     className="dual-range-track"
@@ -654,12 +643,11 @@ export default function Home({ properties = [], initialError }) {
 
               {/* ЦЕНЫ */}
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Fiyat</span>
-                <div className="price-live-display text-sm font-bold text-[#00A4A6] mb-3">
+                <span className="luxe-group-label">Fiyat</span>
+                <div className="price-live-display">
                   <span>{minPrice.toLocaleString('tr-TR')} TL</span> — <span>{maxPrice.toLocaleString('tr-TR')} TL</span>
                 </div>
                 
-                {/* Слайдер цены */}
                 <div className="dual-range-slider-container">
                   <div 
                     className="dual-range-track"
@@ -694,10 +682,10 @@ export default function Home({ properties = [], initialError }) {
                   />
                 </div>
 
-                <div className="price-inputs-container flex flex-col gap-3">
-                  <div className="price-input-box border rounded-lg p-2 bg-slate-50 flex flex-col gap-1">
-                    <span className="price-box-label text-[10px] text-slate-400 font-bold">En Düşük</span>
-                    <div className="price-box-input-wrap flex justify-between items-center text-sm font-bold text-slate-600">
+                <div className="price-inputs-container">
+                  <div className="price-input-box">
+                    <span className="price-box-label">En Düşük</span>
+                    <div className="price-box-input-wrap">
                       <input 
                         type="text" 
                         value={minPrice.toLocaleString('tr-TR')} 
@@ -706,14 +694,14 @@ export default function Home({ properties = [], initialError }) {
                           setMinPrice(val); 
                           setCurrentPage(1); 
                         }}
-                        className="price-box-input w-full bg-transparent outline-none"
+                        className="price-box-input"
                       />
                       <span className="price-currency">TL</span>
                     </div>
                   </div>
-                  <div className="price-input-box border rounded-lg p-2 bg-slate-50 flex flex-col gap-1">
-                    <span className="price-box-label text-[10px] text-slate-400 font-bold">En Yüksek</span>
-                    <div className="price-box-input-wrap flex justify-between items-center text-sm font-bold text-slate-600">
+                  <div className="price-input-box">
+                    <span className="price-box-label">En Yüksek</span>
+                    <div className="price-box-input-wrap">
                       <input 
                         type="text" 
                         value={maxPrice.toLocaleString('tr-TR')} 
@@ -722,7 +710,7 @@ export default function Home({ properties = [], initialError }) {
                           setMaxPrice(val); 
                           setCurrentPage(1); 
                         }}
-                        className="price-box-input w-full bg-transparent outline-none"
+                        className="price-box-input"
                       />
                       <span className="price-currency">TL</span>
                     </div>
@@ -733,8 +721,8 @@ export default function Home({ properties = [], initialError }) {
 
               {/* УДОБСТВА */}
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Olanaklar</span>
-                <div className="luxe-tags flex flex-wrap gap-1.5">
+                <span className="luxe-group-label">Olanaklar</span>
+                <div className="luxe-tags">
                   {['Havuz', 'Fitness', 'Güvenlik', 'Otopark', 'Çocuk parkı', 'Site İçerisinde', 'Spor Salonu', 'Sauna', 'Hamam', 'Oyun Parkı'].map((amenity, idx) => (
                     <div 
                       key={idx}
@@ -750,12 +738,12 @@ export default function Home({ properties = [], initialError }) {
 
               {/* УСЛОВИЯ ОПЛАТЫ */}
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title font-bold block mb-2 text-sm">Ödeme durumu</span>
-                <div className="luxe-checkboxes flex flex-col gap-2">
+                <span className="luxe-group-label">Ödeme durumu</span>
+                <div className="luxe-checkboxes">
                   {['Krediye uygun', 'Taksit imkanı', 'Peşin'].map((payType, idx) => (
                     <div 
                       key={idx}
-                      className={`luxe-checkbox-item flex items-center gap-2 cursor-pointer ${selectedPayments.includes(payType) ? 'checked' : ''}`}
+                      className={`luxe-checkbox-item ${selectedPayments.includes(payType) ? 'checked' : ''}`}
                       onClick={() => handleToggleSelect(payType, selectedPayments, setSelectedPayments)}
                     >
                       <div className="luxe-radio-dot" />
@@ -767,20 +755,42 @@ export default function Home({ properties = [], initialError }) {
 
             </div>
 
-            <div className="luxe-sidebar-mobile-footer flex gap-2 p-4 border-t bg-white">
-              <button onClick={() => setIsSidebarMobileOpen(false)} className="showList c-button c-button--primary flex-1 py-3 bg-[#00A4A6] text-white rounded-lg font-bold text-center text-sm">
+            {/* Исправленные мобильные кнопки в футере */}
+            <div className="luxe-sidebar-mobile-footer" style={{ display: 'flex' }}>
+              <button 
+                onClick={() => setIsSidebarMobileOpen(false)} 
+                className="showList c-button c-button--primary"
+                style={{ border: 'none', outline: 'none', cursor: 'pointer' }}
+              >
                 {filteredProperties.length} Sonucu Göster
               </button>
-              <button onClick={() => handleResetFilters()} className="c-button c-button--transparent px-4 border rounded-lg font-bold text-sm">
+              <button 
+                onClick={() => handleResetFilters()} 
+                className="c-button c-button--transparent"
+                style={{ outline: 'none', cursor: 'pointer' }}
+              >
                 Temizle
               </button>
             </div>
           </aside>
 
+          {/* Левый десктопный значок скрытия/показа сайдбара */}
+          <div 
+            id="sidebar-toggle-btn" 
+            className="hidden lg:flex" 
+            style={{ border: 'none', outline: 'none' }}
+            onClick={() => {
+              setIsSidebarHidden(!isSidebarHidden);
+              setCurrentPage(1);
+            }}
+          >
+            {isSidebarHidden ? '❯' : '❮'}
+          </div>
+
           {/* КОНТЕНТ С КАРТОЧКАМИ */}
           <div id="catalog-content-wrapper">
             
-            <div className="catalog-control-bar flex justify-end gap-2 mb-6 pb-3 border-b">
+            <div className="catalog-control-bar">
               <div className="layout-toggle bg-slate-100 p-1 rounded-lg flex">
                 <button 
                   onClick={() => { setLayout('grid'); setCurrentPage(1); }} 
@@ -880,7 +890,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda только проверенные строительные компании с успешными кейсами и сильной репутацией.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -890,7 +900,7 @@ export default function Home({ properties = [], initialError }) {
                     <p className="text-slate-400 text-sm">Hangi projenin bütçenize en uygun olduğuna karar veremediyseniz, doğrudan bizimle iletişime geçebilirsiniz.</p>
                   </div>
                   <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="kb-btn kb-btn-wa">
-                    <svg className="wa-icon-svg w-5 h-5 fill-current text-white inline-block mr-1" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z" /></svg>
+                    <svg className="wa-icon-svg w-5 h-5 fill-current text-white inline-block mr-1" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7 l-.955 3.486 3.575-.937z" /></svg>
                     Bize WhatsApp'tan Ulaşın
                   </a>
                 </div>
@@ -900,12 +910,10 @@ export default function Home({ properties = [], initialError }) {
           </div>
         </section>
 
-        {/* ПОДВАЛ */}
         <Footer />
 
       </div>
 
-      {/* ОРИГИНАЛЬНЫЙ ЧИСТЫЙ CSS — БЕЗ ЗАВИСИМОСТЕЙ ОТ TAILWIND */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -926,7 +934,6 @@ export default function Home({ properties = [], initialError }) {
           box-sizing: border-box !important;
         }
 
-        /* ПОЛНОЕ СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ НА ДЕСКТОПЕ */
         .dropdown-mobile-header, .dropdown-mobile-footer {
           display: none !important;
         }
@@ -934,7 +941,6 @@ export default function Home({ properties = [], initialError }) {
           display: none !important;
         }
 
-        /* ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
         .input-icon-svg {
           width: 18px !important;
           height: 18px !important;
@@ -984,7 +990,7 @@ export default function Home({ properties = [], initialError }) {
           display: block !important;
         }
 
-        /* Задний фон на мобильных для затемнения */
+        /* Gray Backdrop Overlay */
         .modal-backdrop-overlay {
           display: none !important;
           position: fixed !important;
@@ -993,7 +999,7 @@ export default function Home({ properties = [], initialError }) {
           width: 100% !important;
           height: 100% !important;
           background: rgba(15, 23, 42, .6) !important;
-          z-index: 9999998 !important;
+          z-index: 99999998 !important; /* На 1 уровень ниже выпадающих окон */
           opacity: 0 !important;
           transition: opacity .3s ease-in-out !important;
           pointer-events: none !important;
@@ -1004,13 +1010,13 @@ export default function Home({ properties = [], initialError }) {
           pointer-events: auto !important;
         }
 
-        /* КАСТОМНЫЕ СТИЛИ ДЛЯ ПОЛЗУНКОВ СЛАЙДЕРОВ */
+        /* СТИЛИ ДВОЙНОГО ПОЛЗУНКА */
         .dual-range-slider-container {
           position: relative !important;
-          width: 100% !important;
+          width: calc(100% - 20px) !important;
           height: 4px !important;
           background-color: var(--border-soft) !important;
-          margin: 15px 0 25px 0 !important;
+          margin: 15px 10px 25px 10px !important;
           border-radius: 2px !important;
         }
         .dual-range-track {
@@ -1066,7 +1072,32 @@ export default function Home({ properties = [], initialError }) {
           z-index: 3 !important;
         }
 
-        /* ИСПРАВЛЕНИЕ СЕТКИ И НАЛОЖЕНИЯ САЙДБАРА НА ДЕСКТОПЕ */
+        /* КНОПКА СКРЫТИЯ САЙДБАРА НА ДЕСКТОПЕ */
+        #sidebar-toggle-btn {
+          position: fixed !important;
+          top: 50% !important;
+          left: 0 !important;
+          transform: translateY(-50%) !important;
+          width: 24px !important;
+          height: 60px !important;
+          background: var(--primary) !important;
+          color: #fff !important;
+          border-radius: 0 8px 8px 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          z-index: 99999999 !important;
+          box-shadow: 2px 0 10px rgba(0,0,0,.1) !important;
+          font-size: 14px !important;
+          font-weight: 700 !important;
+          user-select: none !important;
+          transition: background .2s ease !important;
+        }
+        #sidebar-toggle-btn:hover {
+          background: var(--primary-hover) !important;
+        }
+
         @media (min-width: 1025px) {
           #custom-catalog-search {
             display: flex !important;
@@ -1090,7 +1121,17 @@ export default function Home({ properties = [], initialError }) {
             padding: 24px !important;
             box-shadow: var(--shadow-premium) !important;
             z-index: 90 !important;
+            transition: transform 0.3s ease, margin-left 0.3s ease, padding 0.3s ease, width 0.3s ease !important;
           }
+          
+          /* Обработка скрытого сайдбара на ПК */
+          .luxe-sidebar.sidebar-hidden {
+            display: none !important;
+          }
+          .luxe-sidebar.sidebar-hidden ~ #catalog-content-wrapper {
+            margin-left: 0 !important;
+          }
+
           #catalog-content-wrapper {
             margin-left: 0 !important;
             flex-grow: 1 !important;
@@ -1102,13 +1143,11 @@ export default function Home({ properties = [], initialError }) {
           .sidebar-mobile-close-btn {
             display: none !important;
           }
-          
-          /* СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ В ВЫПАДАЮЩЕМ СПИСКЕ НА ПК */
-          .dropdown-mobile-header {
+          .dropdown-mobile-header, .dropdown-mobile-footer {
             display: none !important;
           }
-          .dropdown-mobile-footer {
-            display: none !important;
+          .modal-backdrop-overlay {
+            display: none !important; /* Полное скрытие серого экрана на десктопе */
           }
         }
 
@@ -1394,6 +1433,20 @@ export default function Home({ properties = [], initialError }) {
           color: #FF9800 !important;
           font-weight: 800 !important;
         }
+        
+        /* СТИЛЬ КНОПКИ TEMIZLE В ШАПКЕ САЙДБАРА */
+        .luxe-sidebar-header .clear-link {
+          font-size: 12px !important;
+          font-weight: 800 !important;
+          color: var(--primary) !important;
+          cursor: pointer !important;
+          text-decoration: underline !important;
+          transition: color .2s !important;
+        }
+        .luxe-sidebar-header .clear-link:hover {
+          color: var(--primary-hover) !important;
+        }
+
         .luxe-divider {
           height: 1px !important;
           background-color: var(--border-soft) !important;
@@ -1440,15 +1493,23 @@ export default function Home({ properties = [], initialError }) {
           color: var(--text-muted) !important;
         }
         
-        /* ЦЕНЫ В САЙДБАРЕ */
+        /* СТИЛЬ БЛОКОВ ПОЛЕЙ ВВОДА ЦЕНЫ */
+        .price-live-display {
+          font-size: 13.5px !important;
+          font-weight: 700 !important;
+          color: var(--primary) !important;
+          margin-bottom: 12px !important;
+          display: block !important;
+        }
         .price-inputs-container {
           display: flex !important;
-          flex-direction: column !important;
-          gap: 10px !important;
+          gap: 6px !important;
+          align-items: stretch !important;
           width: 100% !important;
           margin-top: 15px !important;
         }
         .price-input-box {
+          flex: 1 !important;
           background-color: var(--bg-light) !important;
           border: 1px solid var(--border-soft) !important;
           border-radius: 10px !important;
@@ -1963,7 +2024,7 @@ export default function Home({ properties = [], initialError }) {
           background-color: #20ba5a !important;
         }
 
-        /* МЕДИА-ЗАПРОСЫ И ОТСТУПЫ ДЛЯ МОБИЛЬНЫХ */
+        /* МЕДИА-ЗАПРОСЫ */
         @media (max-width: 1024px) {
           .hero-search-title { display: none !important; }
           .mobile-only-title {
@@ -2099,7 +2160,7 @@ export default function Home({ properties = [], initialError }) {
             height: 100vh !important;
             border-radius: 0 !important;
             box-shadow: 0 -10px 40px rgba(15,23,42,0.15) !important;
-            z-index: 10000005 !important;
+            z-index: 100000005 !important; /* Увеличено z-index до 9-значного */
             display: none !important;
             flex-direction: column !important;
             background-color: #fff !important;
@@ -2111,6 +2172,7 @@ export default function Home({ properties = [], initialError }) {
           .custom-dropdown.active-mobile-modal {
             display: flex !important;
             transform: translateY(0) !important;
+            z-index: 100000005 !important;
           }
 
           .custom-dropdown::before {
@@ -2143,6 +2205,7 @@ export default function Home({ properties = [], initialError }) {
             cursor: pointer !important;
           }
 
+          /* МОБИЛЬНЫЙ САЙДБАР */
           .luxe-sidebar {
             position: fixed !important;
             top: 0 !important;
@@ -2162,6 +2225,44 @@ export default function Home({ properties = [], initialError }) {
           .luxe-sidebar.sidebar-mobile-show {
             left: 0 !important;
           }
+          
+          /* Фильтры и оформление мобильного футера */
+          .luxe-sidebar-mobile-footer {
+            display: flex !important;
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            background-color: #fff !important;
+            border-top: 1px solid var(--border-soft) !important;
+            padding: 12px 20px !important;
+            box-sizing: border-box !important;
+            z-index: 110 !important;
+            gap: 10px !important;
+          }
+          .luxe-sidebar-mobile-footer .c-button {
+            flex: 1 !important;
+            height: 42px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            text-decoration: none !important;
+            box-sizing: border-box !important;
+            border: none !important;
+          }
+          .luxe-sidebar-mobile-footer .c-button--primary {
+            background-color: var(--primary) !important;
+            color: #fff !important;
+          }
+          .luxe-sidebar-mobile-footer .c-button--transparent {
+            background-color: transparent !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--border-soft) !important;
+          }
+
           .mobile-filter-floating-btn {
             display: flex !important;
             position: fixed !important;
@@ -2248,16 +2349,11 @@ export async function getServerSideProps() {
       .from('properties')
       .select('*')
 
-    // Безопасная сортировка записей на сервере Next.js
     const sortedProperties = properties ? [...properties].sort((a, b) => {
       const idA = parseInt(a.id || a["Номер"]) || 0;
       const idB = parseInt(b.id || b["Номер"]) || 0;
       return idB - idA;
     }) : [];
-
-    console.log("=== DEBUG SUPABASE DATA FETCHING ===");
-    console.log("Returned Rows count:", sortedProperties.length);
-    console.log("Returned Error:", error);
 
     if (error) throw error
 
@@ -2278,3 +2374,4 @@ export async function getServerSideProps() {
     }
   }
 }
+```
