@@ -11,14 +11,14 @@ import PropertyCard from '../components/PropertyCard'
 const mapProperty = (item) => {
   const f = item.fields || item
   return {
-    id: item.id,
-    title: f.title || f.testproje || '',
+    id: item.id || item["Номер"] || '', // Читаем ID из вашей колонки "Номер"
+    title: f.title || f.testproje || f.adress || '', // Если названия нет, берем адрес из базы
     price: f.price || f.Fiyat || 0,
     description: f.description || f["Açıklama"] || f.Aciklama || '',
     district: f.district || f.district_name || f["İlçe/Semt"] || '',
     rooms: f.rooms || f.card_odalar || f["card odalar"] || '',
     status: f.status || f.konutcesit || f.konut_cesit || '',
-    area: parseInt(f.area || f.card_area || f["card-area"]) || 0,
+    area: parseInt(f.area || f.card_area || f["card-area"]) || 0, // Читаем площадь из вашей колонки "card-area"
     images: f.images || f.Foto || f.kapak_fotografi || f["Kapak Fotoğrafı"] || [],
     whatsapp: f.whatsapp || f.WhatsApp || '',
     amenities: f.amenities || f.ozellikler || f["Özellikler"] || [],
@@ -360,7 +360,7 @@ export default function Home({ properties, initialError }) {
                             </div>
                           ))
                         ) : (
-                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı.</div>
+                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı (Supabase boş).</div>
                         )}
                       </div>
                       <div className="dropdown-mobile-footer">
@@ -828,7 +828,7 @@ export default function Home({ properties, initialError }) {
                     LansmanBul ile <span>Yeni Nesil</span> Konut Keşfi
                   </h2>
                   <p className="v1-desc text-slate-500 text-sm mt-3 leading-relaxed">
-                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
+                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı洍 sağlıyoruz.
                   </p>
                 </div>
 
@@ -854,7 +854,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişте başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -879,7 +879,7 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* ОРИГИНАЛЬНЫЙ ЧИСТЫЙ CSS — НЕЗАВИСИМ ОТ TAILWIND */}
+      {/* ОРИГИНАЛЬНЫЙ ЧИСТЫЙ CSS — БЕЗ ЗАВИСИМОСТЕЙ ОТ TAILWIND */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -898,6 +898,14 @@ export default function Home({ properties, initialError }) {
         .tilda-catalog-wrapper, .tilda-catalog-wrapper * {
           font-family: 'Mulish', sans-serif !important;
           box-sizing: border-box !important;
+        }
+
+        /* ПОЛНОЕ СКРЫТИЕ МОБИЛЬНЫХ ЭЛЕМЕНТОВ НА ДЕСКТОПЕ */
+        .dropdown-mobile-header, .dropdown-mobile-footer {
+          display: none !important;
+        }
+        .mobile-filter-floating-btn {
+          display: none !important;
         }
 
         /* ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
@@ -1063,7 +1071,7 @@ export default function Home({ properties, initialError }) {
             width: auto !important;
           }
           .mobile-filter-floating-btn {
-            display: none !important; /* Убираем кнопку фильтра с десктопа */
+            display: none !important;
           }
           .sidebar-mobile-close-btn {
             display: none !important;
@@ -1682,6 +1690,7 @@ export default function Home({ properties, initialError }) {
           align-items: flex-start !important;
           width: 100% !important;
           gap: 16px !important;
+          box-sizing: border-box !important;
         }
         .custom-card .card-title {
           font-size: 18px !important;
@@ -2203,11 +2212,10 @@ export default function Home({ properties, initialError }) {
 export async function getServerSideProps() {
   try {
     const { data: properties, error } = await supabase
-      .from('properties') // <- Имя вашей таблицы в Supabase (проверьте регистр букв!)
+      .from('properties')
       .select('*')
       .order('id', { ascending: false })
 
-    // Логирование для удобного дебага в терминале (вы увидите, что вернул Supabase)
     console.log("=== DEBUG SUPABASE DATA FETCHING ===");
     console.log("Returned Rows count:", properties ? properties.length : 0);
     console.log("Returned Error:", error);
