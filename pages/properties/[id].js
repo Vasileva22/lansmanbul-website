@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react'
+```jsx
+import React, { useState, useMemo } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { supabase } from '../../supabase' // Корректируйте относительный путь при необходимости
+import { supabase } from '../../supabase'
 
 // Переиспользуемые компоненты Шапки и Подвала
 import Header from '../../components/Header'
@@ -37,7 +38,6 @@ const mapPropertyDetail = (item) => {
   }
 }
 
-// Вспомогательные иконки для детального вида
 const getEmoji = (label) => {
   const lower = label.toLowerCase()
   if (lower.includes('metro') || lower.includes('tramvay') || lower.includes('istasyon')) return '🚇'
@@ -59,7 +59,7 @@ const getFeatureIcon = (feat) => {
   if (lower.includes('site')) return '🏡 '
   if (lower.includes('asansör') || lower.includes('asansor')) return '🛗 '
   if (lower.includes('jeneratör') || lower.includes('jenerator')) return '⚡ '
-  if (lower.includes('yeşil') || lower.includes('bahçe') || lower.includes('peyzaj')) return '🌳 '
+  if (lower.includes('yeşil') || lower.includes('bahçe') || lower.includes('peyzaj')) return '🌳 ';
   if (lower.includes('sauna') || lower.includes('hamam')) return '🧖‍♀️ '
   return '✨ '
 }
@@ -72,11 +72,8 @@ const formatPrice = (val) => {
 
 export default function PropertyDetail({ property, initialError }) {
   const router = useRouter()
-  
-  // Управление полноэкранным лайтбоксом картинок
   const [lightboxIndex, setLightboxIndex] = useState(null)
 
-  // Обработка состояния загрузки на клиенте во время перехода страниц
   if (router.isFallback) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -101,21 +98,18 @@ export default function PropertyDetail({ property, initialError }) {
 
   const p = mapPropertyDetail(property)
 
-  // Парсинг основных галерейных фото
   const photoUrls = useMemo(() => {
     let raw = p.images
     let list = Array.isArray(raw) ? raw : (typeof raw === 'string' ? raw.split(',') : [])
     return list.map(img => typeof img === 'object' ? (img.url || '') : String(img).trim()).filter(Boolean)
   }, [p.images])
 
-  // Парсинг фото стройки
   const constructionUrls = useMemo(() => {
     let raw = p.santiyePhotos
     let list = Array.isArray(raw) ? raw : (typeof raw === 'string' ? raw.split(',') : [])
     return list.map(img => typeof img === 'object' ? (img.url || '') : String(img).trim()).filter(Boolean)
   }, [p.santiyePhotos])
 
-  // Парсинг списка расстояний
   const parsedDistances = useMemo(() => {
     if (!p.distances) return []
     return p.distances.split(',').map(item => {
@@ -127,20 +121,16 @@ export default function PropertyDetail({ property, initialError }) {
     }).filter(Boolean)
   }, [p.distances])
 
-  // Шаблоны сообщений для WhatsApp
   const waNum = p.whatsapp ? p.whatsapp.replace(/\D/g, '') : "905459418536"
   const mainWaMessage = `Merhaba, LansmanBul platformunda yer alan ${p.title} projenizdeki ${p.rooms || 'daire'} tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?`
   const planWaMessage = `Merhaba, LansmanBul platformunda yer alan ${p.title} projenizin ${p.rooms || 'daire'} planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?`
 
-  // Определение цвета плашки статуса
   const badgeColor = p.status?.toLowerCase() === 'lansman' ? '#FF9800' : '#00A4A6'
 
-  // Клик по фото открывает лайтбокс
   const handlePhotoClick = (index) => {
     setLightboxIndex(index)
   }
 
-  // Лайтбокс навигация
   const handlePrevLightbox = (e) => {
     e.stopPropagation()
     setLightboxIndex(prev => (prev === 0 ? photoUrls.length - 1 : prev - 1))
@@ -155,7 +145,7 @@ export default function PropertyDetail({ property, initialError }) {
     <>
       <Head>
         <title>{p.title} — LansmanBul Proje Detayı</title>
-        <meta name="description" content={`${p.title} projesi Çankaya/Ankara. Detaylı bilgi, fiyatlar, kat planları ve ödeme seçenekleri.`} />
+        <meta name="description" content={`${p.title} projesi Çankaya/Ankara. Detaylı bilgi, fiyatlar, kat planları og ödeme seçenekleri.`} />
       </Head>
 
       <div className="projeland-card-container bg-gray-50 text-gray-800 antialiased min-h-screen relative pt-[90px] md:pt-[70px]">
@@ -165,7 +155,6 @@ export default function PropertyDetail({ property, initialError }) {
 
         <div className="max-w-7xl mx-auto px-4 py-8 fade-in">
           
-          {/* ШАПКА КАРТОЧКИ */}
           <header className="mb-6">
             <div className="flex justify-between items-start w-full gap-4">
               <div>
@@ -192,7 +181,7 @@ export default function PropertyDetail({ property, initialError }) {
             </div>
           </header>
 
-          {/* ГАЛЕРЕЯ (AIRBNB СТИЛЬ НА ЧИСТОМ CSS/REACT) */}
+          {/* ГАЛЕРЕЯ */}
           <section className="mb-8 overflow-hidden rounded-2xl shadow-sm">
             <div id="airbnb-gallery" className="airbnb-gallery w-full relative">
               {photoUrls.length === 1 && (
@@ -244,13 +233,11 @@ export default function PropertyDetail({ property, initialError }) {
             </div>
           </section>
 
-          {/* КОНТЕНТ: ДВЕ КОЛОНКИ */}
+          {/* ДВЕ КОЛОНКИ */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            {/* ЛЕВАЯ КОЛОНКА */}
             <div className="lg:col-span-2 space-y-8">
               
-              {/* Описание проекта */}
               {p.description && (
                 <div id="block-desc" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Proje Hakkında</h2>
@@ -269,7 +256,6 @@ export default function PropertyDetail({ property, initialError }) {
                 </div>
               )}
 
-              {/* Расположение */}
               <div id="block-location" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                 <h2>Konum ve Mesafeler</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -300,9 +286,8 @@ export default function PropertyDetail({ property, initialError }) {
                 </div>
               </div>
 
-              {/* Каталог планировок */}
               {p.planPhoto && (
-                <div id="block-plan" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
+                <div id="block-plan" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Kat ve Daire Planları</h2>
                   <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
                   <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
@@ -317,7 +302,7 @@ export default function PropertyDetail({ property, initialError }) {
                         src={p.planPhoto} 
                         alt="Daire Planı" 
                         className="w-full h-auto object-contain max-h-64 rounded-lg mix-blend-multiply cursor-zoom-in hover:opacity-95 transition duration-200"
-                        onClick={() => handlePhotoClick(-1)} // Обозначаем -1 для чертежа планировки
+                        onClick={() => handlePhotoClick(-1)}
                       />
                     </div>
                     
@@ -352,9 +337,8 @@ export default function PropertyDetail({ property, initialError }) {
                 </div>
               )}
 
-              {/* Дневник стройки */}
               {constructionUrls.length > 0 && (
-                <div id="block-construction" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
+                <div id="block-construction" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2 id="construction-title">Şantiye Günlüğü {p.santiyeTarihi ? `(${p.santiyeTarihi})` : ''}</h2>
                   <div className="grid grid-cols-2 gap-3" id="construction-photos">
                     {constructionUrls.slice(0, 2).map((url, idx) => (
@@ -362,7 +346,7 @@ export default function PropertyDetail({ property, initialError }) {
                         key={idx} 
                         className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition construction-photo-item" 
                         style={{ backgroundImage: `url('${url}')` }}
-                        onClick={() => handlePhotoClick(-2 - idx)} // Используем отрицательные индексы для фото стройки
+                        onClick={() => handlePhotoClick(-2 - idx)}
                       />
                     ))}
                   </div>
@@ -438,7 +422,7 @@ export default function PropertyDetail({ property, initialError }) {
         {/* ПОДВАЛ */}
         <Footer />
 
-        {/* РЕАКТИВНЫЙ ЛАЙТБОКС СЛАЙДЕР ДЛЯ ФОТО */}
+        {/* СЛАЙДЕР С ЛАЙТБОКСОМ */}
         {lightboxIndex !== null && (
           <div 
             id="custom-lightbox" 
@@ -447,7 +431,6 @@ export default function PropertyDetail({ property, initialError }) {
           >
             <button className="lightbox-close absolute top-6 right-6 text-white text-4xl font-light hover:scale-110 transition" onClick={() => setLightboxIndex(null)}>&times;</button>
             
-            {/* Стрелки отображаются только для галереи */}
             {lightboxIndex >= 0 && photoUrls.length > 1 && (
               <>
                 <button 
@@ -488,7 +471,8 @@ export default function PropertyDetail({ property, initialError }) {
 
       </div>
 
-      <style jsx>{`
+      {/* ОРИГИНАЛЬНЫЕ УНИВЕРСАЛЬНЫЕ СТИЛИ TILDA ДЛЯ КАРТОЧКИ ОБЪЕКТА */}
+      <style dangerouslySetInnerHTML={{ __html: `
         .projeland-card-container {
           font-family: 'Mulish', sans-serif !important;
         }
@@ -642,12 +626,11 @@ export default function PropertyDetail({ property, initialError }) {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
           }
         }
-      `}</style>
+      `}} />
     </>
   )
 }
 
-// 4. ДИНАМИЧЕСКИЙ СЕРВЕРНЫЙ ЗАПРОС К SUPABASE ПО ID
 export async function getServerSideProps(context) {
   const { id } = context.params
 
@@ -660,7 +643,7 @@ export async function getServerSideProps(context) {
 
     if (error || !property) {
       return {
-        notFound: true, // Автоматический редирект на стандартную страницу 404
+        notFound: true,
       }
     }
 
@@ -680,3 +663,4 @@ export async function getServerSideProps(context) {
     }
   }
 }
+```
