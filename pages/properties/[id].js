@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { supabase } from '../../lib/supabaseClient' // Корректируйте относительный путь при необходимости
+import { supabase } from '../supabase' // Корректируйте относительный путь при необходимости
 
 // Переиспользуемые компоненты Шапки и Подвала
 import Header from '../../components/Header'
