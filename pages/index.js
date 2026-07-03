@@ -4,7 +4,6 @@ import Script from 'next/script'
 import { useRouter } from 'next/router'
 import { supabase } from '../supabase'
 
-// Импортируем ваши компоненты
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
@@ -63,7 +62,6 @@ export default function Home({ properties, initialError }) {
   const [selectedPayments, setSelectedPayments] = useState([])
 
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false)
-
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = useMemo(() => (layout === 'grid' ? 12 : 8), [layout])
 
@@ -95,7 +93,6 @@ export default function Home({ properties, initialError }) {
     setCurrentPage(1)
   }
 
-  // Закрытие выпадающих списков при клике вне поля
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (!e.target.closest('.search-input-field')) {
@@ -106,7 +103,6 @@ export default function Home({ properties, initialError }) {
     return () => window.removeEventListener('click', handleOutsideClick)
   }, [])
 
-  // Синхронизация с глубокими ссылками шапки
   useEffect(() => {
     if (status) {
       setSelectedStatuses([status])
@@ -247,10 +243,11 @@ export default function Home({ properties, initialError }) {
 
   if (initialError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
         <div>
-          <p className="text-red-500 font-bold">Veri Yükleme Hatası</p>
-          <p className="text-gray-500 text-sm mt-1">{initialError}</p>
+          <p className="text-red-500 font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '20px' }}>Veri Yükleme Hatası (Supabase Bağlantı Hatası)</p>
+          <p className="text-gray-500 text-sm mt-1" style={{ color: '#6b7280', fontSize: '14px', marginTop: '8px' }}>{initialError}</p>
+          <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '12px' }}>Lütfen .env.local dosyasındaki Supabase anahtarlarınızı и таблицу properties проверьте.</p>
         </div>
       </div>
     )
@@ -346,21 +343,25 @@ export default function Home({ properties, initialError }) {
                         <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
-                        {filteredDistrictOptions.map((opt, i) => (
-                          <div 
-                            key={i} 
-                            className={`dropdown-item ${selectedDistricts.includes(opt) ? 'selected' : ''}`}
-                            onClick={() => handleToggleSelect(opt, selectedDistricts, setSelectedDistricts)}
-                          >
-                            <div className="dropdown-item-left">
-                              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        {filteredDistrictOptions.length > 0 ? (
+                          filteredDistrictOptions.map((opt, i) => (
+                            <div 
+                              key={i} 
+                              className={`dropdown-item ${selectedDistricts.includes(opt) ? 'selected' : ''}`}
+                              onClick={() => handleToggleSelect(opt, selectedDistricts, setSelectedDistricts)}
+                            >
+                              <div className="dropdown-item-left">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                              </div>
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{opt}</span>
+                                <span className="dropdown-item-subtitle">Ankara, Türkiye</span>
+                              </div>
                             </div>
-                            <div className="dropdown-item-content">
-                              <span className="dropdown-item-title">{opt}</span>
-                              <span className="dropdown-item-subtitle">Ankara, Türkiye</span>
-                            </div>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı.</div>
+                        )}
                       </div>
                       <div className="dropdown-mobile-footer">
                         <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
@@ -398,21 +399,25 @@ export default function Home({ properties, initialError }) {
                         <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
-                        {roomOptions.map((opt, i) => (
-                          <div 
-                            key={i} 
-                            className={`dropdown-item ${selectedRooms.includes(opt) ? 'selected' : ''}`}
-                            onClick={() => handleToggleSelect(opt, selectedRooms, setSelectedRooms)}
-                          >
-                            <div className="dropdown-item-left">
-                              <svg viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+                        {roomOptions.length > 0 ? (
+                          roomOptions.map((opt, i) => (
+                            <div 
+                              key={i} 
+                              className={`dropdown-item ${selectedRooms.includes(opt) ? 'selected' : ''}`}
+                              onClick={() => handleToggleSelect(opt, selectedRooms, setSelectedRooms)}
+                            >
+                              <div className="dropdown-item-left">
+                                <svg viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+                              </div>
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{opt}</span>
+                                <span className="dropdown-item-subtitle">Oda sayısı</span>
+                              </div>
                             </div>
-                            <div className="dropdown-item-content">
-                              <span className="dropdown-item-title">{opt}</span>
-                              <span className="dropdown-item-subtitle">Oda sayısı</span>
-                            </div>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı.</div>
+                        )}
                       </div>
                       <div className="dropdown-mobile-footer">
                         <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
@@ -450,21 +455,25 @@ export default function Home({ properties, initialError }) {
                         <span className="dropdown-select-all-text text-sm font-extrabold text-[#00A4A6]">Tümünü Seç</span>
                       </div>
                       <div className="dropdown-items-scroll">
-                        {statusOptions.map((opt, i) => (
-                          <div 
-                            key={i} 
-                            className={`dropdown-item ${selectedStatuses.includes(opt) ? 'selected' : ''}`}
-                            onClick={() => handleToggleSelect(opt, selectedStatuses, setSelectedStatuses)}
-                          >
-                            <div className="dropdown-item-left">
-                              <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                        {statusOptions.length > 0 ? (
+                          statusOptions.map((opt, i) => (
+                            <div 
+                              key={i} 
+                              className={`dropdown-item ${selectedStatuses.includes(opt) ? 'selected' : ''}`}
+                              onClick={() => handleToggleSelect(opt, selectedStatuses, setSelectedStatuses)}
+                            >
+                              <div className="dropdown-item-left">
+                                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                              </div>
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{opt}</span>
+                                <span className="dropdown-item-subtitle">Yapım Durumu</span>
+                              </div>
                             </div>
-                            <div className="dropdown-item-content">
-                              <span className="dropdown-item-title">{opt}</span>
-                              <span className="dropdown-item-subtitle">Yapım Durumu</span>
-                            </div>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <div className="p-5 text-center text-xs text-gray-400 font-bold">Veri bulunamadı.</div>
+                        )}
                       </div>
                       <div className="dropdown-mobile-footer">
                         <button className="dropdown-sec-btn" onClick={() => setActiveHeroDropdown(null)}>Seç</button>
@@ -487,7 +496,7 @@ export default function Home({ properties, initialError }) {
         {/* СЕКЦИЯ КАТАЛОГА С ФИЛЬТРАМИ И САЙДБАРОМ */}
         <section id="custom-catalog-search" className="max-w-7xl mx-auto px-4 py-8 relative">
           
-          <button className="mobile-filter-floating-btn shadow-lg md:hidden" onClick={() => setIsSidebarMobileOpen(true)}>
+          <button className="mobile-filter-floating-btn shadow-lg" onClick={() => setIsSidebarMobileOpen(true)}>
             <svg style={{ width: '16px', height: '16px', fill: 'currentColor' }} viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
             <span>Filtreleme</span>
           </button>
@@ -732,7 +741,7 @@ export default function Home({ properties, initialError }) {
 
             </div>
 
-            <div className="luxe-sidebar-mobile-footer md:hidden flex gap-2 p-4 border-t bg-white">
+            <div className="luxe-sidebar-mobile-footer flex gap-2 p-4 border-t bg-white">
               <button onClick={() => setIsSidebarMobileOpen(false)} className="showList c-button c-button--primary flex-1 py-3 bg-[#00A4A6] text-white rounded-lg font-bold text-center text-sm">
                 {filteredProperties.length} Sonucu Göster
               </button>
@@ -845,7 +854,7 @@ export default function Home({ properties, initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişте başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -870,7 +879,7 @@ export default function Home({ properties, initialError }) {
 
       </div>
 
-      {/* СТИЛИ С ВЫСОКОЙ СПЕЦИФИЧНОСТЬЮ И ИЗОЛЯЦИЕЙ ОТ TAILWIND */}
+      {/* ОРИГИНАЛЬНЫЙ ЧИСТЫЙ CSS — НЕЗАВИСИМ ОТ TAILWIND */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -891,7 +900,7 @@ export default function Home({ properties, initialError }) {
           box-sizing: border-box !important;
         }
 
-        /* ПОЛНОЕ ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
+        /* ИСПРАВЛЕНИЕ РАЗМЕРА ИКОНОК */
         .input-icon-svg {
           width: 18px !important;
           height: 18px !important;
@@ -916,14 +925,14 @@ export default function Home({ properties, initialError }) {
           fill: var(--primary) !important;
         }
 
-        /* СТИЛИ ДЛЯ ВЫПАДАЮЩИХ СПИСКОВ И ТРИГГЕРОВ */
         .search-input-field {
           position: relative !important;
         }
 
+        /* ВЫПАДАЮЩИЕ МЕНЮ */
         .custom-dropdown {
           position: absolute !important;
-          background-color: #fff !important;
+          background-color: #ffffff !important;
           border-radius: 16px !important;
           box-shadow: var(--shadow-dropdown) !important;
           border: 1.5px solid var(--border-soft) !important;
@@ -937,7 +946,6 @@ export default function Home({ properties, initialError }) {
           margin-top: 4px !important;
         }
 
-        /* При активации на десктопе */
         .custom-dropdown.active-desktop {
           display: block !important;
         }
@@ -1035,7 +1043,7 @@ export default function Home({ properties, initialError }) {
           }
           .luxe-sidebar {
             position: sticky !important;
-            top: 110px !important; /* Учитывает высоту вашей шапки 90px + 20px отступ */
+            top: 110px !important;
             left: auto !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
@@ -1053,6 +1061,12 @@ export default function Home({ properties, initialError }) {
             margin-left: 0 !important;
             flex-grow: 1 !important;
             width: auto !important;
+          }
+          .mobile-filter-floating-btn {
+            display: none !important; /* Убираем кнопку фильтра с десктопа */
+          }
+          .sidebar-mobile-close-btn {
+            display: none !important;
           }
         }
 
@@ -2031,7 +2045,7 @@ export default function Home({ properties, initialError }) {
             border-radius: 12px !important;
           }
 
-          /* Специфические настройки для мобильных выпадающих окон */
+          /* МОБИЛЬНЫЕ ШТОРКИ ВЫПАДАЮЩИХ СПИСКОВ */
           .custom-dropdown {
             position: fixed !important;
             bottom: 0 !important;
@@ -2189,9 +2203,14 @@ export default function Home({ properties, initialError }) {
 export async function getServerSideProps() {
   try {
     const { data: properties, error } = await supabase
-      .from('properties')
+      .from('properties') // <- Имя вашей таблицы в Supabase (проверьте регистр букв!)
       .select('*')
       .order('id', { ascending: false })
+
+    // Логирование для удобного дебага в терминале (вы увидите, что вернул Supabase)
+    console.log("=== DEBUG SUPABASE DATA FETCHING ===");
+    console.log("Returned Rows count:", properties ? properties.length : 0);
+    console.log("Returned Error:", error);
 
     if (error) throw error
 
