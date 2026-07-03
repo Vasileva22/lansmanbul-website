@@ -1,4 +1,3 @@
-```jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
@@ -77,7 +76,7 @@ export default function Home({ properties = [], initialError }) {
   const [selectedPayments, setSelectedPayments] = useState([])
 
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false)
-  const [isSidebarHidden, setIsSidebarHidden] = useState(false) // Новое состояние для скрытия сайдбара на десктопе
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false)
   
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = useMemo(() => (layout === 'grid' ? 12 : 8), [layout])
@@ -286,9 +285,9 @@ export default function Home({ properties = [], initialError }) {
         
         <Header />
 
-        {/* Gray Backdrop Overlay — Срабатывает только на мобильных за счет CSS block/hidden */}
+        {/* Gray Backdrop Overlay */}
         <div 
-          className={`modal-backdrop-overlay ${activeHeroDropdown !== null || isSidebarMobileOpen ? 'show' : ''}`} 
+          className={"modal-backdrop-overlay" + (activeHeroDropdown !== null || isSidebarMobileOpen ? " show" : "")} 
           onClick={() => { setActiveHeroDropdown(null); setIsSidebarMobileOpen(false); }} 
         />
 
@@ -320,7 +319,7 @@ export default function Home({ properties = [], initialError }) {
                   
                   {/* Район */}
                   <div 
-                    className={`search-input-field flex-wide field-trigger-location ${activeHeroDropdown === 'location' ? 'active-field' : ''} ${selectedDistricts.length > 0 ? 'has-value' : ''}`}
+                    className={"search-input-field flex-wide field-trigger-location" + (activeHeroDropdown === 'location' ? " active-field" : "") + (selectedDistricts.length > 0 ? " has-value" : "")}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'location' ? null : 'location') }}
                   >
                     {SVGS.location}
@@ -333,7 +332,7 @@ export default function Home({ properties = [], initialError }) {
 
                     {/* Выпадающий список Районов */}
                     <div 
-                      className={`custom-dropdown ${activeHeroDropdown === 'location' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      className={"custom-dropdown" + (activeHeroDropdown === 'location' ? " active-desktop active-mobile-modal shadow-2xl" : "")}
                       data-field="İlçe/Semt"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -362,7 +361,7 @@ export default function Home({ properties = [], initialError }) {
                           filteredDistrictOptions.map((opt, i) => (
                             <div 
                               key={i} 
-                              className={`dropdown-item ${selectedDistricts.includes(opt) ? 'selected' : ''}`}
+                              className={"dropdown-item" + (selectedDistricts.includes(opt) ? " selected" : "")}
                               onClick={() => handleToggleSelect(opt, selectedDistricts, setSelectedDistricts)}
                             >
                               <div className="dropdown-item-left">
@@ -386,7 +385,7 @@ export default function Home({ properties = [], initialError }) {
 
                   {/* Комнатность */}
                   <div 
-                    className={`search-input-field flex-standard field-trigger-room ${activeHeroDropdown === 'room' ? 'active-field' : ''} ${selectedRooms.length > 0 ? 'has-value' : ''}`}
+                    className={"search-input-field flex-standard field-trigger-room" + (activeHeroDropdown === 'room' ? " active-field" : "") + (selectedRooms.length > 0 ? " has-value" : "")}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'room' ? null : 'room') }}
                   >
                     {SVGS.bed}
@@ -399,7 +398,7 @@ export default function Home({ properties = [], initialError }) {
 
                     {/* Выпадающий список комнатности */}
                     <div 
-                      className={`custom-dropdown ${activeHeroDropdown === 'room' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      className={"custom-dropdown" + (activeHeroDropdown === 'room' ? " active-desktop active-mobile-modal shadow-2xl" : "")}
                       data-field="card odalar"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -418,7 +417,7 @@ export default function Home({ properties = [], initialError }) {
                           roomOptions.map((opt, i) => (
                             <div 
                               key={i} 
-                              className={`dropdown-item ${selectedRooms.includes(opt) ? 'selected' : ''}`}
+                              className={"dropdown-item" + (selectedRooms.includes(opt) ? " selected" : "")}
                               onClick={() => handleToggleSelect(opt, selectedRooms, setSelectedRooms)}
                             >
                               <div className="dropdown-item-left">
@@ -442,7 +441,7 @@ export default function Home({ properties = [], initialError }) {
 
                   {/* Статус */}
                   <div 
-                    className={`search-input-field flex-standard field-trigger-durum ${activeHeroDropdown === 'status' ? 'active-field' : ''} ${selectedStatuses.length > 0 ? 'has-value' : ''}`}
+                    className={"search-input-field flex-standard field-trigger-durum" + (activeHeroDropdown === 'status' ? " active-field" : "") + (selectedStatuses.length > 0 ? " has-value" : "")}
                     onClick={(e) => { e.stopPropagation(); setActiveHeroDropdown(activeHeroDropdown === 'status' ? null : 'status') }}
                   >
                     <svg className="input-icon-svg icon-stroke w-5 h-5 fill-none stroke-slate-400 stroke-[2]" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
@@ -455,7 +454,7 @@ export default function Home({ properties = [], initialError }) {
 
                     {/* Выпадающий список статуса */}
                     <div 
-                      className={`custom-dropdown ${activeHeroDropdown === 'status' ? 'active-desktop active-mobile-modal shadow-2xl' : ''}`}
+                      className={"custom-dropdown" + (activeHeroDropdown === 'status' ? " active-desktop active-mobile-modal shadow-2xl" : "")}
                       data-field="konutcesit"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -474,7 +473,7 @@ export default function Home({ properties = [], initialError }) {
                           statusOptions.map((opt, i) => (
                             <div 
                               key={i} 
-                              className={`dropdown-item ${selectedStatuses.includes(opt) ? 'selected' : ''}`}
+                              className={"dropdown-item" + (selectedStatuses.includes(opt) ? " selected" : "")}
                               onClick={() => handleToggleSelect(opt, selectedStatuses, setSelectedStatuses)}
                             >
                               <div className="dropdown-item-left">
@@ -516,10 +515,10 @@ export default function Home({ properties = [], initialError }) {
             <span>Filtreleme</span>
           </button>
 
-          <div className={`sidebar-mobile-overlay ${isSidebarMobileOpen ? 'show' : ''}`} onClick={() => setIsSidebarMobileOpen(false)} />
+          <div className={"sidebar-mobile-overlay" + (isSidebarMobileOpen ? " show" : "")} onClick={() => setIsSidebarMobileOpen(false)} />
 
           {/* САЙДБАP (ФИЛЬТРЫ) */}
-          <aside className={`luxe-sidebar ${isSidebarMobileOpen ? 'sidebar-mobile-show' : ''} ${isSidebarHidden ? 'sidebar-hidden' : ''}`} id="custom-sidebar">
+          <aside className={"luxe-sidebar" + (isSidebarMobileOpen ? " sidebar-mobile-show" : "") + (isSidebarHidden ? " sidebar-hidden" : "")} id="custom-sidebar">
             <span className="sidebar-mobile-close-btn" onClick={() => setIsSidebarMobileOpen(false)}>&times;</span>
             
             <div className="luxe-sidebar-scrollable-body">
@@ -726,7 +725,7 @@ export default function Home({ properties = [], initialError }) {
                   {['Havuz', 'Fitness', 'Güvenlik', 'Otopark', 'Çocuk parkı', 'Site İçerisinde', 'Spor Salonu', 'Sauna', 'Hamam', 'Oyun Parkı'].map((amenity, idx) => (
                     <div 
                       key={idx}
-                      className={`luxe-tag-item ${selectedAmenities.includes(amenity) ? 'active' : ''}`}
+                      className={"luxe-tag-item" + (selectedAmenities.includes(amenity) ? " active" : "")}
                       onClick={() => handleToggleSelect(amenity, selectedAmenities, setSelectedAmenities)}
                     >
                       <label className="mb-0 cursor-pointer">{amenity}</label>
@@ -743,7 +742,7 @@ export default function Home({ properties = [], initialError }) {
                   {['Krediye uygun', 'Taksit imkanı', 'Peşin'].map((payType, idx) => (
                     <div 
                       key={idx}
-                      className={`luxe-checkbox-item ${selectedPayments.includes(payType) ? 'checked' : ''}`}
+                      className={"luxe-checkbox-item" + (selectedPayments.includes(payType) ? " checked" : "")}
                       onClick={() => handleToggleSelect(payType, selectedPayments, setSelectedPayments)}
                     >
                       <div className="luxe-radio-dot" />
@@ -755,7 +754,7 @@ export default function Home({ properties = [], initialError }) {
 
             </div>
 
-            {/* Исправленные мобильные кнопки в футере */}
+            {/* Мобильные кнопки в футере */}
             <div className="luxe-sidebar-mobile-footer" style={{ display: 'flex' }}>
               <button 
                 onClick={() => setIsSidebarMobileOpen(false)} 
@@ -774,7 +773,7 @@ export default function Home({ properties = [], initialError }) {
             </div>
           </aside>
 
-          {/* Левый десктопный значок скрытия/показа сайдбара */}
+          {/* Десктопный значок скрытия/показа сайдбара */}
           <div 
             id="sidebar-toggle-btn" 
             className="hidden lg:flex" 
@@ -794,13 +793,13 @@ export default function Home({ properties = [], initialError }) {
               <div className="layout-toggle bg-slate-100 p-1 rounded-lg flex">
                 <button 
                   onClick={() => { setLayout('grid'); setCurrentPage(1); }} 
-                  className={`toggle-btn p-2 rounded-md transition ${layout === 'grid' ? 'active bg-white shadow-sm text-[#00A4A6]' : 'text-slate-400'}`}
+                  className={"toggle-btn p-2 rounded-md transition" + (layout === 'grid' ? " active bg-white shadow-sm text-[#00A4A6]" : " text-slate-400")}
                 >
                   {SVGS.grid}
                 </button>
                 <button 
                   onClick={() => { setLayout('list'); setCurrentPage(1); }} 
-                  className={`toggle-btn p-2 rounded-md transition ${layout === 'list' ? 'active bg-white shadow-sm text-[#00A4A6]' : 'text-slate-400'}`}
+                  className={"toggle-btn p-2 rounded-md transition" + (layout === 'list' ? " active bg-white shadow-sm text-[#00A4A6]" : " text-slate-400")}
                 >
                   {SVGS.list}
                 </button>
@@ -830,7 +829,7 @@ export default function Home({ properties = [], initialError }) {
                 <button 
                   disabled={currentPage === 1}
                   onClick={() => { setCurrentPage(prev => Math.max(1, prev - 1)); window.scrollTo({ top: 380, behavior: 'smooth' }) }}
-                  className={`pagination-item px-3 border rounded text-sm font-bold ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={"pagination-item px-3 border rounded text-sm font-bold" + (currentPage === 1 ? " opacity-40 cursor-not-allowed" : "")}
                 >
                   ❮
                 </button>
@@ -839,7 +838,7 @@ export default function Home({ properties = [], initialError }) {
                   <button 
                     key={idx}
                     onClick={() => { setCurrentPage(idx + 1); window.scrollTo({ top: 380, behavior: 'smooth' }) }}
-                    className={`pagination-item w-10 h-10 flex items-center justify-center border rounded text-sm font-bold transition ${currentPage === idx + 1 ? 'active bg-[#00A4A6] text-white border-[#00A4A6]' : 'text-slate-500 hover:bg-slate-50'}`}
+                    className={"pagination-item w-10 h-10 flex items-center justify-center border rounded text-sm font-bold transition" + (currentPage === idx + 1 ? " active bg-[#00A4A6] text-white border-[#00A4A6]" : " text-slate-500 hover:bg-slate-50")}
                   >
                     {idx + 1}
                   </button>
@@ -848,7 +847,7 @@ export default function Home({ properties = [], initialError }) {
                 <button 
                   disabled={currentPage === totalPages}
                   onClick={() => { setCurrentPage(prev => Math.min(totalPages, prev + 1)); window.scrollTo({ top: 380, behavior: 'smooth' }) }}
-                  className={`pagination-item px-3 border rounded text-sm font-bold ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={"pagination-item px-3 border rounded text-sm font-bold" + (currentPage === totalPages ? " opacity-40 cursor-not-allowed" : "")}
                 >
                   ❯
                 </button>
@@ -999,7 +998,7 @@ export default function Home({ properties = [], initialError }) {
           width: 100% !important;
           height: 100% !important;
           background: rgba(15, 23, 42, .6) !important;
-          z-index: 99999998 !important; /* На 1 уровень ниже выпадающих окон */
+          z-index: 99999998 !important;
           opacity: 0 !important;
           transition: opacity .3s ease-in-out !important;
           pointer-events: none !important;
@@ -1147,7 +1146,7 @@ export default function Home({ properties = [], initialError }) {
             display: none !important;
           }
           .modal-backdrop-overlay {
-            display: none !important; /* Полное скрытие серого экрана на десктопе */
+            display: none !important;
           }
         }
 
@@ -2160,7 +2159,7 @@ export default function Home({ properties = [], initialError }) {
             height: 100vh !important;
             border-radius: 0 !important;
             box-shadow: 0 -10px 40px rgba(15,23,42,0.15) !important;
-            z-index: 100000005 !important; /* Увеличено z-index до 9-значного */
+            z-index: 100000005 !important;
             display: none !important;
             flex-direction: column !important;
             background-color: #fff !important;
@@ -2226,7 +2225,7 @@ export default function Home({ properties = [], initialError }) {
             left: 0 !important;
           }
           
-          /* Фильтры и оформление мобильного футера */
+          /* Мобильный футер */
           .luxe-sidebar-mobile-footer {
             display: flex !important;
             position: absolute !important;
@@ -2374,4 +2373,3 @@ export async function getServerSideProps() {
     }
   }
 }
-```
