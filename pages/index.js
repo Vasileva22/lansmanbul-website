@@ -636,8 +636,8 @@ export default function Home({ properties = [], initialError }) {
                   <div 
                     className="dual-range-track"
                     style={{
-                      left: `${(minArea / 500) * 100}%`,
-                      width: `${((maxArea - minArea) / 500) * 100}%`
+                      left: ((minArea / 500) * 100) + '%',
+                      width: (((maxArea - minArea) / 500) * 100) + '%'
                     }}
                   />
                   <input 
@@ -689,8 +689,8 @@ export default function Home({ properties = [], initialError }) {
                   <div 
                     className="dual-range-track"
                     style={{
-                      left: `${(minFloor / 40) * 100}%`,
-                      width: `${((maxFloor - minFloor) / 40) * 100}%`
+                      left: ((minFloor / 40) * 100) + '%',
+                      width: (((maxFloor - minFloor) / 40) * 100) + '%'
                     }}
                   />
                   <input 
@@ -730,8 +730,8 @@ export default function Home({ properties = [], initialError }) {
                   <div 
                     className="dual-range-track"
                     style={{
-                      left: `${(minPrice / 50000000) * 100}%`,
-                      width: `${((maxPrice - minPrice) / 50000000) * 100}%`
+                      left: ((minPrice / 50000000) * 100) + '%',
+                      width: (((maxPrice - minPrice) / 50000000) * 100) + '%'
                     }}
                   />
                   <input 
@@ -947,7 +947,7 @@ export default function Home({ properties = [], initialError }) {
                     LansmanBul ile <span>Yeni Nesil</span> Konut Keşfi
                   </h2>
                   <p className="v1-desc text-slate-500 text-sm mt-3 leading-relaxed">
-                    Türkiye'nin önde gelen inşaat firmalarını tek platformда topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
+                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
                   </p>
                 </div>
 
@@ -965,7 +965,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik и mali detayları birinci elden öğrenirsiniz.</p>
+                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
                   </div>
 
                   <div className="v1-card">
