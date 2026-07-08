@@ -1,3 +1,4 @@
+```jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
@@ -96,18 +97,54 @@ export default function Home({ properties = [], initialError }) {
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false)
   const [isSidebarHidden, setIsSidebarHidden] = useState(false)
   
+  // Состояния Избранного (Favorites)
+  const [favorites, setFavorites] = useState([])
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false)
+
+  // Состояние модального окна подачи объявления
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+
+  // Состояния Полноэкранного Lightbox
+  const [lightboxProperty, setLightboxProperty] = useState(null)
+  const [lightboxImgIdx, setLightboxImgIdx] = useState(0)
+
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = useMemo(() => (layout === 'grid' ? 12 : 8), [layout])
 
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
+  // Загружаем избранное из localStorage при старте
+  useEffect(() => {
+    const saved = localStorage.getItem('lansmanbul_favorites')
+    if (saved) {
+      try {
+        setFavorites(JSON.parse(saved))
+      } catch (e) {
+        console.error("Failed to parse favorites from localStorage", e)
+      }
+    }
+  }, [])
+
+  // Сохраняем в localStorage при изменениях
+  const handleToggleLike = (event, id) => {
+    if (event) event.stopPropagation()
+    let updated = []
+    if (favorites.includes(id)) {
+      updated = favorites.filter(favId => favId !== id)
+    } else {
+      updated = [...favorites, id]
+    }
+    setFavorites(updated)
+    localStorage.setItem('lansmanbul_favorites', JSON.stringify(updated))
+  }
+
   const mappedList = useMemo(() => (properties || []).map(mapProperty), [properties])
 
   const districtOptions = useMemo(() => [...new Set(mappedList.map(p => p.district).filter(Boolean))].sort(), [mappedList])
   const roomOptions = useMemo(() => [...new Set(mappedList.map(p => p.rooms).filter(Boolean))].sort(), [mappedList])
   const statusOptions = useMemo(() => {
-    const customOrder = ["Lansman", "Devam ediyor", "Tamamlandı"]
+    const customOrder = ["Lansman","Devam ediyor","Tamamlandı"]
     const databaseStatuses = [...new Set(mappedList.map(p => p.status).filter(Boolean))]
     return customOrder.filter(v => databaseStatuses.includes(v))
   }, [mappedList])
@@ -160,20 +197,20 @@ export default function Home({ properties = [], initialError }) {
       if (priceVal < minPrice || priceVal > maxPrice) return false
 
       if (selectedAmenities.length > 0) {
-        const pAmenities = (p.amenities || []).map(a => a.toLowerCase().replace(/ı/g,'i').replace(/ş/g,'s').replace(/ç/g,'c').trim())
-        const match = selectedAmenities.every(a => pAmenities.some(pa => pa.includes(a.toLowerCase().replace(/ı/g,'i').replace(/ş/g,'s').replace(/ç/g,'c').trim())))
+        const pAmenities = (p.amenities || []).map(a => a.toLowerCase().replace(/ı/g,'i').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ö/g,'o').replace(/ü/g,'u').trim())
+        const match = selectedAmenities.every(a => pAmenities.some(pa => pa.includes(a.toLowerCase().replace(/ı/g,'i').replace(/ş/g,'s').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ö/g,'o').replace(/ü/g,'u').trim())))
         if (!match) return false
       }
 
       if (selectedPayments.length > 0) {
         const matchPayment = selectedPayments.some(payOpt => {
           const norm = payOpt.toLowerCase()
-          const hasCredit = p.kredi && p.kredi !== "" && p.kredi !== "-"
-          const hasInstallment = (p.vade && p.vade !== "" && p.vade !== "-") || (p.downPayment && p.downPayment !== "" && p.downPayment !== "-")
-          
-          if (norm.includes("kredi")) return hasCredit
-          if (norm.includes("taksit")) return hasInstallment
-          if (norm.includes("peşin") || norm.includes("pesin")) return !hasInstallment
+          const krediDurumu = p.kredi
+          const vadeSecenegi = p.vade
+          const ilkPesinat = p.downPayment
+          if (norm.includes("kredi")) return krediDurumu !== "";
+          if (norm.includes("taksit")) return vadeSecenegi !== "" || ilkPesinat !== "";
+          if (norm.includes("pesin")) return vadeSecenegi === "" && ilkPesinat === "";
           return false
         })
         if (!matchPayment) return false
@@ -275,12 +312,31 @@ export default function Home({ properties = [], initialError }) {
     return districtOptions.filter(opt => opt.toLowerCase().includes(searchDistrictQuery.toLowerCase()))
   }, [districtOptions, searchDistrictQuery])
 
+  // Навигация по фото в Lightbox
+  const handleNextLightbox = (e) => {
+    if (e) e.stopPropagation()
+    if (!lightboxProperty) return
+    const photos = lightboxProperty.images && lightboxProperty.images.length > 0 ? lightboxProperty.images : [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
+    ]
+    setLightboxImgIdx((prev) => (prev + 1) % photos.length)
+  }
+
+  const handlePrevLightbox = (e) => {
+    if (e) e.stopPropagation()
+    if (!lightboxProperty) return
+    const photos = lightboxProperty.images && lightboxProperty.images.length > 0 ? lightboxProperty.images : [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
+    ]
+    setLightboxImgIdx((prev) => (prev + photos.length - 1) % photos.length)
+  }
+
   if (initialError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
-        <div style={{ padding: '24px', maxWidth: '600px', fontFamily: 'sans-serif' }}>
-          <p className="font-bold" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '22px', marginBottom: '8px' }}>Veri Yükleme Hatası</p>
-          <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: '1.6', marginBottom: '16px' }}>{initialError}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center">
+        <div style={{ padding: '24px', maxWidth: '600px' }}>
+          <p className="font-bold text-[#ef4444] text-xl mb-2">Veri Yükleme Hatası</p>
+          <p className="text-slate-500">{initialError}</p>
         </div>
       </div>
     )
@@ -301,12 +357,17 @@ export default function Home({ properties = [], initialError }) {
 
       <div className="bg-white min-h-screen relative text-slate-800 pt-[90px] md:pt-[90px] tilda-catalog-wrapper">
         
-        <Header />
+        {/* Интегрированная шапка */}
+        <Header 
+          favoritesCount={favorites.length}
+          onOpenFavorites={() => setIsFavoritesOpen(true)}
+          onOpenPostModal={() => setIsPostModalOpen(true)}
+        />
 
-        {/* Gray Backdrop Overlay */}
+        {/* Gray Backdrop Overlay — активна только на мобильных при открытии сайдбара */}
         <div 
           className={"modal-backdrop-overlay" + (isSidebarMobileOpen ? " show" : "")} 
-          onClick={() => { setActiveHeroDropdown(null); setIsSidebarMobileOpen(false); }} 
+          onClick={() => setIsSidebarMobileOpen(false)} 
         />
 
         {/* HERO ПОИСК */}
@@ -831,7 +892,12 @@ export default function Home({ properties = [], initialError }) {
                   <PropertyCard 
                     key={property.id} 
                     property={property} 
-                    layout={layout}
+                    isLiked={favorites.includes(property.id)}
+                    onToggleLike={handleToggleLike}
+                    onOpenLightbox={(prop, index) => {
+                      setLightboxProperty(prop)
+                      setLightboxImgIdx(index)
+                    }}
                   />
                 ))
               ) : (
@@ -881,7 +947,7 @@ export default function Home({ properties = [], initialError }) {
                     LansmanBul ile <span>Yeni Nesil</span> Konut Keşfi
                   </h2>
                   <p className="v1-desc text-slate-500 text-sm mt-3 leading-relaxed">
-                    Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
+                    Türkiye'nin önde gelen inşaat firmalarını tek platformда topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.
                   </p>
                 </div>
 
@@ -926,6 +992,101 @@ export default function Home({ properties = [], initialError }) {
 
           </div>
         </section>
+
+        {/* ВЫДВИЖНОЙ ЛИЧНЫЙ КАБИНЕТ (ИЗБРАННОЕ) */}
+        <div className={"cabinet-drawer" + (isFavoritesOpen ? " open" : "")}>
+          <div className="drawer-header">
+            <span className="drawer-title">Favori İlanlarım</span>
+            <button className="drawer-close" onClick={() => setIsFavoritesOpen(false)}>&times;</button>
+          </div>
+          <div className="drawer-content">
+            {favorites.length === 0 ? (
+              <div className="drawer-empty-placeholder">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px auto' }}>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <p>Henüz favori ilanınız bulunmuyor.</p>
+              </div>
+            ) : (
+              <div className="fav-list">
+                {favorites.map(id => {
+                  const p = mappedList.find(item => item.id === id);
+                  if (!p) return null;
+                  const firstPhoto = p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=120&q=80';
+                  return (
+                    <div key={id} className="fav-item flex gap-3 p-2 hover:bg-slate-50 rounded-xl transition items-center border-b border-gray-100 last:border-none relative">
+                      <img src={firstPhoto} alt={p.title} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+                      <div className="flex-grow min-w-0">
+                        <h4 className="font-extrabold text-sm text-[#3F536C] truncate">{p.title}</h4>
+                        <div className="text-[#00A4A6] font-black text-xs mt-1">{formatPriceVal(p.price)}</div>
+                        <p className="text-slate-400 text-[11px] mt-0.5 truncate">{p.district}</p>
+                      </div>
+                      <button 
+                        className="text-red-500 hover:text-red-700 p-1 flex-shrink-0" 
+                        onClick={(e) => handleToggleLike(e, id)}
+                        title="Favorilerden Kaldır"
+                        style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* МОДАЛЬНОЕ ОКНО ПОДАЧИ ОБЪЯВЛЕНИЯ */}
+        <div className={"modal-overlay" + (isPostModalOpen ? " open" : "")} onClick={() => setIsPostModalOpen(false)}>
+          <div className="modal-card-box" onClick={(e) => e.stopPropagation()}>
+            <span className="modal-close-btn" onClick={() => setIsPostModalOpen(false)}>&times;</span>
+            <h3 className="font-black text-xl text-[#3F536C] mb-2">Ücretsiz İlan Verin</h3>
+            <p className="text-slate-500 text-sm mb-5 leading-relaxed">
+              İlanınızı lansmanbul platformunda komisyonsuz, doğrudan ve ücretsiz yayınlamak için resmi temsilcimizle WhatsApp üzerinden iletişime geçebilirsiniz.
+            </p>
+            <div className="phone-highlight-block">+90 545 941 85 36</div>
+            <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="modal-green-btn">
+              WhatsApp Temsilcimizle Görüşün
+            </a>
+          </div>
+        </div>
+
+        {/* ПОЛНОЭКРАННЫЙ LIGHTBOX С СЕНСОРНЫМ СЧЕТЧИКОМ ПО ЦЕНТРУ СНИЗУ */}
+        {lightboxProperty && (
+          <div className="custom-lightbox-overlay active" onClick={() => setLightboxProperty(null)}>
+            <span className="custom-lightbox-close" onClick={() => setLightboxProperty(null)}>&times;</span>
+            
+            <div className="lightbox-slider-container" onClick={(e) => e.stopPropagation()}>
+              
+              <div className="lightbox-slider-track">
+                <div className="lightbox-slide">
+                  <img 
+                    src={
+                      (lightboxProperty.images && lightboxProperty.images.length > 0) 
+                        ? lightboxProperty.images[lightboxImgIdx] 
+                        : 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80'
+                    } 
+                    alt="Proje Görseli" 
+                  />
+                </div>
+              </div>
+
+              {/* Стрелочки переключения в лайтбоксе */}
+              {lightboxProperty.images && lightboxProperty.images.length > 1 && (
+                <>
+                  <div className="lightbox-arrow lightbox-arrow-left" onClick={handlePrevLightbox}>❮</div>
+                  <div className="lightbox-arrow lightbox-arrow-right" onClick={handleNextLightbox}>❯</div>
+                </>
+              )}
+            </div>
+
+            {/* Идеальный счетчик по центру снизу, как в оригинальной Тилде */}
+            <div className="lightbox-counter">
+              {(lightboxImgIdx + 1)} / {(lightboxProperty.images && lightboxProperty.images.length > 0) ? lightboxProperty.images.length : 1}
+            </div>
+          </div>
+        )}
 
         <Footer />
 
@@ -1115,6 +1276,320 @@ export default function Home({ properties = [], initialError }) {
           background: var(--primary-hover) !important;
         }
 
+        /* ЖЕСТКИЙ ЦИАН ГРИД 4Х С ТОЧНЫМИ РАЗМЕРАМИ */
+        .grid-layout {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fill, minmax(227.5px, 1fr)) !important;
+          gap: 20px !important;
+          width: 100% !important;
+        }
+
+        .cian-card {
+          background: #ffffff !important;
+          border-radius: 16px !important;
+          border: 1px solid rgba(226, 232, 240, 0.6) !important;
+          overflow: hidden !important;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;
+          display: flex !important;
+          flex-direction: column !important;
+          transition: transform .25s ease, box-shadow .25s ease !important;
+          position: relative !important;
+          cursor: pointer !important;
+          text-decoration: none !important;
+        }
+        @media (min-width: 1025px) {
+          .grid-layout .cian-card {
+            width: 227.5px !important;
+            height: 302.26px !important;
+          }
+        }
+        .cian-card:hover {
+          transform: translateY(-5px) !important;
+          box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06) !important;
+        }
+
+        .cian-img-container {
+          position: relative !important;
+          overflow: hidden !important;
+          border-radius: 12px !important;
+          width: 100% !important;
+        }
+        @media (min-width: 1025px) {
+          .cian-img-container {
+            height: 184.93px !important;
+          }
+        }
+        @media (max-width: 1024px) {
+          .cian-img-container {
+            aspect-ratio: 1.22 !important;
+          }
+        }
+
+        .cian-img {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          transition: transform 0.4s ease !important;
+        }
+        .cian-card:hover .cian-img {
+          transform: scale(1.04) !important;
+        }
+
+        /* Кнопка сердечка на карточках */
+        .card-fav-btn {
+          position: absolute !important;
+          top: 12px !important;
+          right: 12px !important;
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 50% !important;
+          background: rgba(15, 23, 42, 0.35) !important;
+          backdrop-filter: blur(4px) !important;
+          border: none !important;
+          color: #ffffff !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          z-index: 10 !important;
+          transition: all 0.2s ease !important;
+          padding: 0 !important;
+        }
+        .card-fav-btn:hover {
+          background: rgba(15, 23, 42, 0.55) !important;
+          transform: scale(1.08) !important;
+        }
+        .card-fav-btn.liked {
+          color: #ff3b30 !important;
+          background: #ffffff !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Скрытые стрелки на картинке (проявляются белым при наведении) */
+        .slider-arrow {
+          position: absolute !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          background: rgba(255, 255, 255, 0) !important;
+          color: rgba(255, 255, 255, 0) !important;
+          border: none !important;
+          width: 30px !important;
+          height: 30px !important;
+          border-radius: 50% !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          z-index: 8 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-weight: 900 !important;
+          user-select: none !important;
+        }
+        .arrow-left { left: 8px !important; }
+        .arrow-right { right: 8px !important; }
+        .cian-card:hover .slider-arrow {
+          background: rgba(255, 255, 255, 0.8) !important;
+          color: var(--dark-slate) !important;
+        }
+        .cian-card:hover .slider-arrow:hover {
+          background: rgba(255, 255, 255, 1) !important;
+        }
+
+        .card-badge {
+          position: absolute !important;
+          top: 12px !important;
+          left: 12px !important;
+          color: #ffffff !important;
+          font-size: 10px !important;
+          font-weight: 800 !important;
+          text-transform: uppercase !important;
+          padding: 5px 12px !important;
+          border-radius: 20px !important;
+          z-index: 5 !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          letter-spacing: 0.5px !important;
+        }
+        .status-lansman { background-color: #ff9800 !important; }
+        .status-other { background-color: var(--primary) !important; }
+
+        /* Текстовая область */
+        .cian-info {
+          padding: 12px 6px 14px 6px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 4px !important;
+          min-height: 117.33px !important;
+        }
+        .cian-price {
+          font-size: 21px !important;
+          font-weight: 900 !important;
+          color: var(--text-main) !important;
+          line-height: 1.2 !important;
+        }
+        .cian-specs {
+          font-size: 14.5px !important;
+          font-weight: 700 !important;
+          color: #334155 !important;
+          line-height: 1.4 !important;
+        }
+        .cian-location {
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          color: #475569 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          line-height: 1.4 !important;
+        }
+        .cian-geo-dot {
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50% !important;
+          flex-shrink: 0 !important;
+        }
+        .cian-geo-dot.cyan { background-color: var(--primary) !important; }
+        .cian-address {
+          font-size: 12px !important;
+          font-weight: 500 !important;
+          color: var(--text-muted) !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          line-height: 1.4 !important;
+        }
+
+        /* ВЫДВИЖНОЙ РАЗДЕЛ (ЛИЧНЫЙ КАБИНЕТ) */
+        .cabinet-drawer {
+          position: fixed !important;
+          top: 0 !important;
+          right: -420px !important;
+          width: 400px !important;
+          height: 100vh !important;
+          background: #ffffff !important;
+          box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15) !important;
+          z-index: 10000005 !important;
+          transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .cabinet-drawer.open {
+          right: 0 !important;
+        }
+        .drawer-header {
+          padding: 24px !important;
+          border-bottom: 1px solid var(--border-soft) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+        }
+        .drawer-title {
+          font-size: 20px !important;
+          font-weight: 900 !important;
+          color: var(--text-main) !important;
+        }
+        .drawer-close {
+          background: none !important;
+          border: none !important;
+          font-size: 28px !important;
+          color: var(--text-muted) !important;
+          cursor: pointer !important;
+        }
+        .drawer-content {
+          flex: 1 !important;
+          overflow-y: auto !important;
+          padding: 24px !important;
+        }
+        .fav-list {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 16px !important;
+        }
+        .drawer-empty-placeholder {
+          text-align: center !important;
+          padding: 40px 0 !important;
+          color: var(--text-muted) !important;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО ПОДАЧИ ОБЪЯВЛЕНИЯ */
+        .modal-overlay {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          background: rgba(15, 23, 42, 0.6) !important;
+          backdrop-filter: blur(4px) !important;
+          z-index: 10000010 !important;
+          display: none !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        .modal-overlay.open {
+          display: flex !important;
+        }
+        .modal-card-box {
+          background: #ffffff !important;
+          width: 450px !important;
+          max-width: 90% !important;
+          border-radius: 20px !important;
+          padding: 32px !important;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+          position: relative !important;
+          text-align: center !important;
+        }
+        .modal-close-btn {
+          position: absolute !important;
+          top: 20px !important;
+          right: 20px !important;
+          background: none !important;
+          border: none !important;
+          font-size: 24px !important;
+          color: var(--text-muted) !important;
+          cursor: pointer !important;
+        }
+        .phone-highlight-block {
+          font-size: 20px !important;
+          font-weight: 800 !important;
+          color: var(--primary) !important;
+          background: rgba(0, 164, 166, 0.05) !important;
+          padding: 12px !important;
+          border-radius: 12px !important;
+          display: inline-block !important;
+          margin-bottom: 20px !important;
+        }
+        .modal-green-btn {
+          display: block !important;
+          width: 100% !important;
+          background: #25D366 !important;
+          color: #ffffff !important;
+          text-decoration: none !important;
+          padding: 14px !important;
+          border-radius: 12px !important;
+          font-weight: 800 !important;
+          font-size: 15px !important;
+        }
+
+        /* ПОЛНОЭКРАННЫЙ LIGHTBOX СЧЕТЧИК */
+        .lightbox-counter {
+          position: absolute !important;
+          bottom: 40px !important; /* Увеличено расстояние снизу */
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          color: #fff !important;
+          font-size: 15px !important;
+          font-weight: 800 !important;
+          z-index: 101 !important;
+          background-color: rgba(30, 41, 59, 0.85) !important;
+          padding: 8px 18px !important;
+          border-radius: 30px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+          backdrop-filter: blur(4px) !important;
+          user-select: none !important;
+        }
+
         @media (min-width: 1025px) {
           #custom-catalog-search {
             display: flex !important;
@@ -1141,7 +1616,6 @@ export default function Home({ properties = [], initialError }) {
             transition: transform 0.3s ease, margin-left 0.3s ease, padding 0.3s ease, width 0.3s ease !important;
           }
           
-          /* Обработка скрытого сайдбара на ПК */
           .luxe-sidebar.sidebar-hidden {
             display: none !important;
           }
@@ -1451,7 +1925,6 @@ export default function Home({ properties = [], initialError }) {
           font-weight: 800 !important;
         }
         
-        /* СТИЛЬ КНОПКИ TEMIZLE В ШАПКЕ САЙДБАРА */
         .luxe-sidebar-header .clear-link {
           font-size: 12px !important;
           font-weight: 800 !important;
@@ -1510,7 +1983,6 @@ export default function Home({ properties = [], initialError }) {
           color: var(--text-muted) !important;
         }
         
-        /* СТИЛЬ БЛОКОВ ПОЛЕЙ ВВОДА ЦЕНЫ */
         .price-live-display {
           font-size: 13.5px !important;
           font-weight: 700 !important;
@@ -1564,7 +2036,6 @@ export default function Home({ properties = [], initialError }) {
           color: var(--text-muted) !important;
         }
 
-        /* ТЕГИ И ЧЕКБОКСЫ */
         .luxe-tags {
           display: flex !important;
           flex-direction: row !important;
@@ -1643,13 +2114,6 @@ export default function Home({ properties = [], initialError }) {
           display: block !important;
         }
 
-        /* КАТАЛОГ И КАРТОЧКИ ОБЪЕКТОВ */
-        #catalog-content-wrapper {
-          position: relative !important;
-          display: block !important;
-          width: auto !important;
-          z-index: 10 !important;
-        }
         .catalog-control-bar {
           display: flex !important;
           justify-content: flex-end !important;
@@ -1689,200 +2153,6 @@ export default function Home({ properties = [], initialError }) {
           fill: currentColor !important;
         }
 
-        .btn {
-          padding: 10px 14px !important;
-          border-radius: 8px !important;
-          font-size: 13px !important;
-          font-weight: 700 !important;
-          text-decoration: none !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 6px !important;
-          transition: all .2s ease !important;
-          box-sizing: border-box !important;
-        }
-        .btn-primary {
-          background-color: var(--primary) !important;
-          color: #fff !important;
-          border: 2px solid var(--primary) !important;
-        }
-        .btn-primary:hover {
-          background-color: var(--primary-hover) !important;
-          border-color: var(--primary-hover) !important;
-        }
-        .btn-outline {
-          background-color: transparent !important;
-          color: #3F536C !important;
-          border: 2px solid var(--border-soft) !important;
-        }
-        .btn-outline:hover {
-          border-color: var(--primary) !important;
-          color: var(--primary) !important;
-        }
-
-        /* GRID / LIST LAYOUTS */
-        .grid-layout {
-          display: grid !important;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
-          gap: 30px !important;
-          width: 100% !important;
-        }
-        .list-layout {
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 24px !important;
-          width: 100% !important;
-        }
-
-        .custom-card {
-          background: #fff !important;
-          border-radius: 16px !important;
-          border: 1.5px solid var(--border-soft) !important;
-          overflow: hidden !important;
-          box-shadow: var(--shadow-premium) !important;
-          display: flex !important;
-          transition: transform .3s ease, box-shadow .3s ease !important;
-        }
-        .grid-layout .custom-card {
-          flex-direction: column !important;
-          height: 100% !important;
-        }
-        .list-layout .custom-card {
-          flex-direction: row !important;
-          width: 100% !important;
-        }
-        .custom-card:hover {
-          transform: translateY(-5px) !important;
-          box-shadow: 0 12px 25px rgba(0,164,166,.45) !important;
-        }
-        .custom-card .img-container {
-          position: relative !important;
-          overflow: hidden !important;
-          cursor: zoom-in !important;
-        }
-        .grid-layout .custom-card .img-container {
-          height: 200px !important;
-          width: 100% !important;
-        }
-        .list-layout .custom-card .img-container {
-          width: 320px !important;
-          min-width: 320px !important;
-          height: 250px !important;
-        }
-
-        .custom-card .badge {
-          position: absolute !important;
-          top: 15px !important;
-          left: 15px !important;
-          color: #fff !important;
-          padding: 6px 12px !important;
-          border-radius: 20px !important;
-          font-size: 10px !important;
-          font-weight: 800 !important;
-          text-transform: uppercase !important;
-          z-index: 10 !important;
-          box-shadow: 0 4px 10px rgba(0,0,0,.15) !important;
-        }
-
-        .custom-card .card-content {
-          padding: 20px !important;
-          display: flex !important;
-          flex-direction: column !important;
-          flex-grow: 1 !important;
-        }
-        .custom-card .title-price-row {
-          display: flex !important;
-          flex-direction: column !important;
-          margin-bottom: 8px !important;
-        }
-        .list-layout .custom-card .title-price-row {
-          flex-direction: row !important;
-          justify-content: space-between !important;
-          align-items: flex-start !important;
-          width: 100% !important;
-          gap: 16px !important;
-          box-sizing: border-box !important;
-        }
-        .custom-card .card-title {
-          font-size: 18px !important;
-          font-weight: 800 !important;
-          margin: 0 0 6px 0 !important;
-          color: #3F536C !important;
-        }
-        .custom-card .card-price {
-          font-size: 20px !important;
-          font-weight: 950 !important;
-          color: var(--primary) !important;
-          margin-bottom: 12px !important;
-        }
-        
-        .list-layout .custom-card .card-description {
-          display: block !important;
-          font-size: 13.5px !important;
-          color: var(--text-muted) !important;
-          margin-bottom: 12px !important;
-          line-height: 1.5 !important;
-        }
-
-        .custom-card .features-row {
-          display: flex !important;
-          gap: 10px !important;
-          margin-bottom: 10px !important;
-          border-top: 1px solid var(--border-soft) !important;
-          padding-top: 12px !important;
-        }
-        .custom-card .feat-badge {
-          background: var(--bg-light) !important;
-          padding: 6px 10px !important;
-          border-radius: 8px !important;
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: var(--text-muted) !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-        }
-        .custom-card .feat-badge svg {
-          width: 14px !important;
-          height: 14px !important;
-        }
-        .custom-card .olanaklar-row {
-          display: flex !important;
-          flex-wrap: wrap !important;
-          gap: 6px !important;
-          margin-bottom: 20px !important;
-          margin-top: auto !important;
-        }
-        .olanak-tag {
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          color: var(--primary) !important;
-          background-color: rgba(0,164,166,0.06) !important;
-          padding: 4px 10px !important;
-          border-radius: 6px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          box-sizing: border-box !important;
-        }
-        .olanak-tag svg {
-          width: 14px !important;
-          height: 14px !important;
-          fill: currentColor !important;
-          color: var(--primary) !important;
-        }
-        .custom-card .actions {
-          display: flex !important;
-          gap: 10px !important;
-          margin-top: auto !important;
-          width: 100% !important;
-        }
-        .custom-card .actions .btn {
-          flex: 1 !important;
-        }
-
-        /* ПАГИНАЦИЯ */
         .pagination-container {
           display: flex !important;
           justify-content: center !important;
@@ -2391,3 +2661,4 @@ export async function getServerSideProps() {
     }
   }
 }
+```
