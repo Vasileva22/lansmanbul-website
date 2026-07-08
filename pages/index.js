@@ -3,7 +3,10 @@ import Head from 'next/head'
 import Script from 'next/script'
 import { useRouter } from 'next/router'
 import { supabase } from '../supabase'
-import dynamic from 'next/dynamic'
+
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+import PropertyCard from '../components/PropertyCard'
 
 // Стили CSS объявлены в самом верху файла в виде массива строк, чтобы избежать любых проблем со сборщиками и бэктиками
 const cssStyles = [
@@ -818,11 +821,6 @@ const cssStyles = [
   '  }',
   '}'
 ].join('\n');
-
-// Динамический импорт компонентов без SSR
-const Header = dynamic(() => import('../components/Header'), { ssr: false })
-const Footer = dynamic(() => import('../components/Footer'), { ssr: false })
-const PropertyCard = dynamic(() => import('../components/PropertyCard'), { ssr: false })
 
 export async function getServerSideProps() {
   try {
