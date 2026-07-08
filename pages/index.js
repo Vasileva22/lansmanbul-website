@@ -8,7 +8,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Стили CSS объявлены в самом верху файла в виде массива строк, чтобы избежать любых проблем со сборщиками и бэктиками
+// Стили CSS объявлены в самом верху файла в виде массива строк
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -822,19 +822,315 @@ const cssStyles = [
   '}'
 ].join('\n');
 
+export default function Home({ properties = [], initialError }) {
+  const router = useRouter()
+
+  // Состояния для фильтров
+  const [favorites, setFavorites] = useState([])
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false)
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+  
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeStatusFilter, setActiveStatusFilter] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [selectedRooms, setSelectedRooms] = useState('')
+  
+  // Состояния для просмотрщика изображений (Lightbox)
+  const [lightboxProperty, setLightboxProperty] = useState(null)
+  const [lightboxImageIdx, setLightboxImageIdx] = useState(0)
+
+  // Загрузка избранного из localStorage на стороне клиента
+  useEffect(() => {
+    const stored = localStorage.getItem('lansmanbul_favorites')
+    if (stored) {
+      try {
+        setFavorites(JSON.parse(stored))
+      } catch (err) {
+        console.error('Favorites parsing failed:', err)
+      }
+    }
+  }, [])
+
+  // Синхронизация статуса из URL (для фильтрации по кнопкам из Header/Footer)
+  useEffect(() => {
+    if (router.query.status) {
+      setActiveStatusFilter(String(router.query.status))
+    } else {
+      setActiveStatusFilter('')
+    }
+  }, [router.query.status])
+
+  // Переключение избранного
+  const toggleLike = (e, id) => {
+    if (e) e.stopPropagation()
+    setFavorites((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      localStorage.setItem('lansmanbul_favorites', JSON.stringify(next))
+      return next
+    })
+  }
+
+  // Списки для выпадающих фильтров, собираемые на основе полученных данных
+  const districts = useMemo(() => {
+    const set = new Set(properties.map((p) => p.district).filter(Boolean))
+    return Array.from(set)
+  }, [properties])
+
+  const roomsList = useMemo(() => {
+    const set = new Set(properties.map((p) => p.rooms).filter(Boolean))
+    return Array.from(set).sort()
+  }, [properties])
+
+  // Фильтрация объектов
+  const filteredProperties = useMemo(() => {
+    return properties.filter((p) => {
+      if (activeStatusFilter && p.status?.toLowerCase() !== activeStatusFilter.toLowerCase()) {
+        return false
+      }
+      if (selectedDistrict && p.district?.toLowerCase() !== selectedDistrict.toLowerCase()) {
+        return false
+      }
+      if (selectedRooms && p.rooms !== selectedRooms) {
+        return false
+      }
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchTitle = p.title?.toLowerCase().includes(query)
+        const matchDistrict = p.district?.toLowerCase().includes(query)
+        if (!matchTitle && !matchDistrict) return false
+      }
+      return true
+    })
+  }, [properties, activeStatusFilter, selectedDistrict, selectedRooms, searchQuery])
+
+  // Выборка избранных объектов для бокового ящика
+  const favoriteProperties = useMemo(() => {
+    return properties.filter((p) => favorites.includes(p.id))
+  }, [properties, favorites])
+
+  // Методы управления просмотрщиком картинок
+  const openLightbox = (property, index = 0) => {
+    setLightboxProperty(property)
+    setLightboxImageIdx(index)
+  }
+
+  const nextLightboxImage = () => {
+    if (!lightboxProperty) return
+    const imgs = lightboxProperty.images || []
+    setLightboxImageIdx((prev) => (prev + 1) % (imgs.length || 1))
+  }
+
+  const prevLightboxImage = () => {
+    if (!lightboxProperty) return
+    const imgs = lightboxProperty.images || []
+    setLightboxImageIdx((prev) => (prev + imgs.length - 1) % (imgs.length || 1))
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Lansmanbul - Konut Projeleri Platformu</title>
+        <meta name="description" content="En yeni konut projelerini doğrudan geliştiriciden bulun." />
+        <link rel="icon" href="/favicon.ico" />
+        <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </Head>
+
+      <Header 
+        favoritesCount={favorites.length}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
+        onOpenPostModal={() => setIsPostModalOpen(true)}
+      />
+
+      <main className="tilda-catalog-wrapper" style={{ marginTop: '90px', minHeight: '80vh', backgroundColor: '#f8fafc', paddingBottom: '60px' }}>
+        
+        {/* Секция Поиска / Hero-блок */}
+        <div style={{ backgroundColor: '#00A4A6', padding: '40px 20px', color: '#fff', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '20px' }}>Hayalinizdeki Evi Keşfedin</h1>
+          
+          <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {/* Текстовый поиск */}
+            <input 
+              type="text" 
+              placeholder="Proje adı veya bölge ara..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ padding: '12px 20px', borderRadius: '10px', border: 'none', width: '100%', maxWidth: '300px', color: '#333' }}
+            />
+
+            {/* Фильтр по Районам */}
+            <select 
+              value={selectedDistrict} 
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              style={{ padding: '12px 20px', borderRadius: '10px', border: 'none', color: '#333' }}
+            >
+              <option value="">Bölge Seçiniz</option>
+              {districts.map((d) => (
+                <option key={d} value={d.toLowerCase()}>{d}</option>
+              ))}
+            </select>
+
+            {/* Фильтр по Комнатам */}
+            <select 
+              value={selectedRooms} 
+              onChange={(e) => setSelectedRooms(e.target.value)}
+              style={{ padding: '12px 20px', borderRadius: '10px', border: 'none', color: '#333' }}
+            >
+              <option value="">Oda Sayısı</option>
+              {roomsList.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+
+            {/* Сброс фильтров */}
+            {(searchQuery || selectedDistrict || selectedRooms || activeStatusFilter) && (
+              <button 
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedDistrict('')
+                  setSelectedRooms('')
+                  router.push('/', undefined, { shallow: true })
+                }}
+                style={{ padding: '12px 20px', borderRadius: '10px', border: 'none', backgroundColor: '#e2e8f0', color: '#333', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Temizle
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Каталог объектов */}
+        <div style={{ maxWidth: '1200px', margin: '40px auto 0 auto', padding: '0 20px' }}>
+          {initialError && (
+            <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
+              Hata: {initialError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b' }}>
+              {activeStatusFilter ? `${activeStatusFilter} Projeleri` : 'Tüm Projeler'} ({filteredProperties.length})
+            </h2>
+          </div>
+
+          {filteredProperties.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+              <p style={{ fontSize: '18px', fontWeight: '600' }}>Aradığınız kriterlere uygun ilan bulunamadı.</p>
+            </div>
+          ) : (
+            <div className="grid-layout">
+              {filteredProperties.map((item) => (
+                <PropertyCard 
+                  key={item.id}
+                  property={item}
+                  isLiked={favorites.includes(item.id)}
+                  onToggleLike={toggleLike}
+                  onOpenLightbox={openLightbox}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Выдвижная панель "Избранное" / Личный кабинет */}
+      <div className={`cabinet-drawer ${isFavoritesOpen ? 'open' : ''}`}>
+        <div className="drawer-header">
+          <span className="drawer-title">Favorilerim ({favorites.length})</span>
+          <button className="drawer-close" onClick={() => setIsFavoritesOpen(false)}>&times;</button>
+        </div>
+        <div className="drawer-content">
+          {favoriteProperties.length === 0 ? (
+            <div className="drawer-empty-placeholder">
+              <p>Favori ilanınız bulunmuyor.</p>
+            </div>
+          ) : (
+            <div className="fav-list">
+              {favoriteProperties.map((item) => (
+                <div key={item.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }} onClick={() => { setIsFavoritesOpen(false); openLightbox(item); }}>
+                  <img src={item.images?.[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=150&q=80'} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>{item.title}</h4>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#00A4A6', fontWeight: '800' }}>{item.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Модальное окно подачи объявления (через WhatsApp) */}
+      <div className={`modal-overlay ${isPostModalOpen ? 'open' : ''}`}>
+        <div className="modal-card-box">
+          <button className="modal-close-btn" onClick={() => setIsPostModalOpen(false)}>&times;</button>
+          <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '16px', color: '#1e293b' }}>Ücretsiz İlan Ver</h3>
+          <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '24px', lineHeight: '1.5' }}>
+            Projenizi veya mülkünüzü sitemizde ücretsiz yayınlamak için WhatsApp üzerinden müşteri temsilcimizle doğrudan iletişime geçebilirsiniz.
+          </p>
+          <div className="phone-highlight-block">+90 545 941 85 36</div>
+          <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="modal-green-btn">
+            WhatsApp ile İletişime Geç
+          </a>
+        </div>
+      </div>
+
+      {/* Полноэкранный Lightbox (Детали Илана) */}
+      {lightboxProperty && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.95)', zIndex: 100000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#fff', fontSize: '36px', cursor: 'pointer' }} onClick={closeLightbox}>&times;</button>
+          
+          {/* Кнопки перелистывания в слайдере */}
+          {(lightboxProperty.images?.length || 0) > 1 && (
+            <>
+              <button onClick={prevLightboxImage} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❮</button>
+              <button onClick={nextLightboxImage} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❯</button>
+            </>
+          )}
+
+          <div style={{ maxWidth: '90%', maxHeight: '80%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <img 
+              src={(lightboxProperty.images || [])[lightboxImageIdx] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
+              style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '12px' }} 
+              alt="" 
+            />
+            
+            {/* Текстовые детали под слайдером */}
+            <div style={{ marginTop: '20px', textAlign: 'center', color: '#fff', maxWidth: '600px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 8px 0' }}>{lightboxProperty.price}</h2>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0' }}>{lightboxProperty.title}</h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{lightboxProperty.rooms} · {lightboxProperty.area} m² · {lightboxProperty.district}</p>
+            </div>
+          </div>
+
+          <div className="lightbox-counter">
+            {lightboxImageIdx + 1} / {lightboxProperty.images?.length || 1}
+          </div>
+        </div>
+      )}
+
+      <Footer />
+
+      {/* Безопасное подключение глобальных стилей */}
+      <style dangerouslySetInnerHTML={{ __html: cssStyles }} />
+    </>
+  )
+}
+
+// Защищенный бэкенд-метод для безопасного получения и сортировки данных на стороне сервера
 export async function getServerSideProps() {
   try {
     const { data: properties, error } = await supabase
       .from('properties')
       .select('*')
 
-    const sortedProperties = properties ? [...properties].sort((a, b) => {
+    if (error) throw error
+
+    // Сортировка выполняется на сервере только если данные успешно получены и являются массивом
+    const sortedProperties = Array.isArray(properties) ? [...properties].sort((a, b) => {
       const idA = parseInt(a.id || a["Номер"]) || 0;
       const idB = parseInt(b.id || b["Номер"]) || 0;
       return idB - idA;
     }) : [];
-
-    if (error) throw error
 
     return {
       props: {
