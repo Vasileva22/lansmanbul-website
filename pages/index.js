@@ -14,7 +14,7 @@ const cssStyles = [
   '  --primary: #00A4A6;',
   '  --primary-hover: #00898B;',
   '  --dark-slate: #1E293B;',
-  '  --text-main: #3F536C !important;',
+  '  --text-main: #334155 !important;',
   '  --text-secondary: #475569 !important;',
   '  --text-muted: #64748B !important;',
   '  --border-soft: #CBD5E1;',
@@ -34,7 +34,7 @@ const cssStyles = [
   '/* Секция поиска с уменьшенным верхним отступом */',
   '.hero-search-container {',
   '  width: 100%;',
-  '  padding: 35px 20px 25px 20px !important; /* Уменьшено со 125px для устранения пустоты */',
+  '  padding: 35px 20px 25px 20px !important; /* Уменьшено со 125px для плотного прилегания */',
   '  background-color: var(--bg-light);',
   '  display: flex;',
   '  justify-content: center;',
@@ -57,7 +57,7 @@ const cssStyles = [
   '  text-align: center;',
   '}',
   '',
-  '/* Панель поиска */',
+  '/* Карточка панели поиска */',
   '.search-panel-card {',
   '  width: 100%;',
   '  background-color: #fff;',
@@ -163,7 +163,7 @@ const cssStyles = [
   '  cursor: pointer;',
   '  user-select: none;',
   '  box-sizing: border-box;',
-  '  position: relative !important; /* Важнейшее свойство для фиксации выпадающих меню */',
+  '  position: relative !important; /* Важнейшее свойство для фиксации выпадающих меню под кнопками */',
   '}',
   '.search-input-field:hover, .search-input-field.active-field {',
   '  border-color: var(--primary) !important;',
@@ -249,7 +249,7 @@ const cssStyles = [
   '  border-radius: 16px !important;',
   '  box-shadow: var(--shadow-dropdown) !important;',
   '  border: 1.5px solid var(--border-soft) !important;',
-  '  padding: 8px 0 !important;',
+  '  padding: 0 !important;',
   '  z-index: 99999 !important;',
   '  display: block;',
   '  box-sizing: border-box !important;',
@@ -272,7 +272,7 @@ const cssStyles = [
   '  color: var(--primary) !important;',
   '}',
   '',
-  '/* Сетка ЦИАН с заполнением по ширине */',
+  '/* ГРИД ЦИАН */',
   '.grid-layout {',
   '  display: grid !important;',
   '  grid-template-columns: repeat(auto-fill, 227.5px) !important; /* Строгая фиксация ширины ряда из ЦИАН */',
@@ -281,7 +281,10 @@ const cssStyles = [
   '  width: 100% !important;',
   '}',
   '.cian-card {',
-  '  padding: 0 !important; /* Убираем рамки */',
+  '  width: 227.5px !important; /* Умный фикс размеров карточки */',
+  '  height: 302.26px !important; /* Строгий размер карточки ЦИАН */',
+  '  padding: 0 !important; /* Полное обнуление полей */',
+  '  margin: 0 !important;',
   '  background: #ffffff !important;',
   '  border-radius: 16px !important;',
   '  border: 1px solid rgba(226, 232, 240, 0.8) !important;',
@@ -295,27 +298,24 @@ const cssStyles = [
   '  text-decoration: none !important;',
   '  box-sizing: border-box !important;',
   '}',
-  '@media (min-width: 1025px) {',
-  '  .grid-layout .cian-card {',
-  '    width: 227.5px !important; /* Идеальный размер по макету */',
-  '    height: 302.26px !important;',
-  '  }',
-  '  .cian-img-container {',
-  '    height: 155px !important; /* Высота уменьшена со 180px до 155px, чтобы снизу полностью влезли все тексты */',
-  '    width: 100% !important;',
-  '    margin: 0 !important;',
-  '    padding: 0 !important;',
-  '    border-radius: 16px 16px 0 0 !important; /* Только верхние скругления */',
-  '  }',
-  '  .cian-info {',
-  '    padding: 12px 14px !important;',
-  '    display: flex !important;',
-  '    flex-direction: column !important;',
-  '    justify-content: space-between !important;',
-  '    box-sizing: border-box !important;',
-  '    flex: 1 !important;',
-  '    height: 145px !important; /* Достаточная высота для текстов */',
-  '  }',
+  '.cian-img-container {',
+  '  height: 155px !important; /* Высота ограничена строго до 155px, чтобы снизу гарантированно влезли все подписи */',
+  '  width: 100% !important;',
+  '  margin: 0 !important;',
+  '  padding: 0 !important;',
+  '  border-radius: 16px 16px 0 0 !important; /* Закругляются только верхние углы */',
+  '  position: relative !important;',
+  '  overflow: hidden !important;',
+  '  flex-shrink: 0 !important; /* Запрещает картинке растягиваться и выталкивать текст */',
+  '}',
+  '.cian-info {',
+  '  padding: 12px 14px !important;',
+  '  display: flex !important;',
+  '  flex-direction: column !important;',
+  '  justify-content: space-between !important;',
+  '  box-sizing: border-box !important;',
+  '  flex: 1 !important; /* Занимает строго оставшееся пространство */',
+  '  background-color: #ffffff !important;',
   '}',
   '',
   '.cian-img {',
@@ -510,12 +510,19 @@ const cssStyles = [
   '  backdrop-filter: blur(4px) !important;',
   '}',
   '',
-  '/* Мобильная адаптивность */',
+  '/* Мобильные фиксы для лейблов */',
   '@media (max-width: 1024px) {',
   '  .hero-search-container { padding: 100px 16px 40px 16px !important; }',
+  '  .search-panel-card { border-radius: 16px !important; padding: 16px !important; }',
+  '  .search-inputs-row-wrapper { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-inputs-row { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-input-field { width: 100% !important; border: 1.5px solid var(--border-soft) !important; border-radius: 10px !important; }',
+  '  .search-submit-btn { width: 100% !important; border-radius: 12px !important; margin: 0 !important; }',
   '  .grid-layout { grid-template-columns: 1fr !important; gap: 24px !important; }',
-  '  .input-double-label .sub-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; transition: opacity 0.25s !important; }',
-  '  .input-double-label .main-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; opacity: 0 !important; transition: opacity 0.25s !important; }',
+  '  ',
+  '  .input-double-label { position: relative !important; display: flex !important; flex-direction: column !important; justify-content: center !important; height: 100% !important; width: 100% !important; }',
+  '  .input-double-label .sub-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; transition: opacity 0.25s !important; pointer-events: none !important; }',
+  '  .input-double-label .main-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; opacity: 0 !important; transition: opacity 0.25s !important; pointer-events: none !important; }',
   '  .search-input-field.has-value .input-double-label .sub-label { opacity: 0 !important; }',
   '  .search-input-field.has-value .input-double-label .main-label { opacity: 1 !important; }',
   '}'
@@ -584,7 +591,7 @@ export default function Home({ properties = [], initialError }) {
     })
   }
 
-  // Динамические списки для фильтров
+  // Динамические списки для фильтров (поддерживают оригинальные названия колонок из БД)
   const districts = useMemo(() => {
     const set = new Set(properties.map((p) => p["İlçe/Semt"] || p.district).filter(Boolean))
     return Array.from(set)
@@ -817,10 +824,14 @@ export default function Home({ properties = [], initialError }) {
               {favoriteProperties.map((item) => {
                 const titleVal = item.title || item["testproje"] || '';
                 const priceVal = item.price || item["Fiyat"] || '';
-                const imgVal = (item.images || item["Foto"] || [])[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=150&q=80';
+                const imgVal = (item.images || item["Foto"] || [])[0] || '';
                 return (
                   <div key={item.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }} onClick={() => { setIsFavoritesOpen(false); openLightbox(item); }}>
-                    <img src={imgVal} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
+                    {imgVal ? (
+                      <img src={imgVal} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
+                    ) : (
+                      <div style={{ width: '80px', height: '60px', borderRadius: '8px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}>Yok</div>
+                    )}
                     <div>
                       <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>{titleVal}</h4>
                       <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--primary)', fontWeight: '900' }}>{priceVal}</p>
@@ -839,7 +850,7 @@ export default function Home({ properties = [], initialError }) {
           <button className="modal-close-btn" onClick={() => setIsPostModalOpen(false)}>&times;</button>
           <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '16px', color: 'var(--text-main)' }}>Ücretsiz İlan Ver</h3>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.5' }}>
-            Projenizi veya mülkünüzü sitemizde ücretsiz yayınlamak için WhatsApp üzerinden müşteri temsilcimizle doğrudan iletişime geçebilirsiniz.
+            Projenizi или mülkünüzü sitemizde ücretsiz yayınlamak için WhatsApp üzerinden müşteri temsilcimizle doğrudan iletişime geçebilirsiniz.
           </p>
           <div className="phone-highlight-block">+90 545 941 85 36</div>
           <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="modal-green-btn">
@@ -853,7 +864,7 @@ export default function Home({ properties = [], initialError }) {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.95)', zIndex: 100000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#fff', fontSize: '36px', cursor: 'pointer' }} onClick={() => setLightboxProperty(null)}>&times;</button>
           
-          {(lightboxProperty.images?.length || 0) > 1 && (
+          {(lightboxProperty.images || lightboxProperty["Foto"] || []).length > 1 && (
             <>
               <button onClick={prevLightboxImage} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❮</button>
               <button onClick={nextLightboxImage} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❯</button>
@@ -862,19 +873,19 @@ export default function Home({ properties = [], initialError }) {
 
           <div style={{ maxWidth: '90%', maxHeight: '80%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
-              src={(lightboxProperty.images || [])[lightboxImageIdx] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
+              src={(lightboxProperty.images || lightboxProperty["Foto"] || [])[lightboxImageIdx] || ''} 
               style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '12px' }} 
               alt="" 
             />
             <div style={{ marginTop: '20px', textAlign: 'center', color: '#fff', maxWidth: '600px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.price}</h2>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{lightboxProperty.rooms} · {lightboxProperty.area} m² · {lightboxProperty.district}</p>
+              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.price || lightboxProperty["Fiyat"]}</h2>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.title || lightboxProperty["testproje"]}</h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{lightboxProperty.rooms || lightboxProperty["card odalar"]} · {lightboxProperty.area || lightboxProperty["card-area"]} m² · {lightboxProperty.district || lightboxProperty["İlçe/Semt"]}</p>
             </div>
           </div>
 
           <div className="lightbox-counter">
-            {lightboxImageIdx + 1} / {lightboxProperty.images?.length || 1}
+            {lightboxImageIdx + 1} / {(lightboxProperty.images || lightboxProperty["Foto"] || []).length || 1}
           </div>
         </div>
       )}
