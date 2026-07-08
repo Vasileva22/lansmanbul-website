@@ -45,7 +45,6 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
           </nav>
 
           <div className="header-contact">
-            {/* Иконка сердечка с живым счетчиком */}
             <button className="header-fav-btn" onClick={onOpenFavorites} title="Favorilerim">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -53,11 +52,8 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
               {favoritesCount > 0 && <span className="header-fav-badge">{favoritesCount}</span>}
             </button>
 
-            {/* Кнопка войти, открывает Избранное / Личный Кабинет */}
             <button className="btn-signin" onClick={onOpenFavorites}>Giriş Yap</button>
-
-            {/* Кнопка подачи бесплатного объявления */}
-            <button className="btn-post" onClick={onOpenPostModal}>+ Иlan Ver (0 TL)</button>
+            <button className="btn-post" onClick={onOpenPostModal}>+ İlan Ver (0 TL)</button>
 
             <button className="mobile-burger-btn" onClick={() => setIsMobileNavOpen(true)}>
               <svg className="burger-icon-svg" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -101,15 +97,6 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        :root {
-          --primary: #00A4A6;
-          --primary-hover: #00898B;
-          --dark-slate: #1E293B;   
-          --border-soft: #E2E8F0;  
-          --shadow-dropdown: 0 12px 30px rgba(15, 23, 42, 0.15); 
-          --text-muted: #64748B;   
-        }
-
         .modern-header {
           position: fixed !important;
           top: 0 !important;
@@ -140,12 +127,12 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
         }
         .modern-logo:hover .logo-icon-box { transform: scale(1.05) !important; }
         .logo-icon-svg { width: 22px !important; height: 22px !important; fill: currentColor !important; }
-        .logo-text { font-size: 20px !important; font-weight: 500 !important; color: var(--dark-slate) !important; letter-spacing: -0.5px !important; }
+        .logo-text { font-size: 20px !important; font-weight: 500 !important; color: var(--text-main) !important; letter-spacing: -0.5px !important; }
         .logo-text-accent { color: var(--primary) !important; font-weight: 900 !important; }
         
         .modern-nav { display: flex !important; align-items: center !important; gap: 32px !important; }
         .nav-item {
-          font-size: 15px !important; font-weight: 600 !important; color: var(--dark-slate) !important; text-decoration: none !important;
+          font-size: 15px !important; font-weight: 600 !important; color: var(--text-main) !important; text-decoration: none !important;
           display: flex !important; align-items: center !important; gap: 6px !important; cursor: pointer !important; transition: color 0.2s ease !important;
           padding: 8px 0 !important; position: relative !important; user-select: none !important;
         }
@@ -174,7 +161,7 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
         .header-fav-btn {
           background: none !important;
           border: none !important;
-          color: var(--dark-slate) !important;
+          color: var(--text-main) !important;
           cursor: pointer !important;
           position: relative !important;
           display: flex !important;
@@ -204,7 +191,7 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
         }
 
         .btn-signin {
-          color: var(--dark-slate) !important;
+          color: var(--text-main) !important;
           background: none !important;
           border: 1.5px solid var(--border-soft) !important;
           padding: 10px 18px !important;
@@ -240,7 +227,7 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
           .btn-signin { display: none !important; }
           .btn-post { padding: 8px 14px !important; font-size: 12px !important; }
           .mobile-burger-btn { display: flex !important; }
-          .burger-icon-svg { width: 22px !important; height: 22px !important; stroke: var(--dark-slate) !important; fill: none !important; }
+          .burger-icon-svg { width: 22px !important; height: 22px !important; stroke: var(--text-main) !important; fill: none !important; }
 
           .mobile-nav-panel {
             display: flex !important; flex-direction: column !important; position: fixed !important;
@@ -252,7 +239,7 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
           .mobile-nav-panel.open { right: 0 !important; }
           .mobile-nav-close { font-size: 32px !important; color: var(--text-muted) !important; cursor: pointer !important; margin-bottom: 24px !important; line-height: 1 !important; }
           .mobile-nav-links { display: flex !important; flex-direction: column !important; gap: 20px !important; }
-          .mobile-nav-item { font-size: 15px !important; font-weight: 700 !important; color: var(--dark-slate) !important; display: flex !important; justify-content: space-between !important; }
+          .mobile-nav-item { font-size: 15px !important; font-weight: 700 !important; color: var(--text-main) !important; display: flex !important; justify-content: space-between !important; }
           .header-mobile-overlay {
             display: none !important; position: fixed !important; top: 0 !important; left: 0 !important;
             width: 100% !important; height: 100% !important; background: rgba(15, 23, 42, 0.6) !important;
