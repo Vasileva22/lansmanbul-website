@@ -4,7 +4,34 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  const photos = property?.images && property.images.length > 0 ? property.images : [
+  // Извлечение данных с поддержкой ваших оригинальных Airtable/Supabase названий колонок
+  const pId = property?.id || '';
+  const pRooms = property?.["card odalar"] || property?.rooms || '';
+  const pArea = property?.["card-area"] || property?.area || '';
+  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || property?.kat_sayisi || '';
+  const pPrice = property?.["Fiyat"] || property?.price || '';
+  const pDistrict = property?.["İlçe/Semt"] || property?.district || '';
+  const pTitle = property?.["testproje"] || property?.title || '';
+  const pStatus = property?.["konutcesit"] || property?.status || '';
+  const pDescription = property?.["Açıklama"] || property?.description || '';
+  
+  // Безопасное чтение фото (поддержка массивов, Airtable-объектов с вложенными URL и CSV-строк)
+  let pImages = property?.["Foto"] || property?.["Kapak Fotoğrafı"] || property?.images || [];
+  if (typeof pImages === 'string') {
+    try {
+      pImages = JSON.parse(pImages);
+    } catch {
+      pImages = pImages.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+
+  const photoUrls = (Array.isArray(pImages) ? pImages : []).map(p => {
+    if (!p) return '';
+    if (typeof p === 'string') return p;
+    return p.url || (p.thumbnails?.large?.url) || '';
+  }).filter(Boolean);
+
+  const photos = photoUrls.length > 0 ? photoUrls : [
     'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
   ]
 
@@ -50,31 +77,30 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Лайка */}
+      {/* Кнопка Избранного */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
-        onClick={(e) => onToggleLike && onToggleLike(e, property?.id)}
+        onClick={(e) => onToggleLike && onToggleLike(e, pId)}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
         </svg>
       </button>
 
-      {/* Бейдж Статуса */}
-      {property?.status && (
-        <span className={"card-badge status-" + (property.status.toLowerCase() === "lansman" ? "lansman" : "other")}>
-          {property.status}
+      {/* Бейдж статуса */}
+      {pStatus && (
+        <span className={"card-badge status-" + (pStatus.toLowerCase() === "lansman" ? "lansman" : "other")}>
+          {pStatus}
         </span>
       )}
 
-      {/* Контейнер картинки без лишних рамок */}
+      {/* Контейнер картинки встык к границам */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
-        <img src={photos[currentIdx]} className="cian-img" alt={property?.title || ''} />
+        <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
         
-        {/* Ручные скрытые стрелочки */}
         {photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
@@ -83,22 +109,22 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Информация о проекте */}
+      {/* Текстовая информация */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
-          <div className="cian-price">{formatPriceVal(property?.price)}</div>
+          <div className="cian-price">{formatPriceVal(pPrice)}</div>
           <div className="cian-specs">
-            {property?.rooms ? `${property.rooms} · ` : ''}
-            {property?.area ? `${property.area} m²` : ''}
-            {property?.kat_sayisi ? ` · ${property.kat_sayisi} Kat` : ''}
+            {pRooms ? `${pRooms} · ` : ''}
+            {pArea ? `${pArea} m²` : ''}
+            {pFloor ? ` · ${pFloor} Kat` : ''}
           </div>
         </div>
         <div>
           <div className="cian-location">
             <span className="cian-geo-dot cyan"></span>
-            {property?.district || ''}
+            {pDistrict}
           </div>
-          <div className="cian-address" title={property?.title + ", " + property?.description}>{property?.title || ''}</div>
+          <div className="cian-address" title={pTitle + ", " + pDescription}>{pTitle}</div>
         </div>
       </div>
     </div>
