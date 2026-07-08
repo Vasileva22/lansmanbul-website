@@ -4,39 +4,50 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  // Чтение данных напрямую из оригинальных колонок вашей базы данных
+  // Универсальный маппинг колонок (поддерживает любые вариации из Airtable и Supabase)
   const pId = property?.id || '';
-  const pRooms = property?.["card odalar"] || '';
-  const pArea = property?.["card-area"] || '';
-  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || '';
-  const pPrice = property?.["Fiyat"] || '';
-  const pDistrict = property?.["İlçe/Semt"] || '';
-  const pTitle = property?.["testproje"] || '';
-  const pStatus = property?.["konutcesit"] || '';
-  const pDescription = property?.["Açıklama"] || '';
-  
-  // Безопасное чтение фото (поддержка массивов, Airtable-объектов с вложенными URL и CSV-строк)
-  let pImages = property?.["Foto"] || property?.["Kapak Fotoğrafı"] || [];
-  if (typeof pImages === 'string') {
+  const pRooms = property?.["card odalar"] || property?.rooms || '';
+  const pArea = property?.["card-area"] || property?.area || '';
+  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || property?.kat_sayisi || '';
+  const pPrice = property?.["Fiyat"] || property?.price || '';
+  const pDistrict = property?.["İlçe/Semt"] || property?.district || '';
+  const pTitle = property?.["testproje"] || property?.title || '';
+  const pStatus = property?.["konutcesit"] || property?.status || '';
+  const pDescription = property?.["Açıklama"] || property?.description || '';
+
+  // Умный поиск колонки с фотографиями в вашей базе данных
+  const getPhotosFromDB = (item) => {
+    if (!item) return [];
+    const possibleKeys = ["Foto", "Kapak Fotoğrafı", "images", "Images", "photo", "photos", "Resim", "resim", "Görsel"];
+    for (const key of possibleKeys) {
+      if (item[key] !== undefined && item[key] !== null) {
+        return item[key];
+      }
+    }
+    return [];
+  };
+
+  let dbImages = getPhotosFromDB(property);
+  if (typeof dbImages === 'string') {
     try {
-      pImages = JSON.parse(pImages);
+      dbImages = JSON.parse(dbImages);
     } catch {
-      pImages = pImages.split(',').map(s => s.trim()).filter(Boolean);
+      dbImages = dbImages.split(',').map(s => s.trim()).filter(Boolean);
     }
   }
 
-  const photoUrls = (Array.isArray(pImages) ? pImages : []).map(p => {
+  const photoUrls = (Array.isArray(dbImages) ? dbImages : []).map(p => {
     if (!p) return '';
     if (typeof p === 'string') return p;
-    return p.url || (p.thumbnails?.large?.url) || '';
+    return p.url || p.URL || (p.thumbnails?.large?.url) || '';
   }).filter(Boolean);
 
-  const photos = photoUrls.length > 0 ? photoUrls : [
-    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
-  ]
+  // Если фото нет в вашей базе, выводим стильную пустую серую плашку, а не чужую виллу с бассейном
+  const hasPhotos = photoUrls.length > 0;
+  const photos = hasPhotos ? photoUrls : [''];
 
   const handleMouseEnter = () => {
-    if (photos.length <= 1) return
+    if (photos.length <= 1 || !hasPhotos) return
     autoplayTimer.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % photos.length)
     }, 2000)
@@ -94,14 +105,21 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </span>
       )}
 
-      {/* Контейнер картинки (высота уменьшена для освобождения места под текст) */}
+      {/* Контейнер картинки */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
-        <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
+        {hasPhotos ? (
+          <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span style={{ fontSize: '12px', fontWeight: '700' }}>Görsel Yok</span>
+          </div>
+        )}
         
-        {photos.length > 1 && (
+        {hasPhotos && photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
             <button className="slider-arrow arrow-right" onClick={handleNextPhoto}>❯</button>
@@ -109,7 +127,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Информационный текстовый блок карточки */}
+      {/* Информация о проекте */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
           <div className="cian-price">{formatPriceVal(pPrice)}</div>
