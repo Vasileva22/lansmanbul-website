@@ -8,35 +8,34 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Объединенные глобальные стили, дизайн-система и сетка
+// Стили CSS
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
   '  --primary-hover: #00898B;',
   '  --dark-slate: #1E293B;',
-  '  --text-main: #1E293B !important; /* Единый темно-сине-серый вместо черного */',
+  '  --text-main: #1E293B !important;',
   '  --text-secondary: #475569 !important;',
   '  --text-muted: #64748B !important;',
-  '  --border-soft: #CBD5E1;',
-  '  --bg-light: #F1F5F9;',
+  '  --border-soft: #E2E8F0;',
+  '  --bg-light: #F8FAFC;',
   '  --shadow-premium: 0 10px 30px rgba(0, 164, 166, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);',
-  '  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.18);',
+  '  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.15);',
   '  --primary-light: rgba(0, 164, 166, 0.06);',
   '  --radius-bubble: 36px;',
   '  --font-main: "Mulish", sans-serif !important;',
   '}',
   '',
-  '/* ЕДИНЫЙ ШРИФТ И ЦВЕТ ДЛЯ ВСЕХ ЭЛЕМЕНТОВ */',
   'html, body, *, input, select, button, textarea {',
   '  font-family: var(--font-main) !important;',
   '  color: var(--text-secondary);',
   '  box-sizing: border-box !important;',
   '}',
   '',
-  '/* Поисковый баннер (Hero-блок) */',
+  '/* Секция поиска */',
   '.hero-search-container {',
   '  background-color: var(--primary) !important;',
-  '  padding: 60px 20px 80px 20px !important;',
+  '  padding: 60px 20px 70px 20px !important;',
   '  text-align: center !important;',
   '  position: relative !important;',
   '}',
@@ -48,62 +47,7 @@ const cssStyles = [
   '  letter-spacing: -0.5px !important;',
   '}',
   '',
-  '/* Плавающая карточка поиска */',
-  '.search-panel-card {',
-  '  background-color: #ffffff !important;',
-  '  border-radius: 20px !important;',
-  '  box-shadow: var(--shadow-dropdown) !important;',
-  '  padding: 8px !important;',
-  '  max-width: 900px !important;',
-  '  margin: 0 auto !important;',
-  '  border: 1px solid var(--border-soft) !important;',
-  '}',
-  '.search-inputs-row-wrapper {',
-  '  display: flex !important;',
-  '  gap: 12px !important;',
-  '  align-items: center !important;',
-  '}',
-  '.search-inputs-row {',
-  '  display: flex !important;',
-  '  flex: 1 !important;',
-  '  background: #ffffff !important;',
-  '}',
-  '',
-  '/* Индивидуальные интерактивные поля */',
-  '.search-input-field {',
-  '  flex: 1 !important;',
-  '  padding: 12px 24px !important;',
-  '  text-align: left !important;',
-  '  cursor: pointer !important;',
-  '  border-radius: 12px !important;',
-  '  transition: background-color 0.2s ease !important;',
-  '  position: relative !important;',
-  '}',
-  '.search-input-field:hover {',
-  '  background-color: var(--primary-light) !important;',
-  '}',
-  '.search-input-field:not(:last-child) {',
-  '  border-right: 1px solid var(--border-soft) !important;',
-  '}',
-  '.input-double-label {',
-  '  display: flex !important;',
-  '  flex-direction: column !important;',
-  '  gap: 4px !important;',
-  '}',
-  '.input-double-label .sub-label {',
-  '  font-size: 11px !important;',
-  '  font-weight: 800 !important;',
-  '  text-transform: uppercase !important;',
-  '  color: var(--text-muted) !important;',
-  '  letter-spacing: 0.5px !important;',
-  '}',
-  '.input-double-label .main-label {',
-  '  font-size: 15px !important;',
-  '  font-weight: 700 !important;',
-  '  color: var(--text-main) !important;',
-  '}',
-  '',
-  '/* Кастомные выпадающие меню */',
+  '/* Дропдауны фильтрации */',
   '.custom-dropdown {',
   '  position: absolute !important;',
   '  background-color: #ffffff !important;',
@@ -112,50 +56,32 @@ const cssStyles = [
   '  border: 1.5px solid var(--border-soft) !important;',
   '  padding: 8px 0 !important;',
   '  z-index: 99999 !important;',
-  '  top: 110% !important;',
+  '  top: 105% !important;',
   '  left: 0 !important;',
   '  width: 100% !important;',
-  '  min-width: 220px !important;',
-  '  display: block !important;',
   '}',
   '.dropdown-item {',
-  '  padding: 10px 20px !important;',
+  '  padding: 10px 16px !important;',
   '  font-size: 14px !important;',
   '  font-weight: 700 !important;',
   '  color: var(--text-secondary) !important;',
   '  cursor: pointer !important;',
-  '  transition: background-color 0.15s ease, color 0.15s ease !important;',
+  '  transition: all 0.15s ease !important;',
   '}',
   '.dropdown-item:hover {',
   '  background-color: var(--primary-light) !important;',
   '  color: var(--primary) !important;',
   '}',
   '',
-  '.search-submit-btn {',
-  '  background-color: var(--primary) !important;',
-  '  color: #ffffff !important;',
-  '  border: none !important;',
-  '  height: 52px !important;',
-  '  border-radius: 14px !important;',
-  '  padding: 0 28px !important;',
-  '  font-weight: 800 !important;',
-  '  font-size: 15px !important;',
-  '  cursor: pointer !important;',
-  '  transition: background-color 0.2s ease !important;',
-  '}',
-  '.search-submit-btn:hover {',
-  '  background-color: var(--primary-hover) !important;',
-  '}',
-  '',
-  '/* ЖЕСТКИЙ ГРИД 4Х С ТОЧНЫМИ РАЗМЕРАМИ ИЗ ЦИАН */',
+  '/* Сетка ЦИАН с заполнением по ширине */',
   '.grid-layout {',
   '  display: grid !important;',
   '  grid-template-columns: repeat(auto-fill, minmax(227.5px, 1fr)) !important;',
   '  gap: 20px !important;',
   '  width: 100% !important;',
   '}',
-  '',
   '.cian-card {',
+  '  padding: 0 !important;',
   '  background: #ffffff !important;',
   '  border-radius: 16px !important;',
   '  border: 1px solid rgba(226, 232, 240, 0.8) !important;',
@@ -170,29 +96,23 @@ const cssStyles = [
   '}',
   '@media (min-width: 1025px) {',
   '  .grid-layout .cian-card {',
-  '    width: 227.5px !important;',
+  '    width: 100% !important; /* Убрано фиксированное сжатие 227px, теперь карточка заполняет сетку */',
   '    height: 302.26px !important;',
   '  }',
-  '}',
-  '.cian-card:hover {',
-  '  transform: translateY(-5px) !important;',
-  '  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06) !important;',
-  '}',
-  '',
-  '.cian-img-container {',
-  '  position: relative !important;',
-  '  overflow: hidden !important;',
-  '  border-radius: 12px !important;',
-  '  width: 100% !important;',
-  '}',
-  '@media (min-width: 1025px) {',
   '  .cian-img-container {',
-  '    height: 180.93px !important; /* Зафиксированная высота фото из ЦИАН */',
+  '    height: 180.93px !important;',
+  '    width: 100% !important;',
+  '    margin: 0 !important;',
+  '    padding: 0 !important;',
+  '    border-radius: 16px 16px 0 0 !important; /* Скругление только вверху */',
   '  }',
-  '}',
-  '@media (max-width: 1024px) {',
-  '  .cian-img-container {',
-  '    aspect-ratio: 1.25 !important;',
+  '  .cian-info {',
+  '    padding: 12px 14px !important;',
+  '    display: flex !important;',
+  '    flex-direction: column !important;',
+  '    justify-content: space-between !important;',
+  '    box-sizing: border-box !important;',
+  '    flex: 1 !important;',
   '  }',
   '}',
   '',
@@ -203,7 +123,10 @@ const cssStyles = [
   '  width: 100% !important;',
   '  height: 100% !important;',
   '  object-fit: cover !important;',
-  '  transition: transform 0.4s ease !important;',
+  '}',
+  '.cian-card:hover {',
+  '  transform: translateY(-5px) !important;',
+  '  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06) !important;',
   '}',
   '',
   '/* Сердечко */',
@@ -231,48 +154,45 @@ const cssStyles = [
   '  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;',
   '}',
   '',
-  '/* Блок текста в карточке */',
-  '.cian-info {',
-  '  padding: 12px !important;',
-  '  display: flex !important;',
-  '  flex-direction: column !important;',
-  '  gap: 4px !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '@media (min-width: 1025px) {',
-  '  .cian-info {',
-  '    height: 100px !important; /* Точный размер текстового блока */',
-  '  }',
-  '}',
+  '/* Текстовые поля в карточке */',
   '.cian-price {',
   '  font-size: 20px !important;',
-  '  font-weight: 900 !important;',
+  '  font-weight: 800 !important;',
   '  color: var(--text-main) !important;',
   '  line-height: 1.1 !important;',
   '}',
   '.cian-specs {',
   '  font-size: 13.5px !important;',
-  '  font-weight: 700 !important;',
+  '  font-weight: 500 !important;',
   '  color: var(--text-secondary) !important;',
+  '  margin-top: 2px !important;',
   '}',
   '.cian-location {',
-  '  font-size: 12px !important;',
+  '  font-size: 12.5px !important;',
   '  font-weight: 600 !important;',
   '  color: var(--text-secondary) !important;',
   '  display: inline-flex !important;',
   '  align-items: center !important;',
-  '  gap: 4px !important;',
+  '  gap: 6px !important;',
+  '  margin-top: 4px !important;',
+  '}',
+  '.cian-geo-dot {',
+  '  width: 8px !important;',
+  '  height: 8px !important;',
+  '  border-radius: 50% !important;',
+  '  background-color: var(--primary) !important;',
   '}',
   '.cian-address {',
-  '  font-size: 11px !important;',
+  '  font-size: 11.5px !important;',
   '  font-weight: 500 !important;',
   '  color: var(--text-muted) !important;',
   '  white-space: nowrap !important;',
   '  overflow: hidden !important;',
   '  text-overflow: ellipsis !important;',
+  '  margin-top: 2px !important;',
   '}',
   '',
-  '/* ВЫДВИЖНОЙ РАЗДЕЛ (ЛИЧНЫЙ КАБИНЕТ) */',
+  '/* Личный кабинет */',
   '.cabinet-drawer {',
   '  position: fixed !important;',
   '  top: 0 !important;',
@@ -314,7 +234,7 @@ const cssStyles = [
   '  padding: 24px !important;',
   '}',
   '',
-  '/* МОДАЛЬНЫЕ ОКНА И ОВЕРЛЕИ */',
+  '/* Модалки */',
   '.modal-overlay {',
   '  position: fixed !important;',
   '  top: 0 !important;',
@@ -388,59 +308,36 @@ const cssStyles = [
   '  backdrop-filter: blur(4px) !important;',
   '}',
   '',
-  '/* Мобильная адаптивность поиска */',
+  '/* Адаптивность */',
   '@media (max-width: 1024px) {',
-  '  .hero-search-container {',
-  '    padding: 100px 16px 40px 16px !important;',
-  '  }',
-  '  .search-panel-card {',
-  '    padding: 12px !important;',
-  '  }',
-  '  .search-inputs-row-wrapper {',
-  '    flex-direction: column !important;',
-  '    width: 100% !important;',
-  '  }',
-  '  .search-inputs-row {',
-  '    flex-direction: column !important;',
-  '    width: 100% !important;',
-  '  }',
-  '  .search-input-field:not(:last-child) {',
-  '    border-right: none !important;',
-  '    border-bottom: 1px solid var(--border-soft) !important;',
-  '  }',
-  '  .search-submit-btn {',
-  '    width: 100% !important;',
-  '  }',
-  '  .grid-layout {',
-  '    grid-template-columns: 1fr !important;',
-  '    gap: 24px !important;',
-  '  }',
+  '  .hero-search-container { padding: 100px 16px 40px 16px !important; }',
+  '  .grid-layout { grid-template-columns: 1fr !important; gap: 24px !important; }',
   '}'
 ].join('\n');
 
 export default function Home({ properties = [], initialError }) {
   const router = useRouter()
 
-  // Состояния для избранного и модальных окон
+  // Избранное и модалки
   const [favorites, setFavorites] = useState([])
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false)
   const [isPostModalOpen, setIsPostModalOpen] = useState(false)
   
-  // Состояния для фильтров
+  // Параметры поиска
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [selectedRooms, setSelectedRooms] = useState('')
   const [activeStatusFilter, setActiveStatusFilter] = useState('')
 
-  // Состояние открытого выпадающего списка
-  const [openDropdown, setOpenDropdown] = useState(null) // 'district' | 'rooms' | 'status' | null
+  // Активный дропдаун
+  const [openDropdown, setOpenDropdown] = useState(null)
 
-  // Просмотрщик картинок (Lightbox)
+  // Lightbox
   const [lightboxProperty, setLightboxProperty] = useState(null)
   const [lightboxImageIdx, setLightboxImageIdx] = useState(0)
 
   const searchContainerRef = useRef(null)
 
-  // Закрытие списков при клике вне области поиска
+  // Клик вне меню закрывает выпадающие списки
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
@@ -451,7 +348,7 @@ export default function Home({ properties = [], initialError }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Синхронизация избранного
+  // Синхронизация избранного из localStorage
   useEffect(() => {
     const stored = localStorage.getItem('lansmanbul_favorites')
     if (stored) {
@@ -463,7 +360,7 @@ export default function Home({ properties = [], initialError }) {
     }
   }, [])
 
-  // Синхронизация фильтра по клику из шапки / футера
+  // Изменение статуса через URL query
   useEffect(() => {
     if (router.query.status) {
       setActiveStatusFilter(String(router.query.status))
@@ -472,7 +369,6 @@ export default function Home({ properties = [], initialError }) {
     }
   }, [router.query.status])
 
-  // Переключение лайка
   const toggleLike = (e, id) => {
     if (e) e.stopPropagation()
     setFavorites((prev) => {
@@ -482,7 +378,7 @@ export default function Home({ properties = [], initialError }) {
     })
   }
 
-  // Списки для фильтров
+  // Динамические списки для фильтров
   const districts = useMemo(() => {
     const set = new Set(properties.map((p) => p.district).filter(Boolean))
     return Array.from(set)
@@ -493,7 +389,7 @@ export default function Home({ properties = [], initialError }) {
     return Array.from(set).sort()
   }, [properties])
 
-  // Фильтрация
+  // Фильтрация объектов
   const filteredProperties = useMemo(() => {
     return properties.filter((p) => {
       if (activeStatusFilter && p.status?.toLowerCase() !== activeStatusFilter.toLowerCase()) {
@@ -502,7 +398,7 @@ export default function Home({ properties = [], initialError }) {
       if (selectedDistrict && p.district?.toLowerCase() !== selectedDistrict.toLowerCase()) {
         return false
       }
-      if (selectedRooms && p.rooms !== selectedRooms) {
+      if (selectedRooms && String(p.rooms) !== String(selectedRooms)) {
         return false
       }
       return true
@@ -513,7 +409,6 @@ export default function Home({ properties = [], initialError }) {
     return properties.filter((p) => favorites.includes(p.id))
   }, [properties, favorites])
 
-  // Слайдер Lightbox
   const openLightbox = (property, index = 0) => {
     setLightboxProperty(property)
     setLightboxImageIdx(index)
@@ -547,84 +442,87 @@ export default function Home({ properties = [], initialError }) {
 
       <main className="tilda-catalog-wrapper" style={{ marginTop: '90px', minHeight: '80vh', backgroundColor: '#f8fafc', paddingBottom: '80px' }}>
         
-        {/* ХЕРО-блок с бирюзовым фоном */}
+        {/* ХЕРО-блок */}
         <div className="hero-search-container">
           <h1 className="hero-search-title">Hayalinizdeki Evi Keşfedin</h1>
           
-          {/* Плавающая панель поиска */}
-          <div className="search-panel-card" ref={searchContainerRef}>
-            <div className="search-inputs-row-wrapper">
+          {/* ТРИ отдельных интерактивных элемента на белом фоне */}
+          <div ref={searchContainerRef} style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', maxWidth: '900px', margin: '0 auto' }}>
+            
+            {/* 1. Элемент: Выбор региона */}
+            <div 
+              onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')} 
+              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>📍</span>
+                <div className="input-double-label">
+                  <span className="sub-label">Bölge Seçiniz</span>
+                  <span className="main-label">{selectedDistrict || 'Tüm Bölgeler'}</span>
+                </div>
+              </div>
               
-              <div className="search-inputs-row">
-                
-                {/* 1. Поле: Регионы */}
-                <div 
-                  className="search-input-field" 
-                  onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')}
-                >
-                  <div className="input-double-label">
-                    <span className="sub-label">Bölge Seçiniz</span>
-                    <span className="main-label">{selectedDistrict || 'Tüm Bölgeler'}</span>
-                  </div>
-                  
-                  {openDropdown === 'district' && (
-                    <div className="custom-dropdown">
-                      <div className="dropdown-item" onClick={() => setSelectedDistrict('')}>Tüm Bölgeler</div>
-                      {districts.map((d) => (
-                        <div key={d} className="dropdown-item" onClick={() => setSelectedDistrict(d)}>{d}</div>
-                      ))}
-                    </div>
-                  )}
+              {openDropdown === 'district' && (
+                <div className="custom-dropdown">
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedDistrict(''); setOpenDropdown(null); }}>Tüm Bölgeler</div>
+                  {districts.map((d) => (
+                    <div key={d} className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedDistrict(d); setOpenDropdown(null); }}>{d}</div>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {/* 2. Поле: Комнаты */}
-                <div 
-                  className="search-input-field" 
-                  onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')}
-                >
-                  <div className="input-double-label">
-                    <span className="sub-label">Oda Sayısı</span>
-                    <span className="main-label">{selectedRooms || 'Tüm Odalar'}</span>
-                  </div>
-
-                  {openDropdown === 'rooms' && (
-                    <div className="custom-dropdown">
-                      <div className="dropdown-item" onClick={() => setSelectedRooms('')}>Tüm Odalar</div>
-                      {roomsList.map((r) => (
-                        <div key={r} className="dropdown-item" onClick={() => setSelectedRooms(r)}>{r}</div>
-                      ))}
-                    </div>
-                  )}
+            {/* 2. Элемент: Выбор комнат */}
+            <div 
+              onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')} 
+              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>🔑</span>
+                <div className="input-double-label">
+                  <span className="sub-label">Oda Sayısı</span>
+                  <span className="main-label">{selectedRooms || 'Tüm Odalar'}</span>
                 </div>
-
-                {/* 3. Поле: Статус проекта */}
-                <div 
-                  className="search-input-field" 
-                  onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
-                >
-                  <div className="input-double-label">
-                    <span className="sub-label">Proje Durumu</span>
-                    <span className="main-label">{activeStatusFilter || 'Tüm Durumlar'}</span>
-                  </div>
-
-                  {openDropdown === 'status' && (
-                    <div className="custom-dropdown">
-                      <div className="dropdown-item" onClick={() => setActiveStatusFilter('')}>Tüm Durumlar</div>
-                      <div className="dropdown-item" onClick={() => setActiveStatusFilter('Lansman')}>Lansman</div>
-                      <div className="dropdown-item" onClick={() => setActiveStatusFilter('Devam ediyor')}>Devam ediyor</div>
-                      <div className="dropdown-item" onClick={() => setActiveStatusFilter('Tamamlandı')}>Tamamlandı</div>
-                    </div>
-                  )}
-                </div>
-
               </div>
 
-              <button className="search-submit-btn" onClick={() => setOpenDropdown(null)}>
-                Filtrele
-              </button>
-
+              {openDropdown === 'rooms' && (
+                <div className="custom-dropdown">
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedRooms(''); setOpenDropdown(null); }}>Tüm Odalar</div>
+                  {roomsList.map((r) => (
+                    <div key={r} className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedRooms(r); setOpenDropdown(null); }}>{r}</div>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {/* 3. Элемент: Статус проекта */}
+            <div 
+              onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')} 
+              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>📊</span>
+                <div className="input-double-label">
+                  <span className="sub-label">Proje Durumu</span>
+                  <span className="main-label">{activeStatusFilter || 'Tüm Durumlar'}</span>
+                </div>
+              </div>
+
+              {openDropdown === 'status' && (
+                <div className="custom-dropdown">
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter(''); setOpenDropdown(null); }}>Tüm Durumlar</div>
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Lansman'); setOpenDropdown(null); }}>Lansman</div>
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Devam ediyor'); setOpenDropdown(null); }}>Devam ediyor</div>
+                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Tamamlandı'); setOpenDropdown(null); }}>Tamamlandı</div>
+                </div>
+              )}
+            </div>
+
           </div>
+
+          {/* Фирменная градиентная линия под блоками */}
+          <div style={{ maxWidth: '900px', margin: '24px auto 0 auto', height: '4px', background: 'linear-gradient(90deg, #B2EBF2 0%, #00A4A6 100%)', borderRadius: '2px' }} />
+
         </div>
 
         {/* Сетка объявлений */}
@@ -706,7 +604,7 @@ export default function Home({ properties = [], initialError }) {
           <button className="modal-close-btn" onClick={() => setIsPostModalOpen(false)}>&times;</button>
           <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '16px', color: 'var(--text-main)' }}>Ücretsiz İlan Ver</h3>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.5' }}>
-            Projenizi veya mülkünüzü sitemizde ücretsiz yayınlamak için WhatsApp üzerinden müşteri temsilcimizле doğrudan iletişime geçebilirsiniz.
+            Projenizi veya mülkünüzü sitemizde ücretsiz yayınlamak için WhatsApp üzerinden müşteri temsilcimizle doğrudan iletişime geçebilirsiniz.
           </p>
           <div className="phone-highlight-block">+90 545 941 85 36</div>
           <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="modal-green-btn">
