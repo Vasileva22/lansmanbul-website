@@ -8,15 +8,13 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
   ]
 
-  // Включаем автопрокрутку при наведении
   const handleMouseEnter = () => {
     if (photos.length <= 1) return
     autoplayTimer.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % photos.length)
-    }, 2000) // Меняем фото каждые 2 секунды
+    }, 2000)
   }
 
-  // Останавливаем автопрокрутку
   const handleMouseLeave = () => {
     if (autoplayTimer.current) {
       clearInterval(autoplayTimer.current)
@@ -52,7 +50,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Лайка */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, property?.id)}
@@ -62,22 +59,18 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Бейдж Статуса */}
       {property?.status && (
         <span className={"card-badge status-" + (property.status.toLowerCase() === "lansman" ? "lansman" : "other")}>
           {property.status}
         </span>
       )}
 
-      {/* Область Картинки */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
-        {/* class заменен на className */}
         <img src={photos[currentIdx]} className="cian-img" alt={property?.title || ''} />
         
-        {/* Ручные скрытые стрелочки управления (проявляются белым при наведении) */}
         {photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
@@ -86,7 +79,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Текстовая Информация */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div className="cian-price">{formatPriceVal(property?.price)}</div>
         <div className="cian-specs">{property?.rooms || ''} · {property?.area || '0'} m² · {property?.kat_sayisi || '0'} Kat</div>
