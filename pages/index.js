@@ -44,32 +44,6 @@ const mapProperty = (item) => {
   }
 }
 
-const SVGS = {
-  location: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
-  bed: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
-  search: (
-    <svg 
-      className="dropdown-search-icon" 
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="#64748b"
-      strokeWidth="2.5"
-      style={{ 
-        position: 'absolute', 
-        pointerEvents: 'none',
-        fill: 'none'
-      }}
-    >
-      <circle cx="11" cy="11" r="8" fill="none" stroke="#64748b" strokeWidth="2.5" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#64748b" strokeWidth="2.5" />
-    </svg>
-  ),
-  grid: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>,
-  list: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
-}
-
 export default function Home({ properties = [], initialError }) {
   const router = useRouter()
   const { status } = router.query
@@ -112,6 +86,33 @@ export default function Home({ properties = [], initialError }) {
 
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
+
+  // Перенесли SVG-иконки внутрь компонента во избежание их глобальной инициализации при импорте
+  const SVGS = {
+    location: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
+    bed: <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>,
+    search: (
+      <svg 
+        className="dropdown-search-icon" 
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        fill="none"
+        stroke="#64748b"
+        strokeWidth="2.5"
+        style={{ 
+          position: 'absolute', 
+          pointerEvents: 'none',
+          fill: 'none'
+        }}
+      >
+        <circle cx="11" cy="11" r="8" fill="none" stroke="#64748b" strokeWidth="2.5" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#64748b" strokeWidth="2.5" />
+      </svg>
+    ),
+    grid: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>,
+    list: <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>,
+  }
 
   // Загружаем избранное из localStorage при старте
   useEffect(() => {
@@ -964,7 +965,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkла doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                    <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
                   </div>
 
                   <div className="v1-card">
@@ -972,7 +973,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
@@ -1097,8 +1098,7 @@ export default function Home({ properties = [], initialError }) {
   )
 }
 
-// Вынесли CSS-стили за пределы компонента в виде JS-массива строк. 
-// Здесь используются исключительно одинарные кавычки для строк, благодаря чему у SWC/Turbopack не возникнет ошибок.
+// Стили вынесены за пределы компонента в виде массива строк
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -1748,7 +1748,7 @@ const cssStyles = [
   '  }',
   '',
   '  .custom-dropdown::before {',
-  '    content: "" !important;',
+  '    content: \'\' !important;',
   '    display: block !important;',
   '    width: 40px !important;',
   '    height: 4px !important;',
