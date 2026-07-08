@@ -57,7 +57,7 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
             <button className="btn-signin" onClick={onOpenFavorites}>Giriş Yap</button>
 
             {/* Кнопка подачи бесплатного объявления */}
-            <button className="btn-post" onClick={onOpenPostModal}>+ İlan Ver (0 TL)</button>
+            <button className="btn-post" onClick={onOpenPostModal}>+ Иlan Ver (0 TL)</button>
 
             <button className="mobile-burger-btn" onClick={() => setIsMobileNavOpen(true)}>
               <svg className="burger-icon-svg" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -256,7 +256,9 @@ export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModa
           .header-mobile-overlay {
             display: none !important; position: fixed !important; top: 0 !important; left: 0 !important;
             width: 100% !important; height: 100% !important; background: rgba(15, 23, 42, 0.6) !important;
-            z-index: 9999999 !important; opacity: 0; transition: opacity 0.3s ease-in-out !important;
+            z-index: 100000008 !important;
+            opacity: 0 !important;
+            transition: opacity 0.3s ease-in-out !important;
           }
           .header-mobile-overlay.show { display: block !important; opacity: 1 !important; }
         }
