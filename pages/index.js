@@ -8,19 +8,18 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Стили CSS
+// Стили CSS, полностью импортирующие дизайн-систему, табы, монолитные элементы и закругления
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
   '  --primary-hover: #00898B;',
   '  --dark-slate: #1E293B;',
-  '  --text-main: #1E293B !important;',
-  '  --text-secondary: #475569 !important;',
-  '  --text-muted: #64748B !important;',
-  '  --border-soft: #E2E8F0;',
-  '  --bg-light: #F8FAFC;',
+  '  --text-main: #334155;',
+  '  --text-muted: #64748B;',
+  '  --border-soft: #CBD5E1;',
+  '  --bg-light: #F1F5F9;',
   '  --shadow-premium: 0 10px 30px rgba(0, 164, 166, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);',
-  '  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.15);',
+  '  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.18);',
   '  --primary-light: rgba(0, 164, 166, 0.06);',
   '  --radius-bubble: 36px;',
   '  --font-main: "Mulish", sans-serif !important;',
@@ -34,42 +33,234 @@ const cssStyles = [
   '',
   '/* Секция поиска */',
   '.hero-search-container {',
-  '  background-color: var(--primary) !important;',
-  '  padding: 60px 20px 70px 20px !important;',
-  '  text-align: center !important;',
-  '  position: relative !important;',
+  '  width: 100%;',
+  '  padding: 125px 20px 25px 20px;',
+  '  background-color: var(--bg-light);',
+  '  display: flex;',
+  '  justify-content: center;',
+  '  box-sizing: border-box;',
+  '}',
+  '.search-width-limiter {',
+  '  width: 100%;',
+  '  max-width: 1140px;',
+  '  display: flex;',
+  '  flex-direction: column;',
+  '  align-items: center;',
+  '  box-sizing: border-box;',
   '}',
   '.hero-search-title {',
-  '  color: #ffffff !important;',
-  '  font-size: 34px !important;',
-  '  font-weight: 900 !important;',
-  '  margin-bottom: 30px !important;',
-  '  letter-spacing: -0.5px !important;',
+  '  font-size: 36px;',
+  '  font-weight: 900;',
+  '  color: #3F536C;',
+  '  margin: 0 0 25px 0;',
+  '  line-height: 1.3;',
+  '  text-align: center;',
   '}',
   '',
-  '/* Дропдауны фильтрации */',
+  '/* Карточка панели поиска */',
+  '.search-panel-card {',
+  '  width: 100%;',
+  '  background-color: #fff;',
+  '  border-radius: 20px;',
+  '  border: 1px solid var(--border-soft);',
+  '  box-shadow: var(--shadow-premium);',
+  '  padding: 24px 30px 32px 30px;',
+  '  display: flex;',
+  '  flex-direction: column;',
+  '  gap: 20px;',
+  '  position: relative;',
+  '  box-sizing: border-box;',
+  '}',
+  '.panel-bottom-gradient {',
+  '  position: absolute;',
+  '  bottom: 0;',
+  '  left: 0;',
+  '  width: 100%;',
+  '  height: 4px;',
+  '  background: linear-gradient(to right, #7b1fa2, var(--primary), #ffb300);',
+  '  overflow: hidden;',
+  '  border-radius: 0 0 20px 20px;',
+  '}',
+  '',
+  '/* Вкладки городов */',
+  '.search-tabs-header {',
+  '  display: flex;',
+  '  gap: 24px;',
+  '  border-bottom: 1px solid var(--border-soft);',
+  '  padding-bottom: 12px;',
+  '  margin-bottom: 4px;',
+  '  box-sizing: border-box;',
+  '}',
+  '.city-tab-item {',
+  '  display: flex;',
+  '  align-items: center;',
+  '  gap: 8px;',
+  '  font-size: 16px;',
+  '  font-weight: 800;',
+  '  color: var(--text-muted);',
+  '  cursor: pointer;',
+  '  position: relative;',
+  '  padding-bottom: 12px;',
+  '  margin-bottom: -13px;',
+  '  transition: color .2s ease;',
+  '  user-select: none;',
+  '}',
+  '.city-tab-item.active {',
+  '  color: var(--primary);',
+  '}',
+  '.city-tab-item.active::after {',
+  '  content: "";',
+  '  position: absolute;',
+  '  bottom: 0;',
+  '  left: 0;',
+  '  width: 100%;',
+  '  height: 3px;',
+  '  background-color: var(--primary);',
+  '  border-radius: 3px 3px 0 0;',
+  '}',
+  '.city-tab-item.disabled {',
+  '  color: #9CA3AF;',
+  '  cursor: pointer;',
+  '}',
+  '.tab-badge {',
+  '  font-size: 9px;',
+  '  background-color: #F3F4F6;',
+  '  color: #9CA3AF;',
+  '  padding: 2px 6px;',
+  '  border-radius: 20px;',
+  '  font-weight: 700;',
+  '  text-transform: uppercase;',
+  '  letter-spacing: .5px;',
+  '}',
+  '',
+  '/* Поля ввода */',
+  '.search-inputs-row-wrapper {',
+  '  display: flex;',
+  '  gap: 16px;',
+  '  width: 100%;',
+  '  align-items: center;',
+  '  box-sizing: border-box;',
+  '}',
+  '.search-inputs-row {',
+  '  display: flex;',
+  '  gap: 16px;',
+  '  align-items: center;',
+  '  flex: 1;',
+  '  box-sizing: border-box;',
+  '}',
+  '.search-input-field {',
+  '  display: flex;',
+  '  align-items: center;',
+  '  gap: 12px;',
+  '  border: 1.5px solid var(--border-soft);',
+  '  border-radius: 10px;',
+  '  height: 60px;',
+  '  padding: 0 16px;',
+  '  background-color: #F8FAFC;',
+  '  transition: border-color .2s, background-color .2s, box-shadow .2s;',
+  '  cursor: pointer;',
+  '  user-select: none;',
+  '  box-sizing: border-box;',
+  '}',
+  '.search-input-field:hover, .search-input-field.active-field {',
+  '  border-color: var(--primary) !important;',
+  '  background-color: #fff !important;',
+  '  box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;',
+  '}',
+  '.search-input-field.flex-wide { flex: 1.5 !important; }',
+  '.search-input-field.flex-standard { flex: 1 !important; }',
+  '',
+  '.input-icon-svg {',
+  '  width: 18px;',
+  '  height: 18px;',
+  '  flex-shrink: 0;',
+  '  transition: stroke .2s, fill .2s;',
+  '}',
+  '.input-icon-svg.icon-stroke {',
+  '  fill: none;',
+  '  stroke: var(--text-muted);',
+  '  stroke-width: 2;',
+  '}',
+  '.search-input-field:hover .input-icon-svg.icon-stroke, .search-input-field.active-field .input-icon-svg.icon-stroke {',
+  '  stroke: var(--primary) !important;',
+  '}',
+  '.input-icon-svg.icon-fill {',
+  '  fill: var(--text-muted);',
+  '}',
+  '.search-input-field:hover .input-icon-svg.icon-fill, .search-input-field.active-field .input-icon-svg.icon-fill {',
+  '  fill: var(--primary) !important;',
+  '}',
+  '',
+  '.input-double-label {',
+  '  display: flex;',
+  '  flex-direction: column;',
+  '  gap: 2px;',
+  '  text-align: left;',
+  '  overflow: hidden;',
+  '  width: 100%;',
+  '}',
+  '.input-double-label .sub-label {',
+  '  font-size: 11px;',
+  '  font-weight: 800;',
+  '  color: var(--text-muted);',
+  '  text-transform: uppercase;',
+  '  letter-spacing: .5px;',
+  '}',
+  '.input-double-label .main-label {',
+  '  font-size: 16px;',
+  '  font-weight: 800;',
+  '  color: #3F536C;',
+  '  white-space: nowrap;',
+  '  overflow: hidden;',
+  '  text-overflow: ellipsis;',
+  '}',
+  '',
+  '.search-submit-btn {',
+  '  background-color: var(--primary);',
+  '  color: #fff;',
+  '  border: none;',
+  '  height: 60px;',
+  '  padding: 0 40px;',
+  '  border-radius: 30px;',
+  '  font-size: 18px;',
+  '  font-weight: 800;',
+  '  cursor: pointer;',
+  '  transition: background-color .2s, transform .1s, box-shadow .2s;',
+  '  flex-shrink: 0;',
+  '  box-shadow: 0 4px 14px rgba(0, 164, 166, 0.2);',
+  '}',
+  '.search-submit-btn:hover {',
+  '  background-color: var(--primary-hover);',
+  '  box-shadow: 0 6px 20px rgba(0, 164, 166, 0.35);',
+  '}',
+  '.search-submit-btn:active { transform: scale(.97); }',
+  '',
+  '/* Кастомные выпадающие меню */',
   '.custom-dropdown {',
   '  position: absolute !important;',
-  '  background-color: #ffffff !important;',
+  '  background-color: #fff !important;',
   '  border-radius: 16px !important;',
   '  box-shadow: var(--shadow-dropdown) !important;',
   '  border: 1.5px solid var(--border-soft) !important;',
-  '  padding: 8px 0 !important;',
+  '  padding: 0 !important;',
   '  z-index: 99999 !important;',
+  '  display: block;',
+  '  box-sizing: border-box !important;',
+  '  overflow: hidden !important;',
   '  top: 105% !important;',
   '  left: 0 !important;',
   '  width: 100% !important;',
   '}',
   '.dropdown-item {',
-  '  padding: 10px 16px !important;',
+  '  padding: 12px 20px !important;',
   '  font-size: 14px !important;',
   '  font-weight: 700 !important;',
-  '  color: var(--text-secondary) !important;',
+  '  color: #3F536C !important;',
   '  cursor: pointer !important;',
   '  transition: all 0.15s ease !important;',
   '}',
   '.dropdown-item:hover {',
-  '  background-color: var(--primary-light) !important;',
+  '  background-color: #f8fafc !important;',
   '  color: var(--primary) !important;',
   '}',
   '',
@@ -104,7 +295,7 @@ const cssStyles = [
   '    width: 100% !important;',
   '    margin: 0 !important;',
   '    padding: 0 !important;',
-  '    border-radius: 16px 16px 0 0 !important; /* Скругление только вверху */',
+  '    border-radius: 16px 16px 0 0 !important;',
   '  }',
   '  .cian-info {',
   '    padding: 12px 14px !important;',
@@ -192,7 +383,7 @@ const cssStyles = [
   '  margin-top: 2px !important;',
   '}',
   '',
-  '/* Личный кабинет */',
+  '/* Выдвижная панель */',
   '.cabinet-drawer {',
   '  position: fixed !important;',
   '  top: 0 !important;',
@@ -234,7 +425,7 @@ const cssStyles = [
   '  padding: 24px !important;',
   '}',
   '',
-  '/* Модалки */',
+  '/* Модальные окна */',
   '.modal-overlay {',
   '  position: fixed !important;',
   '  top: 0 !important;',
@@ -308,10 +499,21 @@ const cssStyles = [
   '  backdrop-filter: blur(4px) !important;',
   '}',
   '',
-  '/* Адаптивность */',
+  '/* Мобильные фиксы для лейблов */',
   '@media (max-width: 1024px) {',
-  '  .hero-search-container { padding: 100px 16px 40px 16px !important; }',
+  '  .hero-search-container { padding: 110px 16px 40px 16px !important; }',
+  '  .search-panel-card { border-radius: 16px !important; padding: 16px !important; }',
+  '  .search-inputs-row-wrapper { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-inputs-row { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-input-field { width: 100% !important; border: 1.5px solid var(--border-soft) !important; border-radius: 10px !important; }',
+  '  .search-submit-btn { width: 100% !important; border-radius: 12px !important; margin: 0 !important; }',
   '  .grid-layout { grid-template-columns: 1fr !important; gap: 24px !important; }',
+  '  ',
+  '  .input-double-label { position: relative !important; display: flex !important; flex-direction: column !important; justify-content: center !important; height: 100% !important; width: 100% !important; }',
+  '  .input-double-label .sub-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; color: #5a6472 !important; text-transform: none !important; font-weight: 600 !important; display: block !important; transition: opacity 0.25s ease !important; pointer-events: none !important; }',
+  '  .input-double-label .main-label { position: absolute !important; left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 15px !important; font-weight: 700 !important; color: #3F536C !important; opacity: 0 !important; transition: opacity 0.25s ease !important; pointer-events: none !important; }',
+  '  .search-input-field.has-value .input-double-label .sub-label { opacity: 0 !important; }',
+  '  .search-input-field.has-value .input-double-label .main-label { opacity: 1 !important; }',
   '}'
 ].join('\n');
 
@@ -378,27 +580,31 @@ export default function Home({ properties = [], initialError }) {
     })
   }
 
-  // Динамические списки для фильтров
+  // Динамические списки для фильтров (поддерживают русскую и английскую раскладки из БД)
   const districts = useMemo(() => {
-    const set = new Set(properties.map((p) => p.district).filter(Boolean))
+    const set = new Set(properties.map((p) => p["İlçe/Semt"] || p.district).filter(Boolean))
     return Array.from(set)
   }, [properties])
 
   const roomsList = useMemo(() => {
-    const set = new Set(properties.map((p) => p.rooms).filter(Boolean))
+    const set = new Set(properties.map((p) => p["card odalar"] || p.rooms).filter(Boolean))
     return Array.from(set).sort()
   }, [properties])
 
   // Фильтрация объектов
   const filteredProperties = useMemo(() => {
     return properties.filter((p) => {
-      if (activeStatusFilter && p.status?.toLowerCase() !== activeStatusFilter.toLowerCase()) {
+      const pStatus = p["konutcesit"] || p.status || '';
+      const pDistrict = p["İlçe/Semt"] || p.district || '';
+      const pRooms = p["card odalar"] || p.rooms || '';
+
+      if (activeStatusFilter && pStatus.toLowerCase() !== activeStatusFilter.toLowerCase()) {
         return false
       }
-      if (selectedDistrict && p.district?.toLowerCase() !== selectedDistrict.toLowerCase()) {
+      if (selectedDistrict && pDistrict.toLowerCase() !== selectedDistrict.toLowerCase()) {
         return false
       }
-      if (selectedRooms && String(p.rooms) !== String(selectedRooms)) {
+      if (selectedRooms && String(pRooms) !== String(selectedRooms)) {
         return false
       }
       return true
@@ -416,13 +622,13 @@ export default function Home({ properties = [], initialError }) {
 
   const nextLightboxImage = () => {
     if (!lightboxProperty) return
-    const imgs = lightboxProperty.images || []
+    const imgs = lightboxProperty.images || lightboxProperty["Foto"] || []
     setLightboxImageIdx((prev) => (prev + 1) % (imgs.length || 1))
   }
 
   const prevLightboxImage = () => {
     if (!lightboxProperty) return
-    const imgs = lightboxProperty.images || []
+    const imgs = lightboxProperty.images || lightboxProperty["Foto"] || []
     setLightboxImageIdx((prev) => (prev + imgs.length - 1) % (imgs.length || 1))
   }
 
@@ -442,88 +648,108 @@ export default function Home({ properties = [], initialError }) {
 
       <main className="tilda-catalog-wrapper" style={{ marginTop: '90px', minHeight: '80vh', backgroundColor: '#f8fafc', paddingBottom: '80px' }}>
         
-        {/* ХЕРО-блок */}
-        <div className="hero-search-container">
-          <h1 className="hero-search-title">Hayalinizdeki Evi Keşfedin</h1>
-          
-          {/* ТРИ отдельных интерактивных элемента на белом фоне */}
-          <div ref={searchContainerRef} style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', maxWidth: '900px', margin: '0 auto' }}>
+        {/* ХЕРО-блок с единым поиском */}
+        <section className="hero-search-container">
+          <div className="search-width-limiter">
+            <h1 className="hero-search-title">Komisyonsuz, doğrudan müteahhitten konut keşfedin!</h1>
             
-            {/* 1. Элемент: Выбор региона */}
-            <div 
-              onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')} 
-              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '20px' }}>📍</span>
-                <div className="input-double-label">
-                  <span className="sub-label">Bölge Seçiniz</span>
-                  <span className="main-label">{selectedDistrict || 'Tüm Bölgeler'}</span>
-                </div>
-              </div>
+            {/* Панель поиска */}
+            <div className="search-panel-card" ref={searchContainerRef}>
               
-              {openDropdown === 'district' && (
-                <div className="custom-dropdown">
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedDistrict(''); setOpenDropdown(null); }}>Tüm Bölgeler</div>
-                  {districts.map((d) => (
-                    <div key={d} className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedDistrict(d); setOpenDropdown(null); }}>{d}</div>
-                  ))}
+              {/* Табы */}
+              <div className="search-tabs-header">
+                <div className="city-tab-item active" id="city-select-trigger">
+                  <svg className="tab-icon-svg" viewBox="0 0 24 24" style={{ width: '16px', height: '16px', marginRight: '6px' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+                  <span>Ankara Projeleri</span>
                 </div>
-              )}
-            </div>
-
-            {/* 2. Элемент: Выбор комнат */}
-            <div 
-              onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')} 
-              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '20px' }}>🔑</span>
-                <div className="input-double-label">
-                  <span className="sub-label">Oda Sayısı</span>
-                  <span className="main-label">{selectedRooms || 'Tüm Odalar'}</span>
+                <div className="city-tab-item disabled">
+                  <span>İstanbul</span>
+                  <span className="tab-badge">Yakında</span>
+                </div>
+                <div className="city-tab-item disabled">
+                  <span>İzmir</span>
+                  <span className="tab-badge">Yakında</span>
                 </div>
               </div>
 
-              {openDropdown === 'rooms' && (
-                <div className="custom-dropdown">
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedRooms(''); setOpenDropdown(null); }}>Tüm Odalar</div>
-                  {roomsList.map((r) => (
-                    <div key={r} className="dropdown-item" onClick={(e) => { e.stopPropagation(); setSelectedRooms(r); setOpenDropdown(null); }}>{r}</div>
-                  ))}
-                </div>
-              )}
-            </div>
+              {/* Поля ввода и кнопка */}
+              <div className="search-inputs-row-wrapper">
+                <div className="search-inputs-row">
+                  
+                  {/* Поле 1: Конум (Bölge) */}
+                  <div 
+                    className={`search-input-field flex-wide field-trigger-location ${selectedDistrict ? 'has-value' : ''}`}
+                    onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')}
+                  >
+                    <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+                    <div className="input-double-label">
+                      <span className="sub-label">Konum</span>
+                      <span className="main-label">{selectedDistrict || 'İlçe / Semt seçiniz'}</span>
+                    </div>
 
-            {/* 3. Элемент: Статус проекта */}
-            <div 
-              onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')} 
-              style={{ flex: '1', minWidth: '220px', backgroundColor: '#fff', borderRadius: '12px', border: '1.5px solid var(--border-soft)', padding: '12px 16px', position: 'relative', boxShadow: 'var(--shadow-premium)', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '20px' }}>📊</span>
-                <div className="input-double-label">
-                  <span className="sub-label">Proje Durumu</span>
-                  <span className="main-label">{activeStatusFilter || 'Tüm Durumlar'}</span>
+                    {openDropdown === 'district' && (
+                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
+                        <div className="dropdown-item" onClick={() => { setSelectedDistrict(''); setOpenDropdown(null); }}>Tüm Bölgeler</div>
+                        {districts.map((d) => (
+                          <div key={d} className="dropdown-item" onClick={() => { setSelectedDistrict(d); setOpenDropdown(null); }}>{d}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Поле 2: Комнатность (Rooms) */}
+                  <div 
+                    className={`search-input-field flex-standard field-trigger-room ${selectedRooms ? 'has-value' : ''}`}
+                    onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')}
+                  >
+                    <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" fill="currentColor"/></svg>
+                    <div className="input-double-label">
+                      <span className="sub-label">Oda sayısı</span>
+                      <span className="main-label">{selectedRooms || 'Oda sayısı seçiniz'}</span>
+                    </div>
+
+                    {openDropdown === 'rooms' && (
+                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
+                        <div className="dropdown-item" onClick={() => { setSelectedRooms(''); setOpenDropdown(null); }}>Tüm Odalar</div>
+                        {roomsList.map((r) => (
+                          <div key={r} className="dropdown-item" onClick={() => { setSelectedRooms(r); setOpenDropdown(null); }}>{r}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Поле 3: Статус (Durum) */}
+                  <div 
+                    className={`search-input-field flex-standard field-trigger-durum ${activeStatusFilter ? 'has-value' : ''}`}
+                    onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                  >
+                    <svg className="input-icon-svg icon-stroke" viewBox="0 0 24 24" style={{ width: '18px', height: '18px', fill: 'none', stroke: 'currentColor', strokeWidth: '2' }}><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
+                    <div className="input-double-label">
+                      <span className="sub-label">Proje durumu</span>
+                      <span className="main-label">{activeStatusFilter || 'Durum seçiniz'}</span>
+                    </div>
+
+                    {openDropdown === 'status' && (
+                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
+                        <div className="dropdown-item" onClick={() => { setActiveStatusFilter(''); setOpenDropdown(null); }}>Tüm Durumlar</div>
+                        <div className="dropdown-item" onClick={() => { setActiveStatusFilter('Lansman'); setOpenDropdown(null); }}>Lansman</div>
+                        <div className="dropdown-item" onClick={() => { setActiveStatusFilter('Devam ediyor'); setOpenDropdown(null); }}>Devam ediyor</div>
+                        <div className="dropdown-item" onClick={() => { setActiveStatusFilter('Tamamlandı'); setOpenDropdown(null); }}>Tamamlandı</div>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
+
+                <button className="search-submit-btn" onClick={() => setOpenDropdown(null)}>Ara</button>
               </div>
 
-              {openDropdown === 'status' && (
-                <div className="custom-dropdown">
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter(''); setOpenDropdown(null); }}>Tüm Durumlar</div>
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Lansman'); setOpenDropdown(null); }}>Lansman</div>
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Devam ediyor'); setOpenDropdown(null); }}>Devam ediyor</div>
-                  <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveStatusFilter('Tamamlandı'); setOpenDropdown(null); }}>Tamamlandı</div>
-                </div>
-              )}
+              {/* Декоративная цветная градиентная линия снизу панели */}
+              <div className="panel-bottom-gradient"></div>
             </div>
 
           </div>
-
-          {/* Фирменная градиентная линия под блоками */}
-          <div style={{ maxWidth: '900px', margin: '24px auto 0 auto', height: '4px', background: 'linear-gradient(90deg, #B2EBF2 0%, #00A4A6 100%)', borderRadius: '2px' }} />
-
-        </div>
+        </section>
 
         {/* Сетка объявлений */}
         <div style={{ maxWidth: '1200px', margin: '40px auto 0 auto', padding: '0 20px' }}>
@@ -584,15 +810,20 @@ export default function Home({ properties = [], initialError }) {
             </div>
           ) : (
             <div className="fav-list">
-              {favoriteProperties.map((item) => (
-                <div key={item.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }} onClick={() => { setIsFavoritesOpen(false); openLightbox(item); }}>
-                  <img src={item.images?.[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=150&q=80'} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>{item.title}</h4>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--primary)', fontWeight: '900' }}>{item.price}</p>
+              {favoriteProperties.map((item) => {
+                const titleVal = item.title || item["testproje"] || '';
+                const priceVal = item.price || item["Fiyat"] || '';
+                const imgVal = (item.images || item["Foto"] || [])[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=150&q=80';
+                return (
+                  <div key={item.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }} onClick={() => { setIsFavoritesOpen(false); openLightbox(item); }}>
+                    <img src={imgVal} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>{titleVal}</h4>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--primary)', fontWeight: '900' }}>{priceVal}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -618,7 +849,7 @@ export default function Home({ properties = [], initialError }) {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.95)', zIndex: 100000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#fff', fontSize: '36px', cursor: 'pointer' }} onClick={() => setLightboxProperty(null)}>&times;</button>
           
-          {(lightboxProperty.images?.length || 0) > 1 && (
+          {(lightboxProperty.images || lightboxProperty["Foto"] || []).length > 1 && (
             <>
               <button onClick={prevLightboxImage} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❮</button>
               <button onClick={nextLightboxImage} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '24px', cursor: 'pointer' }}>❯</button>
@@ -627,19 +858,19 @@ export default function Home({ properties = [], initialError }) {
 
           <div style={{ maxWidth: '90%', maxHeight: '80%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
-              src={(lightboxProperty.images || [])[lightboxImageIdx] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
+              src={(lightboxProperty.images || lightboxProperty["Foto"] || [])[lightboxImageIdx] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
               style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '12px' }} 
               alt="" 
             />
             <div style={{ marginTop: '20px', textAlign: 'center', color: '#fff', maxWidth: '600px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.price}</h2>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{lightboxProperty.rooms} · {lightboxProperty.area} m² · {lightboxProperty.district}</p>
+              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.price || lightboxProperty["Fiyat"]}</h2>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0', color: '#fff !important' }}>{lightboxProperty.title || lightboxProperty["testproje"]}</h3>
+              <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>{lightboxProperty.rooms || lightboxProperty["card odalar"]} · {lightboxProperty.area || lightboxProperty["card-area"]} m² · {lightboxProperty.district || lightboxProperty["İlçe/Semt"]}</p>
             </div>
           </div>
 
           <div className="lightbox-counter">
-            {lightboxImageIdx + 1} / {lightboxProperty.images?.length || 1}
+            {lightboxImageIdx + 1} / {(lightboxProperty.images || lightboxProperty["Foto"] || []).length || 1}
           </div>
         </div>
       )}
