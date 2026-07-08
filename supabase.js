@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Добавляем безопасные текстовые заглушки на время сборки на Vercel. 
-// При запуске живого сайта Next.js автоматически заменит их на ваши настоящие переменные окружения.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Инициализируем настоящий Supabase только если есть реальные ключи в панели Vercel или локально.
+// Если ключей нет, отдаем безопасную заглушку, чтобы сборщик Vercel не падал при анализе импортов.
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : {
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: null })
+      })
+    };
