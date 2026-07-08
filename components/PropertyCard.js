@@ -50,6 +50,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Кнопка Лайка */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, property?.id)}
@@ -59,18 +60,21 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
+      {/* Бейдж Статуса */}
       {property?.status && (
         <span className={"card-badge status-" + (property.status.toLowerCase() === "lansman" ? "lansman" : "other")}>
           {property.status}
         </span>
       )}
 
+      {/* Контейнер картинки без лишних рамок */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
         <img src={photos[currentIdx]} className="cian-img" alt={property?.title || ''} />
         
+        {/* Ручные скрытые стрелочки */}
         {photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
@@ -79,14 +83,23 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
+      {/* Информация о проекте */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
-        <div className="cian-price">{formatPriceVal(property?.price)}</div>
-        <div className="cian-specs">{property?.rooms || ''} · {property?.area || '0'} m² · {property?.kat_sayisi || '0'} Kat</div>
-        <div className="cian-location">
-          <span className="cian-geo-dot cyan"></span>
-          {property?.district || ''}
+        <div>
+          <div className="cian-price">{formatPriceVal(property?.price)}</div>
+          <div className="cian-specs">
+            {property?.rooms ? `${property.rooms} · ` : ''}
+            {property?.area ? `${property.area} m²` : ''}
+            {property?.kat_sayisi ? ` · ${property.kat_sayisi} Kat` : ''}
+          </div>
         </div>
-        <div className="cian-address" title={(property?.title || '') + ", " + (property?.description || '')}>{property?.title || ''}</div>
+        <div>
+          <div className="cian-location">
+            <span className="cian-geo-dot cyan"></span>
+            {property?.district || ''}
+          </div>
+          <div className="cian-address" title={property?.title + ", " + property?.description}>{property?.title || ''}</div>
+        </div>
       </div>
     </div>
   )
