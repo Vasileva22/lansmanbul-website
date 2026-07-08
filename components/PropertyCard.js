@@ -4,19 +4,19 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  // Извлечение данных с поддержкой ваших оригинальных Airtable/Supabase названий колонок
+  // Чтение данных напрямую из оригинальных колонок вашей базы данных
   const pId = property?.id || '';
-  const pRooms = property?.["card odalar"] || property?.rooms || '';
-  const pArea = property?.["card-area"] || property?.area || '';
-  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || property?.kat_sayisi || '';
-  const pPrice = property?.["Fiyat"] || property?.price || '';
-  const pDistrict = property?.["İlçe/Semt"] || property?.district || '';
-  const pTitle = property?.["testproje"] || property?.title || '';
-  const pStatus = property?.["konutcesit"] || property?.status || '';
-  const pDescription = property?.["Açıklama"] || property?.description || '';
+  const pRooms = property?.["card odalar"] || '';
+  const pArea = property?.["card-area"] || '';
+  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || '';
+  const pPrice = property?.["Fiyat"] || '';
+  const pDistrict = property?.["İlçe/Semt"] || '';
+  const pTitle = property?.["testproje"] || '';
+  const pStatus = property?.["konutcesit"] || '';
+  const pDescription = property?.["Açıklama"] || '';
   
   // Безопасное чтение фото (поддержка массивов, Airtable-объектов с вложенными URL и CSV-строк)
-  let pImages = property?.["Foto"] || property?.["Kapak Fotoğrafı"] || property?.images || [];
+  let pImages = property?.["Foto"] || property?.["Kapak Fotoğrafı"] || [];
   if (typeof pImages === 'string') {
     try {
       pImages = JSON.parse(pImages);
@@ -77,7 +77,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Избранного */}
+      {/* Кнопка Лайка */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, pId)}
@@ -87,14 +87,14 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Бейдж статуса */}
+      {/* Бейдж Статуса */}
       {pStatus && (
         <span className={"card-badge status-" + (pStatus.toLowerCase() === "lansman" ? "lansman" : "other")}>
           {pStatus}
         </span>
       )}
 
-      {/* Контейнер картинки встык к границам */}
+      {/* Контейнер картинки (высота уменьшена для освобождения места под текст) */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
@@ -109,7 +109,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Текстовая информация */}
+      {/* Информационный текстовый блок карточки */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
           <div className="cian-price">{formatPriceVal(pPrice)}</div>
@@ -121,7 +121,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </div>
         <div>
           <div className="cian-location">
-            <span className="cian-geo-dot cyan"></span>
+            <span className="cian-geo-dot"></span>
             {pDistrict}
           </div>
           <div className="cian-address" title={pTitle + ", " + pDescription}>{pTitle}</div>
