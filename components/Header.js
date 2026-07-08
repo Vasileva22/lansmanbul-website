@@ -1,8 +1,9 @@
+```jsx
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
-export default function Header() {
+export default function Header({ favoritesCount, onOpenFavorites, onOpenPostModal }) {
   const router = useRouter()
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isMobileProjectsOpen, setIsMobileProjectsOpen] = useState(false)
@@ -45,13 +46,20 @@ export default function Header() {
           </nav>
 
           <div className="header-contact">
-            <a href="tel:+905459418536" className="contact-phone">
-              <svg className="phone-icon-svg" viewBox="0 0 24 24"><path d="M6.62 10.79a15.15 15.15 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" /></svg>
-              <span>+90 545 941 85 36</span>
-            </a>
-            <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="contact-whatsapp">
-              <svg className="wa-icon-svg" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.953-2.005-.001-3.973-.502-5.71-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.488 1.977 14.02 1.953 12.01 1.953c-5.439 0-9.865 4.371-9.87 9.8-.002 1.714.453 3.39 1.317 4.883l-.994 3.634 3.791-.983z" /></svg>
-            </a>
+            {/* Иконка сердечка с живым счетчиком */}
+            <button className="header-fav-btn" onClick={onOpenFavorites} title="Favorilerim">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              {favoritesCount > 0 && <span className="header-fav-badge">{favoritesCount}</span>}
+            </button>
+
+            {/* Кнопка войти, открывает Избранное / Личный Кабинет */}
+            <button className="btn-signin" onClick={onOpenFavorites}>Giriş Yap</button>
+
+            {/* Кнопка подачи бесплатного объявления */}
+            <button className="btn-post" onClick={onOpenPostModal}>+ İlan Ver (0 TL)</button>
+
             <button className="mobile-burger-btn" onClick={() => setIsMobileNavOpen(true)}>
               <svg className="burger-icon-svg" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
@@ -83,9 +91,9 @@ export default function Header() {
             
             {isMobileProjectsOpen && (
               <div className="mobile-dropdown-container block pl-4 mt-2.5 mb-1.5 border-l-2 border-[#00a4a6]/30">
-                <button onClick={() => handleStatusSelect('Lansman')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5 animate-fade-in">Lansman</button>
-                <button onClick={() => handleStatusSelect('Devam ediyor')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5 animate-fade-in">Devam ediyor</button>
-                <button onClick={() => handleStatusSelect('Tamamlandı')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5 animate-fade-in">Tamamlandı</button>
+                <button onClick={() => handleStatusSelect('Lansman')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5">Lansman</button>
+                <button onClick={() => handleStatusSelect('Devam ediyor')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5">Devam ediyor</button>
+                <button onClick={() => handleStatusSelect('Tamamlandı')} className="mobile-dropdown-link text-left block w-full text-sm font-semibold text-slate-500 py-1.5">Tamamlandı</button>
               </div>
             )}
           </div>
@@ -93,7 +101,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ОРИГИНАЛЬНЫЙ CSS С КОНТРОЛЕМ ВЫСОТЫ И ШИРИНЫ ИКОНОК */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --primary: #00A4A6;
@@ -163,33 +170,65 @@ export default function Header() {
         .new-ssapkaprojelerimiz.open .nav-chevron-svg { transform: rotate(180deg) !important; stroke: var(--primary) !important; }
         .new-ssapkaprojelerimiz.open { color: var(--primary) !important; }
 
-        .header-contact { display: flex !important; align-items: center !important; gap: 20px !important; }
-        .contact-phone {
-          display: flex !important; align-items: center !important; gap: 8px !important; text-decoration: none !important;
-          color: var(--dark-slate) !important; font-size: 15px !important; font-weight: 700 !important; transition: color 0.2s ease !important;
-        }
-        .contact-phone:hover { color: var(--primary) !important; }
+        .header-contact { display: flex !important; align-items: center !important; gap: 16px !important; }
         
-        .phone-icon-svg { 
-          width: 16px !important; 
-          height: 16px !important; 
-          fill: currentColor !important; 
-          color: var(--primary) !important; 
-          display: inline-block !important;
+        .header-fav-btn {
+          background: none !important;
+          border: none !important;
+          color: var(--dark-slate) !important;
+          cursor: pointer !important;
+          position: relative !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 40px !important;
+          height: 40px !important;
+          border-radius: 50% !important;
+          transition: background-color 0.2s !important;
         }
-        .contact-whatsapp {
-          width: 42px !important; height: 42px !important; background-color: #25D366 !important; border-radius: 50% !important;
-          display: flex !important; align-items: center !important; justify-content: center !important; color: #ffffff !important;
-          text-decoration: none !important; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3) !important; transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        .header-fav-btn:hover { background-color: var(--border-soft) !important; }
+        .header-fav-badge {
+          position: absolute !important;
+          top: 2px !important;
+          right: 2px !important;
+          background: #ff3b30 !important;
+          color: #ffffff !important;
+          font-size: 10px !important;
+          font-weight: 900 !important;
+          width: 18px !important;
+          height: 18px !important;
+          border-radius: 50% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3) !important;
         }
-        .contact-whatsapp:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4) !important; }
-        
-        .wa-icon-svg { 
-          width: 22px !important; 
-          height: 22px !important; 
-          fill: currentColor !important; 
-          display: inline-block !important;
+
+        .btn-signin {
+          color: var(--dark-slate) !important;
+          background: none !important;
+          border: 1.5px solid var(--border-soft) !important;
+          padding: 10px 18px !important;
+          border-radius: 10px !important;
+          font-size: 14px !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+          transition: all 0.2s !important;
         }
+        .btn-signin:hover { border-color: var(--primary) !important; color: var(--primary) !important; }
+
+        .btn-post {
+          background-color: var(--primary) !important;
+          color: #ffffff !important;
+          border: none !important;
+          padding: 12px 20px !important;
+          border-radius: 10px !important;
+          font-size: 14px !important;
+          font-weight: 800 !important;
+          cursor: pointer !important;
+          transition: background-color 0.2s !important;
+        }
+        .btn-post:hover { background-color: var(--primary-hover) !important; }
 
         @media (max-width: 768px) {
           .modern-header { height: 70px !important; }
@@ -199,14 +238,8 @@ export default function Header() {
           .logo-icon-svg { width: 18px !important; height: 18px !important; }
           .modern-nav { display: none !important; }
           .header-contact { gap: 10px !important; }
-          .contact-phone span { display: none !important; }
-          .contact-phone {
-            width: 36px !important; height: 36px !important; background-color: rgba(0, 164, 166, 0.05) !important;
-            border-radius: 50% !important; justify-content: center !important; align-items: center !important; gap: 0 !important;
-          }
-          .phone-icon-svg { width: 15px !important; height: 15px !important; }
-          .contact-whatsapp { width: 36px !important; height: 36px !important; }
-          .wa-icon-svg { width: 18px !important; height: 18px !important; }
+          .btn-signin { display: none !important; }
+          .btn-post { padding: 8px 14px !important; font-size: 12px !important; }
           .mobile-burger-btn { display: flex !important; }
           .burger-icon-svg { width: 22px !important; height: 22px !important; stroke: var(--dark-slate) !important; fill: none !important; }
 
@@ -215,7 +248,7 @@ export default function Header() {
             top: 0 !important; right: -280px !important; width: 260px !important; height: 100% !important;
             background-color: #ffffff !important; z-index: 10000000 !important;
             box-shadow: -10px 0 30px rgba(15, 23, 42, 0.1) !important; padding: 24px 20px !important;
-            transition: right 0.3s ease-in-out !important; box-sizing: border-box !important;
+            transition: right 0.3s ease !important;
           }
           .mobile-nav-panel.open { right: 0 !important; }
           .mobile-nav-close { font-size: 32px !important; color: var(--text-muted) !important; cursor: pointer !important; margin-bottom: 24px !important; line-height: 1 !important; }
