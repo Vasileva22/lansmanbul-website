@@ -3,10 +3,13 @@ import Head from 'next/head'
 import Script from 'next/script'
 import { useRouter } from 'next/router'
 import { supabase } from '../supabase'
+import dynamic from 'next/dynamic'
 
-import Header from '../components/Header'
-import Footer from '../components/Footer'
-import PropertyCard from '../components/PropertyCard'
+// Динамический импорт компонентов с отключением SSR (серверного рендеринга).
+// Это гарантирует, что сборщик Vercel не упадет при анализе модулей на сервере.
+const Header = dynamic(() => import('../components/Header'), { ssr: false })
+const Footer = dynamic(() => import('../components/Footer'), { ssr: false })
+const PropertyCard = dynamic(() => import('../components/PropertyCard'), { ssr: false })
 
 const ensureArray = (val) => {
   if (!val) return []
@@ -973,7 +976,7 @@ export default function Home({ properties = [], initialError }) {
                       <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                    <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                   </div>
                 </div>
 
