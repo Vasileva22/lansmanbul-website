@@ -1,11 +1,10 @@
-```jsx
 import React, { useState, useEffect, useRef } from 'react'
 
 export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLightbox }) {
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  const photos = property.images && property.images.length > 0 ? property.images : [
+  const photos = property?.images && property.images.length > 0 ? property.images : [
     'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80'
   ]
 
@@ -56,7 +55,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       {/* Кнопка Лайка */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
-        onClick={(e) => onToggleLike(e, property.id)}
+        onClick={(e) => onToggleLike && onToggleLike(e, property?.id)}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -64,7 +63,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       </button>
 
       {/* Бейдж Статуса */}
-      {property.status && (
+      {property?.status && (
         <span className={"card-badge status-" + (property.status.toLowerCase() === "lansman" ? "lansman" : "other")}>
           {property.status}
         </span>
@@ -73,9 +72,10 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       {/* Область Картинки */}
       <div 
         className="cian-img-container" 
-        onClick={() => onOpenLightbox(property, currentIdx)}
+        onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
-        <img src={photos[currentIdx]} class="cian-img" alt={property.title} />
+        {/* class заменен на className */}
+        <img src={photos[currentIdx]} className="cian-img" alt={property?.title || ''} />
         
         {/* Ручные скрытые стрелочки управления (проявляются белым при наведении) */}
         {photos.length > 1 && (
@@ -87,16 +87,15 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       </div>
 
       {/* Текстовая Информация */}
-      <div className="cian-info" onClick={() => onOpenLightbox(property, currentIdx)}>
-        <div className="cian-price">{formatPriceVal(property.price)}</div>
-        <div className="cian-specs">{property.rooms} · {property.area} m² · {property.kat_sayisi} Kat</div>
+      <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
+        <div className="cian-price">{formatPriceVal(property?.price)}</div>
+        <div className="cian-specs">{property?.rooms || ''} · {property?.area || '0'} m² · {property?.kat_sayisi || '0'} Kat</div>
         <div className="cian-location">
           <span className="cian-geo-dot cyan"></span>
-          {property.district}
+          {property?.district || ''}
         </div>
-        <div className="cian-address" title={property.title + ", " + property.description}>{property.title}</div>
+        <div className="cian-address" title={(property?.title || '') + ", " + (property?.description || '')}>{property?.title || ''}</div>
       </div>
     </div>
   )
 }
-```
