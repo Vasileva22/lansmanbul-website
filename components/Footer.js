@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
-// Стили перенесены наверх, чтобы избежать ReferenceError на этапе компиляции Next.js
 const cssFooterStyles = [
   '  .v3-footer {',
   '    font-family: "Mulish", sans-serif !important;',
@@ -10,7 +9,7 @@ const cssFooterStyles = [
   '    padding: 60px 20px 30px 20px !important;',
   '    box-sizing: border-box !important;',
   '    width: 100% !important;',
-  '    color: #334155 !important;',
+  '    color: var(--text-secondary) !important;',
   '  }',
   '  .v3-container {',
   '    max-width: 1200px !important;',
@@ -58,7 +57,7 @@ const cssFooterStyles = [
   '  .v3-logo-text {',
   '    font-size: 17px !important;',
   '    font-weight: 500 !important;',
-  '    color: #0f172a !important;',
+  '    color: var(--text-main) !important;',
   '    letter-spacing: -0.3px !important;',
   '  }',
   '  .v3-logo-accent {',
@@ -68,13 +67,13 @@ const cssFooterStyles = [
   '  .v3-description {',
   '    font-size: 13px !important;',
   '    line-height: 1.6 !important;',
-  '    color: #475569 !important;',
+  '    color: var(--text-secondary) !important;',
   '    margin: 0 !important;',
   '  }',
   '  .v3-title {',
   '    font-size: 14px !important;',
   '    font-weight: 800 !important;',
-  '    color: #0f172a !important;',
+  '    color: var(--text-main) !important;',
   '    margin-top: 0 !important;',
   '    margin-bottom: 18px !important;',
   '  }',
@@ -88,7 +87,7 @@ const cssFooterStyles = [
   '  }',
   '  .v3-links a, .v3-links button {',
   '    font-size: 13px !important;',
-  '    color: #475569 !important;',
+  '    color: var(--text-secondary) !important;',
   '    text-decoration: none !important;',
   '    background: transparent;',
   '    border: none;',
@@ -96,7 +95,7 @@ const cssFooterStyles = [
   '    cursor: pointer;',
   '  }',
   '  .v3-links a:hover, .v3-links button:hover {',
-  '    color: #00A4A6 !important;',
+  '    color: var(--primary) !important;',
   '  }',
   '  .v3-contacts {',
   '    display: flex !important;',
@@ -109,7 +108,7 @@ const cssFooterStyles = [
   '    align-items: center !important;',
   '    gap: 8px !important;',
   '    font-size: 13px !important;',
-  '    color: #475569 !important;',
+  '    color: var(--text-secondary) !important;',
   '    text-decoration: none !important;',
   '  }',
   '  .v3-contact-icon {',
@@ -145,7 +144,7 @@ const cssFooterStyles = [
   '  .v3-disclaimer {',
   '    font-size: 11px !important;',
   '    line-height: 1.6 !important;',
-  '    color: #64748b !important;',
+  '    color: var(--text-muted) !important;',
   '    text-align: center !important;',
   '    margin: 0 !important;',
   '  }',
@@ -198,9 +197,9 @@ export default function Footer() {
             <div className="v3-col">
               <h4 className="v3-title">Projeler</h4>
               <ul className="v3-links">
-                <li><button onClick={() => handleStatusSelect('Lansman')} className="text-sm text-slate-500 font-semibold hover:text-[#007a7c]">Lansman</button></li>
-                <li><button onClick={() => handleStatusSelect('Devam ediyor')} className="text-sm text-slate-500 font-semibold hover:text-[#007a7c]">Devam ediyor</button></li>
-                <li><button onClick={() => handleStatusSelect('Tamamlandı')} className="text-sm text-slate-500 font-semibold hover:text-[#007a7c]">Tamamlandı</button></li>
+                <li><button onClick={() => handleStatusSelect('Lansman')}>Lansman</button></li>
+                <li><button onClick={() => handleStatusSelect('Devam ediyor')}>Devam ediyor</button></li>
+                <li><button onClick={() => handleStatusSelect('Tamamlandı')}>Tamamlandı</button></li>
               </ul>
             </div>
 
@@ -240,8 +239,6 @@ export default function Footer() {
           </div>
         </div>
       </footer>
-
-      {/* Безопасное подключение стилей без обратных кавычек */}
       <style dangerouslySetInnerHTML={{ __html: cssFooterStyles }} />
     </>
   )
