@@ -7,7 +7,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Скорректированные адаптивные стили с пропорциональным масштабированием
+// Скорректированные пропорции: Фото 68% (квадратное), Текст 32% (плотный)
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -239,12 +239,12 @@ const cssStyles = [
   '}',
   '.dropdown-item:hover { background-color: #f8fafc !important; color: var(--primary) !important; }',
   '',
-  '/* СЕТКА ГРИДА: Делаем её "резиновой" до 1200px */',
+  '/* СЕТКА ГРИДА: Расширяем лимиты до 1440px для крупных и сочных карточек */',
   '.grid-layout {',
   '  display: grid !important;',
-  '  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;',
+  '  grid-template-columns: repeat(4, 1fr) !important; /* Строго 4 колонки в ряд */',
   '  width: 100% !important;',
-  '  max-width: 1200px !important;',
+  '  max-width: 1440px !important; /* Увеличили ширину сетки как на ЦИАН */',
   '  margin: 24px auto !important;',
   '  column-gap: 16px !important;',
   '  row-gap: 24px !important;',
@@ -253,9 +253,9 @@ const cssStyles = [
   '',
   '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Адаптивное масштабирование aspect-ratio */',
   '.cian-card {',
-  '  width: 100% !important; /* Тянется по ширине ячейки */',
-  '  aspect-ratio: 227.5 / 302.26 !important; /* Всегда идеальная пропорция ЦИАН */',
-  '  height: auto !important; /* Высота рассчитывается автоматически */',
+  '  width: 100% !important;',
+  '  aspect-ratio: 227.5 / 302.26 !important; /* Пропорция ЦИАН */',
+  '  height: auto !important;',
   '  padding: 0 !important;',
   '  margin: 0 !important;',
   '  background: #ffffff !important;',
@@ -274,10 +274,10 @@ const cssStyles = [
   '  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;',
   '}',
   '',
-  '/* КОНТЕЙНЕР КАРТИНКИ: Ровно 51.2% от высоты карточки */',
+  '/* КОНТЕЙНЕР КАРТИНКИ: Увеличиваем до 68% высоты (почти квадрат) */',
   '.cian-img-container {',
   '  width: 100% !important;',
-  '  height: 51.2% !important; /* Пропорциональная высота фото как в ЦИАН */',
+  '  height: 68% !important; /* Фото теперь занимает 68% всей карточки и выглядит крупно */',
   '  margin: 0 !important;',
   '  border-radius: 8px 8px 0 0 !important;',
   '  position: relative !important;',
@@ -290,15 +290,15 @@ const cssStyles = [
   '  object-fit: cover !important;',
   '}',
   '',
-  '/* БЛОК ИНФОРМАЦИИ: Ровно 48.8% от высоты карточки */',
+  '/* БЛОК ИНФОРМАЦИИ: Сжимаем до 32% высоты для плотного прилегания текстов */',
   '.cian-info {',
   '  width: 100% !important;',
-  '  height: 48.8% !important;',
+  '  height: 32% !important; /* Всего 32% высоты - элементы прижаты плотно друг к другу */',
   '  margin: 0 auto !important;',
-  '  padding: 5% 6% 6% 6% !important; /* Пропорциональные резиновые отступы */',
+  '  padding: 10px 14px 12px 14px !important; /* Плотные отступы */',
   '  display: flex !important;',
   '  flex-direction: column !important;',
-  '  justify-content: space-between !important; /* Прижимает адрес вниз, цену - наверх */',
+  '  justify-content: space-between !important; /* Разносит верхний блок и нижний адрес */',
   '  box-sizing: border-box !important;',
   '}',
   '',
@@ -327,7 +327,7 @@ const cssStyles = [
   '  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;',
   '}',
   '',
-  '/* Статус-плашка сверху на картинке */',
+  '/* Статус-плашка */',
   '.card-status-badge {',
   '  position: absolute !important;',
   '  top: 12px !important;',
@@ -346,14 +346,14 @@ const cssStyles = [
   '/* ЦЕНА: Крупная (22px) */',
   '.cian-price {',
   '  width: 100% !important;',
-  '  font-size: 22px !important; /* Оригинальный крупный размер ЦИАН */',
+  '  font-size: 22px !important; /* Жирный и крупный шрифт как в ЦИАН */',
   '  font-weight: 800 !important;',
   '  color: #1E293B !important;',
   '  white-space: nowrap !important;',
   '  overflow: hidden !important;',
   '  text-overflow: ellipsis !important;',
   '  letter-spacing: -0.5px !important;',
-  '  line-height: 1.2 !important;',
+  '  line-height: 1.1 !important;',
   '}',
   '',
   '/* Характеристики */',
@@ -361,7 +361,7 @@ const cssStyles = [
   '  font-size: 13px !important;',
   '  font-weight: 500 !important;',
   '  color: var(--text-muted) !important;',
-  '  margin-top: 2px !important;',
+  '  margin-top: 3px !important;',
   '  white-space: nowrap !important;',
   '  overflow: hidden !important;',
   '  text-overflow: ellipsis !important;',
@@ -373,7 +373,6 @@ const cssStyles = [
   '  display: inline-flex !important;',
   '  align-items: center !important;',
   '  gap: 4px !important;',
-  '  margin-top: 4px !important;',
   '  max-width: 100% !important;',
   '  overflow: hidden !important;',
   '  white-space: nowrap !important;',
@@ -389,7 +388,7 @@ const cssStyles = [
   '  margin-top: 2px !important;',
   '}',
   '',
-  '/* Навигационные стрелочки на слайдере */',
+  '/* Навигационные стрелочки */',
   '.slider-arrow {',
   '  position: absolute !important;',
   '  top: 50% !important;',
@@ -471,7 +470,6 @@ const cssStyles = [
   '  .search-submit-btn { width: 100% !important; border-radius: 12px !important; margin: 0 !important; }',
   '}',
   '@media (max-width: 500px) {',
-  '  /* На телефонах карточка приобретает автоматическую высоту без фиксированных пропорций */',
   '  .grid-layout {',
   '    grid-template-columns: 1fr !important;',
   '    padding: 0 16px !important;',
@@ -724,8 +722,8 @@ export default function Home({
           </div>
         </div>
 
-        {/* Растягиваем контентную часть до 1200px для устранения сжатости */}
-        <div style={{ width: '100%', maxWidth: '1200px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
+        {/* Секция сетки объявлений: ширина 1440px для крупных карточек */}
+        <div style={{ width: '100%', maxWidth: '1440px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
           {initialError && (
             <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
               Hata: {initialError}
