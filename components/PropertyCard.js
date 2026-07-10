@@ -1,122 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-// Конфигурация приоритетов городов
-const cityPoiPriorities = {
-  istanbul: {
-    priorities: ['transport', 'business', 'infrastructure', 'leisure'],
-    maxWalkingTimeMinutes: 15,
-  },
-  antalya: {
-    priorities: ['leisure', 'infrastructure', 'transport', 'business'],
-    maxWalkingTimeMinutes: 20,
-  },
-  mugla: {
-    priorities: ['leisure', 'infrastructure', 'transport', 'business'],
-    maxWalkingTimeMinutes: 20,
-  },
-  ankara: {
-    priorities: ['transport', 'infrastructure', 'business', 'leisure'],
-    maxWalkingTimeMinutes: 15,
-  },
-  default: {
-    priorities: ['infrastructure', 'transport', 'leisure', 'business'],
-    maxWalkingTimeMinutes: 15,
-  }
-};
-
-// Функция определения цвета ветки метро
+// Функция распределения цветов по веткам метро Турции (M1-M11)
 function getMetroColor(stationName) {
-  if (!stationName) return '#E11D48';
+  if (!stationName) return '#E11D48'; // Дефолтный красный
   const name = stationName.toLowerCase().trim();
   
   if (name.includes('m1')) return '#E11D48'; 
-  if (name.includes('m2')) return '#10B981'; 
+  if (name.includes('m2') || name.includes('taksim') || name.includes('levent') || name.includes('şişli')) return '#10B981'; 
   if (name.includes('m3')) return '#0EA5E9'; 
   if (name.includes('m4') || name.includes('kadıköy') || name.includes('kartal')) return '#EC4899'; 
-  if (name.includes('m5') || name.includes('üsküdar')) return '#8B5CF6'; 
-  if (name.includes('m7')) return '#06B6D4'; 
+  if (name.includes('m5') || name.includes('üsküdar') || name.includes('altunizade')) return '#8B5CF6'; 
+  if (name.includes('m7') || name.includes('mecidiyeköy')) return '#06B6D4'; 
   if (name.includes('m8')) return '#6366F1'; 
   if (name.includes('m11')) return '#D946EF'; 
   
   return '#E11D48'; 
 }
 
-// Функция тонкой очистки названий станций (без повреждения слов вроде Metrobüs)
-function cleanPoiName(name) {
-  if (!name) return '';
-  let cleaned = name;
-  
-  // Убираем коды веток (M1, M2, M4, M11 и т.д.)
-  cleaned = cleaned.replace(/\b[m|M]\d{1,2}\b/g, '');
-  
-  // Убираем служебные слова турецкого транспорта по границам слов
-  cleaned = cleaned.replace(/\bmetro\b/gi, '');
-  cleaned = cleaned.replace(/\bistasyonu\b/gi, '');
-  cleaned = cleaned.replace(/\bistasyon\b/gi, '');
-  cleaned = cleaned.replace(/\bdurağı\b/gi, '');
-  cleaned = cleaned.replace(/\bdurak\b/gi, '');
-  
-  // Убираем лишние символы, тире и пробелы
-  cleaned = cleaned.replace(/[-–—/]/g, ' ');
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
-  
-  if (cleaned.length > 0) {
-    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-  }
-  return cleaned;
-}
-
-// Извлечение лучшего POI
+// Поиск лучшего POI на основе рассчитанных весов из нового скоринга бэкенда
 function getBestPoiBadge(property) {
-  const poiData = property?.poi_data;
-  
-  if (!poiData || typeof poiData !== 'object' || Object.keys(poiData).length === 0) {
-    return null;
-  }
+  const poiPayload = property?.poi_data;
+  if (!poiPayload || typeof poiPayload !== 'object') return null;
 
-  const cityKey = (property?.city || 'default').toLowerCase().trim();
-  const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
+  // В новой структуре все объекты лежат внутри вложенного объекта `pois`
+  const pois = poiPayload.pois || {};
+  const allPois = Object.entries(pois).filter(([_, poi]) => poi && poi.raw_score > 0);
 
-  for (const category of config.priorities) {
-    const poi = poiData[category];
-    if (poi) {
-      if (poi.travel_mode === 'walking' && poi.travel_time_minutes <= config.maxWalkingTimeMinutes) {
-        return {
-          name: cleanPoiName(poi.name),
-          time: poi.travel_time_minutes,
-          mode: 'walking',
-          type: category
-        };
-      }
-      
-      if (poi.travel_mode === 'driving' && poi.travel_time_minutes <= 15) {
-        return {
-          name: cleanPoiName(poi.name),
-          time: poi.travel_time_minutes,
-          mode: 'driving',
-          type: category
-        };
-      }
-    }
-  }
+  if (allPois.length === 0) return null;
 
   try {
-    const allPois = Object.entries(poiData);
-    if (allPois.length > 0) {
-      const closest = allPois.reduce((prev, curr) => 
-        prev[1].distance_meters < curr[1].distance_meters ? prev : curr
-      );
-      return {
-        name: cleanPoiName(closest[1].name),
-        time: closest[1].travel_time_minutes,
-        mode: closest[1].travel_mode,
-        type: closest[0]
-      };
-    }
+    // Находим объект, который получил наивысшую взвешенную оценку (weighted_score)
+    const best = allPois.reduce((prev, curr) => 
+      prev[1].weighted_score > curr[1].weighted_score ? prev : curr
+    );
+
+    return {
+      name: best[1].name,
+      time: best[1].travel_time_minutes,
+      mode: best[1].travel_mode,
+      type: best[0] // Вернет 'metro', 'beach' и т.д.
+    };
   } catch (e) {
     console.error(e);
   }
-
   return null;
 }
 
@@ -132,6 +58,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pStatus = property?.status || property?.["konutcesit"] || '';
   const pAddress = property?.address || property?.adress || '';
 
+  // Получаем лучший POI на основе нового взвешенного скоринга
   const poiBadge = getBestPoiBadge(property);
 
   const imagesList = property?.property_images || [];
@@ -169,7 +96,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
   }
 
-  // Форматирование цены пробелами вместо точек
+  // Форматирование цены неразрывными пробелами
   const formatPriceVal = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
@@ -179,6 +106,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
 
   const renderProximityIcon = (type) => {
     switch (type?.toLowerCase()) {
+      case 'beach':
       case 'leisure':
         return (
           <svg style={{ width: '15px', height: '15px', color: '#0284C7', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -186,9 +114,10 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
             <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
           </svg>
         )
+      case 'hospital':
+      case 'school':
+      case 'university':
       case 'infrastructure':
-      case 'business':
-      case 'default':
       default:
         return (
           <svg style={{ width: '15px', height: '15px', color: '#64748B', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -242,10 +171,12 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       </div>
 
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
+        {/* Цена крупным шрифтом Mulish без точек */}
         <div className="cian-price" title={formatPriceVal(pPrice)}>
           {formatPriceVal(pPrice)}
         </div>
 
+        {/* Характеристики (15px, вес 500) */}
         <div className="cian-specs">
           {[
             pRooms ? `${pRooms}` : null,
@@ -254,10 +185,11 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           ].filter(Boolean).join(' · ')}
         </div>
         
+        {/* Инфраструктура со временем пути вплотную к названию */}
         <div className="cian-location">
           {poiBadge ? (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
-              {poiBadge.type === 'transport' ? (
+              {poiBadge.type === 'metro' || poiBadge.type === 'metrobus' ? (
                 <span style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -290,7 +222,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
                 {poiBadge.name}
               </span>
 
-              {/* Расстояние выводится сразу после названия */}
+              {/* Способ пути и минуты сразу после названия */}
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
