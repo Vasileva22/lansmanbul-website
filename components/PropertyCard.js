@@ -16,7 +16,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pProxType = property?.proximity_type || '';
   const pAddress = property?.address || property?.adress || '';
 
-  // Подгружаем изображения из связи property_images
   const imagesList = property?.property_images || [];
   const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
 
@@ -95,7 +94,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Лайка (40px * 40px) */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, pId)}
@@ -105,20 +103,18 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Бейдж Статуса */}
       {pStatus && (
         <span className="card-status-badge">
           {pStatus}
         </span>
       )}
 
-      {/* Контейнер картинки (Ровно 51.2% от высоты адаптивной карточки) */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
         {hasPhotos ? (
-          <img src={photoUrls[currentIdx]} className="cian-img" alt={pTitle || ''} />
+          <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
         ) : (
           <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -126,7 +122,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           </div>
         )}
         
-        {hasPhotos && photoUrls.length > 1 && (
+        {hasPhotos && photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
             <button className="slider-arrow arrow-right" onClick={handleNextPhoto}>❯</button>
@@ -134,14 +130,11 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Текстовый блок (Ровно 48.8% от высоты адаптивной карточки) */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
-          {/* Цена: 22px */}
           <div className="cian-price" title={formatPriceVal(pPrice)}>
             {formatPriceVal(pPrice)}
           </div>
-          {/* Характеристики */}
           <div className="cian-specs">
             {pRooms ? `${pRooms} · ` : ''}
             {pArea ? `${pArea} m²` : ''}
@@ -150,7 +143,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </div>
         
         <div>
-          {/* Локация/Метро */}
           <div className="cian-location">
             {pProxText ? (
               <>
