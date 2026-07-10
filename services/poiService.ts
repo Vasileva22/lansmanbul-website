@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 
-const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
 
 interface PoiResult {
   name: string;
@@ -9,82 +9,90 @@ interface PoiResult {
   travel_mode: 'walking' | 'driving';
 }
 
-// Поиск ближайшего POI конкретного типа
-async function findNearestPoi(lat: number, lng: number, type: string): Promise<any | null> {
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&rankby=distance&type=${type}&key=${GOOGLE_API_KEY}`;
+// 1. Поиск ближайшей организации через Яндекс API Поиска по организациям
+async function findNearestYandexPoi(lat: number, lng: number, searchText: string): Promise<any | null> {
+  // Важно: Яндекс Геопоиск ожидает координаты в порядке longitude,latitude (Долгота, Широта)
+  const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
+  
   try {
     const res = await fetch(url);
     const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      return data.results[0]; // Возвращаем самый первый (ближайший по воздуху) объект
+    if (data.features && data.features.length > 0) {
+      return data.features[0]; // Возвращаем первую (ближайшую) найденную точку
     }
   } catch (err) {
-    console.error(`Ошибка при поиске POI типа ${type}:`, err);
+    console.error(`Ошибка геопоиска Яндекс по запросу "${searchText}":`, err);
   }
   return null;
 }
 
-// Расчет реального времени в пути
-async function calculateDistanceMatrix(
+// 2. Расчет расстояния и времени через Яндекс Матрицу Расстояний
+async function calculateYandexMatrix(
   originLat: number, 
   originLng: number, 
   destLat: number, 
   destLng: number, 
   mode: 'walking' | 'driving'
 ): Promise<{ distance: number; duration: number } | null> {
-  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originLat},${originLng}&destinations=${destLat},${destLng}&mode=${mode}&key=${GOOGLE_API_KEY}`;
+  // Важно: Матрица расстояний Яндекса ожидает координаты в порядке latitude,longitude
+  const url = `https://api.routing.yandex.net/v2/distancematrix?origins=${originLat},${originLng}&destinations=${destLat},${destLng}&mode=${mode}&apikey=${YANDEX_API_KEY}`;
+  
   try {
     const res = await fetch(url);
     const data = await res.json();
+    
     if (data.rows && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
       const element = data.rows[0].elements[0];
       return {
-        distance: element.distance.value, // в метрах
-        duration: Math.ceil(element.duration.value / 60), // переводим секунды в минуты
+        distance: element.distance.value, // Расстояние в метрах
+        duration: Math.ceil(element.duration.value / 60) // Переводим секунды в округленные минуты
       };
     }
   } catch (err) {
-    console.error('Ошибка расчета матрицы расстояний:', err);
+    console.error('Ошибка расчета матрицы расстояний Яндекс:', err);
   }
   return null;
 }
 
-// Основная функция: запускается при создании/обновлении объекта
+// 3. Основная бэкенд-функция расчета инфраструктуры
 export async function updatePropertyPOIs(propertyId: string, lat: number, lng: number): Promise<void> {
-  if (!GOOGLE_API_KEY) {
-    console.error('Google Maps API Key отсутствует в .env');
+  if (!YANDEX_API_KEY) {
+    console.error('YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return;
   }
 
-  // Соответствие наших таксономий категориям Google Places
-  const poiMappings = {
-    transport: 'subway_station', // Для примера берем метро, можно расширить массивом
-    leisure: 'park',
-    infrastructure: 'shopping_mall',
-    business: 'city_hall'
+  // Поисковые фразы на турецком языке для высокой точности поиска в Турции
+  const poiSearchQueries = {
+    transport: 'metro', // Метро
+    leisure: 'plaj', // Пляж (для курортов) или парк
+    infrastructure: 'Alışveriş Merkezi', // ТЦ / Молл
+    business: 'İş Merkezi' // Бизнес-центр
   };
 
   const finalPoiData: Record<string, PoiResult> = {};
 
-  for (const [category, googleType] of Object.entries(poiMappings)) {
-    const nearestPlace = await findNearestPoi(lat, lng, googleType);
+  for (const [category, searchQuery] of Object.entries(poiSearchQueries)) {
+    const nearestPlace = await findNearestYandexPoi(lat, lng, searchQuery);
+    
     if (nearestPlace) {
-      const destLat = nearestPlace.geometry.location.lat;
-      const destLng = nearestPlace.geometry.location.lng;
+      // Геометрия Яндекса возвращает координаты в формате [longitude, latitude]
+      const destLng = nearestPlace.geometry.coordinates[0];
+      const destLat = nearestPlace.geometry.coordinates[1];
+      const placeName = nearestPlace.properties.CompanyMetaData.name;
 
       // По умолчанию рассчитываем пеший маршрут
       let travelMode: 'walking' | 'driving' = 'walking';
-      let matrix = await calculateDistanceMatrix(lat, lng, destLat, destLng, 'walking');
+      let matrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'walking');
 
-      // Если пешком идти дольше 25 минут, рассчитываем поездку на машине
-      if (matrix && matrix.duration > 25) {
+      // Если пешком добираться дольше 20 минут, пересчитываем поездку на авто
+      if (matrix && matrix.duration > 20) {
         travelMode = 'driving';
-        matrix = await calculateDistanceMatrix(lat, lng, destLat, destLng, 'driving');
+        matrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'driving');
       }
 
       if (matrix) {
         finalPoiData[category] = {
-          name: nearestPlace.name,
+          name: placeName,
           distance_meters: matrix.distance,
           travel_time_minutes: matrix.duration,
           travel_mode: travelMode
@@ -93,7 +101,7 @@ export async function updatePropertyPOIs(propertyId: string, lat: number, lng: n
     }
   }
 
-  // Сохраняем обновленные данные в Supabase
+  // Обновляем данные в таблице properties в Supabase
   const { error } = await supabase
     .from('properties')
     .update({ poi_data: finalPoiData })
