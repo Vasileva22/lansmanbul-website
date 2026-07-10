@@ -24,24 +24,49 @@ const cityPoiPriorities = {
   }
 };
 
-// Функция определения цвета ветки метро Турции (в основном Стамбул)
+// Функция определения цвета ветки метро
 function getMetroColor(stationName) {
-  if (!stationName) return '#E11D48'; // Дефолтный красный
+  if (!stationName) return '#E11D48';
   const name = stationName.toLowerCase().trim();
   
-  if (name.includes('m1')) return '#E11D48'; // Красный (M1)
-  if (name.includes('m2')) return '#10B981'; // Зеленый (M2)
-  if (name.includes('m3')) return '#0EA5E9'; // Голубой (M3)
-  if (name.includes('m4') || name.includes('kadıköy') || name.includes('kartal')) return '#EC4899'; // Розовый (M4)
-  if (name.includes('m5') || name.includes('üsküdar')) return '#8B5CF6'; // Фиолетовый (M5)
-  if (name.includes('m7')) return '#06B6D4'; // Бирюзовый (M7)
-  if (name.includes('m8')) return '#6366F1'; // Сине-фиолетовый (M8)
-  if (name.includes('m11')) return '#D946EF'; // Пурпурный (M11)
+  if (name.includes('m1')) return '#E11D48'; 
+  if (name.includes('m2')) return '#10B981'; 
+  if (name.includes('m3')) return '#0EA5E9'; 
+  if (name.includes('m4') || name.includes('kadıköy') || name.includes('kartal')) return '#EC4899'; 
+  if (name.includes('m5') || name.includes('üsküdar')) return '#8B5CF6'; 
+  if (name.includes('m7')) return '#06B6D4'; 
+  if (name.includes('m8')) return '#6366F1'; 
+  if (name.includes('m11')) return '#D946EF'; 
   
-  return '#E11D48'; // Базовый красный
+  return '#E11D48'; 
 }
 
-// Измененный хелпер: возвращает чистый объект данных вместо готовой строки
+// Функция тонкой очистки названий станций (без повреждения слов вроде Metrobüs)
+function cleanPoiName(name) {
+  if (!name) return '';
+  let cleaned = name;
+  
+  // Убираем коды веток (M1, M2, M4, M11 и т.д.)
+  cleaned = cleaned.replace(/\b[m|M]\d{1,2}\b/g, '');
+  
+  // Убираем служебные слова турецкого транспорта по границам слов
+  cleaned = cleaned.replace(/\bmetro\b/gi, '');
+  cleaned = cleaned.replace(/\bistasyonu\b/gi, '');
+  cleaned = cleaned.replace(/\bistasyon\b/gi, '');
+  cleaned = cleaned.replace(/\bdurağı\b/gi, '');
+  cleaned = cleaned.replace(/\bdurak\b/gi, '');
+  
+  // Убираем лишние символы, тире и пробелы
+  cleaned = cleaned.replace(/[-–—/]/g, ' ');
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  return cleaned;
+}
+
+// Извлечение лучшего POI
 function getBestPoiBadge(property) {
   const poiData = property?.poi_data;
   
@@ -57,7 +82,7 @@ function getBestPoiBadge(property) {
     if (poi) {
       if (poi.travel_mode === 'walking' && poi.travel_time_minutes <= config.maxWalkingTimeMinutes) {
         return {
-          name: poi.name,
+          name: cleanPoiName(poi.name),
           time: poi.travel_time_minutes,
           mode: 'walking',
           type: category
@@ -66,7 +91,7 @@ function getBestPoiBadge(property) {
       
       if (poi.travel_mode === 'driving' && poi.travel_time_minutes <= 15) {
         return {
-          name: poi.name,
+          name: cleanPoiName(poi.name),
           time: poi.travel_time_minutes,
           mode: 'driving',
           type: category
@@ -82,7 +107,7 @@ function getBestPoiBadge(property) {
         prev[1].distance_meters < curr[1].distance_meters ? prev : curr
       );
       return {
-        name: closest[1].name,
+        name: cleanPoiName(closest[1].name),
         time: closest[1].travel_time_minutes,
         mode: closest[1].travel_mode,
         type: closest[0]
@@ -107,10 +132,8 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pStatus = property?.status || property?.["konutcesit"] || '';
   const pAddress = property?.address || property?.adress || '';
 
-  // Получаем структурированный бейдж инфраструктуры
   const poiBadge = getBestPoiBadge(property);
 
-  // Список изображений
   const imagesList = property?.property_images || [];
   const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
   const hasPhotos = photoUrls.length > 0;
@@ -146,17 +169,19 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
   }
 
+  // Форматирование цены пробелами вместо точек
   const formatPriceVal = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
-    return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL";
+    if (numOnly === "" || numOnly === "0") return val;
+    return Number(numOnly).toLocaleString('tr-TR').replace(/\./g, '\u00A0') + " TL";
   }
 
   const renderProximityIcon = (type) => {
     switch (type?.toLowerCase()) {
       case 'leisure':
         return (
-          <svg style={{ width: '16px', height: '16px', color: '#0284C7', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg style={{ width: '15px', height: '15px', color: '#0284C7', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
             <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
           </svg>
@@ -217,12 +242,10 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       </div>
 
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
-        {/* Блок цены: Mulish, аккуратный вес */}
         <div className="cian-price" title={formatPriceVal(pPrice)}>
           {formatPriceVal(pPrice)}
         </div>
 
-        {/* Блок характеристик: одна строка через среднюю точку (16px) */}
         <div className="cian-specs">
           {[
             pRooms ? `${pRooms}` : null,
@@ -231,7 +254,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           ].filter(Boolean).join(' · ')}
         </div>
         
-        {/* Блок инфраструктуры: точечный дизайн CIAN (16px) */}
         <div className="cian-location">
           {poiBadge ? (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
@@ -257,27 +279,25 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
                 renderProximityIcon(poiBadge.type)
               )}
               
-              {/* Название станции или объекта в темно-серым цвете */}
               <span style={{
                 color: '#1E293B',
-                fontWeight: '700',
+                fontWeight: '500',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                maxWidth: '120px'
+                flexShrink: 1
               }} title={poiBadge.name}>
                 {poiBadge.name}
               </span>
 
-              {/* Иконка способа передвижения и число минут */}
+              {/* Расстояние выводится сразу после названия */}
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '2px',
                 color: '#64748B',
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: '500',
-                marginLeft: 'auto',
                 flexShrink: 0
               }}>
                 {poiBadge.mode === 'walking' ? (
@@ -297,11 +317,11 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
               {renderProximityIcon('default')}
               <span style={{
                 color: '#64748B',
-                fontWeight: '600',
+                fontWeight: '500',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                fontSize: '13px'
+                fontSize: '15px'
               }} title={pAddress}>
                 {pAddress}
               </span>
