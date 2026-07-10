@@ -1,23 +1,28 @@
-import { NextResponse } from 'next/server';
-import { updatePropertyPOIs } from '../../../services/poiService'; // Корректируйте путь в зависимости от расположения
+import { updatePropertyPOIs } from '../../services/poiService';
 
-export async function POST(request: Request) {
+export default async function handler(req, res) {
+  // Разрешаем только POST-запросы от вебхука Supabase
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+  }
+
   try {
-    const body = await request.json();
-    const { type, table, record, old_record } = body;
+    const { type, table, record, old_record } = req.body;
 
     console.log(`[Webhook] Получено событие ${type} для таблицы "${table}"`);
 
+    // Проверяем, что запрос пришел именно от таблицы properties
     if (table !== 'properties') {
-      return NextResponse.json({ error: 'Неверный триггер таблицы' }, { status: 400 });
+      return res.status(400).json({ error: 'Invalid table trigger' });
     }
 
     const id = record?.id;
     if (!id) {
-      return NextResponse.json({ error: 'ID объекта не найден' }, { status: 400 });
+      return res.status(400).json({ error: 'No record ID found in payload' });
     }
 
-    // Защита от бесконечного цикла (проверка изменения адреса или города)
+    // ЗАЩИТА ОТ БЕСКОНЕЧНОЙ РЕКУРСИИ:
+    // Сравниваем старый адрес с новым. Если они совпадают, прерываем выполнение.
     if (type === 'UPDATE' && old_record) {
       const newAddress = record?.address || record?.adress;
       const oldAddress = old_record?.address || old_record?.adress;
@@ -25,23 +30,23 @@ export async function POST(request: Request) {
       const oldCity = old_record?.city;
 
       if (newAddress === oldAddress && newCity === oldCity) {
-        console.log(`[Webhook] Адрес/город объекта ${id} не менялись. Пропускаем расчет POI.`);
-        return NextResponse.json({ message: 'Адрес не изменен. Обновление пропущено.' });
+        console.log(`[Webhook] Адрес не менялся (ID: ${id}). Пропускаем расчет.`);
+        return res.status(200).json({ message: 'Address did not change. Skipped update.' });
       }
     }
 
-    console.log(`[Webhook] Запуск глубокого скоринг-анализа для объекта ID: ${id}`);
+    console.log(`[Webhook] Запуск глубокого анализа инфраструктуры для ID: ${id}`);
     
-    // Запуск обновленного интеллектуального анализа
+    // Запускаем наш умный скоринг-сервис
     await updatePropertyPOIs(id);
 
-    return NextResponse.json({ 
+    return res.status(200).json({ 
       success: true, 
       message: `Инфраструктура и Livability Score для ID ${id} успешно рассчитаны и сохранены.` 
     });
 
-  } catch (err: any) {
-    console.error('[Webhook API Route Error]:', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err) {
+    console.error('[Webhook Error]:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 }
