@@ -7,6 +7,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
+// Скорректированные стили под точные размеры ЦИАН
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -238,24 +239,26 @@ const cssStyles = [
   '}',
   '.dropdown-item:hover { background-color: #f8fafc !important; color: var(--primary) !important; }',
   '',
-  '/* Сетка карточек по стандартам ЦИАН */',
+  '/* СЕТКА ГРИДА ЦИАН: Ровно 958px на десктопе */',
   '.grid-layout {',
   '  display: grid !important;',
-  '  grid-template-columns: repeat(auto-fill, 227.5px) !important;',
-  '  justify-content: center !important;',
-  '  gap: 20px !important;',
-  '  width: 100% !important;',
+  '  grid-template-columns: repeat(4, 227.5px) !important; /* Ровно 4 колонки */',
+  '  width: 958px !important; /* Жестко заданный размер контента ЦИАН */',
+  '  margin: 24px auto !important; /* Центрирование всей сетки */',
+  '  column-gap: 16px !important; /* Межколоночный зазор */',
+  '  row-gap: 24px !important; /* Зазор между строками */',
+  '  box-sizing: border-box !important;',
   '}',
   '',
-  '/* Фиксированная карточка 227.5px * 302.26px */',
+  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Ровно 227.5px * 302.26px */',
   '.cian-card {',
   '  width: 227.5px !important;',
   '  height: 302.26px !important;',
   '  padding: 0 !important;',
   '  margin: 0 !important;',
   '  background: #ffffff !important;',
-  '  border-radius: 12px !important;',
-  '  border: 1px solid rgba(226, 232, 240, 0.8) !important;',
+  '  border-radius: 8px !important; /* Углы 8px */',
+  '  border: 0.666667px solid rgb(208, 216, 233) !important; /* Точная рамка */',
   '  overflow: hidden !important;',
   '  display: flex !important;',
   '  flex-direction: column !important;',
@@ -269,12 +272,12 @@ const cssStyles = [
   '  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;',
   '}',
   '',
-  '/* Контейнер картинки 226.17px * 180.93px */',
+  '/* КОНТЕЙНЕР КАРТИНКИ: Ровно 226.17px * 180.93px */',
   '.cian-img-container {',
   '  width: 226.17px !important;',
   '  height: 180.93px !important;',
-  '  margin: 0.66px auto 0 auto !important;',
-  '  border-radius: 11px 11px 0 0 !important;',
+  '  margin: 0.66px auto 0 auto !important; /* Ровное прилегание внутри рамки */',
+  '  border-radius: 7.33px 7.33px 0 0 !important; /* Углы с учетом рамки */',
   '  position: relative !important;',
   '  overflow: hidden !important;',
   '  flex-shrink: 0 !important;',
@@ -285,11 +288,11 @@ const cssStyles = [
   '  object-fit: cover !important;',
   '}',
   '',
-  '/* Блок текста 202.17px * 100px */',
+  '/* БЛОК ИНФОРМАЦИИ: Ровно 202.17px * 100px */',
   '.cian-info {',
   '  width: 202.17px !important;',
   '  height: 100px !important;',
-  '  margin: 0 auto !important;',
+  '  margin: 0 auto !important; /* Идеальное центрирование внутри карточки */',
   '  padding: 8px 0 !important;',
   '  display: flex !important;',
   '  flex-direction: column !important;',
@@ -297,7 +300,7 @@ const cssStyles = [
   '  box-sizing: border-box !important;',
   '}',
   '',
-  '/* Кнопка избранного в круге 40px * 40px */',
+  '/* КНОПКА ИЗБРАННОГО: Ровно 40px * 40px */',
   '.card-fav-btn {',
   '  position: absolute !important;',
   '  top: 12px !important;',
@@ -322,7 +325,7 @@ const cssStyles = [
   '  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;',
   '}',
   '',
-  '/* Верхняя красивая плашка статуса */',
+  '/* Статус-плашка сверху на картинке */',
   '.card-status-badge {',
   '  position: absolute !important;',
   '  top: 12px !important;',
@@ -334,12 +337,11 @@ const cssStyles = [
   '  font-size: 11px !important;',
   '  font-weight: 800 !important;',
   '  text-transform: uppercase !important;',
-  '  letter-spacing: .5px !important;',
   '  z-index: 10 !important;',
   '  box-shadow: 0 2px 8px rgba(0, 164, 166, 0.3) !important;',
   '}',
   '',
-  '/* Цена с ограничением 113.14px * 28px */',
+  '/* ЦЕНА: 113.14px * 28px */',
   '.cian-price {',
   '  width: 113.14px !important;',
   '  height: 28px !important;',
@@ -352,7 +354,7 @@ const cssStyles = [
   '  text-overflow: ellipsis !important;',
   '}',
   '',
-  '/* Характеристики с троеточием как на ЦИАН */',
+  '/* Характеристики с троеточием (Ellipsis) */',
   '.cian-specs {',
   '  font-size: 12px !important;',
   '  font-weight: 500 !important;',
@@ -385,7 +387,7 @@ const cssStyles = [
   '  margin-top: 2px !important;',
   '}',
   '',
-  '/* Слайдер наведение */',
+  '/* Навигационные стрелочки на слайдере */',
   '.slider-arrow {',
   '  position: absolute !important;',
   '  top: 50% !important;',
@@ -409,7 +411,7 @@ const cssStyles = [
   '.arrow-left { left: 8px !important; }',
   '.arrow-right { right: 8px !important; }',
   '',
-  '/* Пагинация 1 2 3 */',
+  '/* Пагинация */',
   '.pagination-container {',
   '  display: flex;',
   '  justify-content: center;',
@@ -437,7 +439,7 @@ const cssStyles = [
   '.pagination-btn.active { background-color: var(--primary); border-color: var(--primary); color: #fff; }',
   '.pagination-btn.disabled { opacity: 0.5; cursor: not-allowed; }',
   '',
-  '/* Drawer избранного */',
+  '/* Drawer */',
   '.cabinet-drawer {',
   '  position: fixed !important;',
   '  top: 0 !important;',
@@ -455,7 +457,49 @@ const cssStyles = [
   '.drawer-header { padding: 24px !important; border-bottom: 1px solid var(--border-soft) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }',
   '.drawer-title { font-size: 20px !important; font-weight: 900 !important; }',
   '.drawer-close { background: none !important; border: none !important; font-size: 28px !important; color: var(--text-muted) !important; cursor: pointer !important; }',
-  '.drawer-content { flex: 1 !important; overflow-y: auto !important; padding: 24px !important; }'
+  '.drawer-content { flex: 1 !important; overflow-y: auto !important; padding: 24px !important; }',
+  '',
+  '/* АДАПТИВНОСТЬ (Mobile Friendly) */',
+  '@media (max-width: 1024px) {',
+  '  .hero-search-container { padding: 100px 16px 40px 16px !important; }',
+  '  .search-panel-card { border-radius: 16px !important; padding: 16px !important; }',
+  '  .search-inputs-row-wrapper { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-inputs-row { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
+  '  .search-input-field { width: 100% !important; border: 1.5px solid var(--border-soft) !important; border-radius: 10px !important; }',
+  '  .search-submit-btn { width: 100% !important; border-radius: 12px !important; margin: 0 !important; }',
+  '  ',
+  '  /* Сетка на планшетах становится резиновой */',
+  '  .grid-layout {',
+  '    width: 100% !important;',
+  '    grid-template-columns: repeat(auto-fill, 227.5px) !important;',
+  '    justify-content: center !important;',
+  '    column-gap: 16px !important;',
+  '    row-gap: 24px !important;',
+  '  }',
+  '}',
+  '@media (max-width: 500px) {',
+  '  /* На мобильных телефонах карточки растягиваются на всю ширину экрана */',
+  '  .grid-layout {',
+  '    grid-template-columns: 1fr !important;',
+  '    padding: 0 16px !important;',
+  '  }',
+  '  .cian-card {',
+  '    width: 100% !important;',
+  '    height: auto !important;',
+  '  }',
+  '  .cian-img-container {',
+  '    width: 100% !important;',
+  '    height: 220px !important;',
+  '    margin: 0 !important;',
+  '    border-radius: 8px 8px 0 0 !important;',
+  '  }',
+  '  .cian-info {',
+  '    width: calc(100% - 24px) !important;',
+  '    height: auto !important;',
+  '    padding: 12px 0 !important;',
+  '    gap: 8px !important;',
+  '  }',
+  '}'
 ].join('\n');
 
 export default function Home({ 
@@ -471,12 +515,10 @@ export default function Home({
 }) {
   const router = useRouter()
 
-  // Избранное и модалки
   const [favorites, setFavorites] = useState([])
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false)
   const [isPostModalOpen, setIsPostModalOpen] = useState(false)
   
-  // Текущие активные фильтры
   const [selectedCity, setSelectedCity] = useState(router.query.city || '')
   const [selectedDistrict, setSelectedDistrict] = useState(router.query.district || '')
   const [selectedRooms, setSelectedRooms] = useState(router.query.rooms || '')
@@ -488,7 +530,6 @@ export default function Home({
 
   const searchContainerRef = useRef(null)
 
-  // Синхронизация фильтров при изменении URL
   useEffect(() => {
     setSelectedCity(router.query.city || '')
     setSelectedDistrict(router.query.district || '')
@@ -496,7 +537,6 @@ export default function Home({
     setActiveStatusFilter(router.query.status || '')
   }, [router.query])
 
-  // Клик вне меню
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
@@ -507,7 +547,6 @@ export default function Home({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Синхронизация избранного
   useEffect(() => {
     const stored = localStorage.getItem('lansmanbul_favorites')
     if (stored) {
@@ -524,7 +563,6 @@ export default function Home({
     })
   }
 
-  // Запуск фильтрации через роутер (Серверный поиск)
   const handleSearch = () => {
     setOpenDropdown(null)
     router.push({
@@ -535,7 +573,7 @@ export default function Home({
         district: selectedDistrict,
         rooms: selectedRooms,
         status: activeStatusFilter,
-        page: 1 // Сброс на первую страницу при новом поиске
+        page: 1
       }
     }, undefined, { shallow: false })
   }
@@ -576,7 +614,6 @@ export default function Home({
     setLightboxImageIdx((prev) => (prev + imgs.length - 1) % (imgs.length || 1))
   }
 
-  // Фильтруем избранное только из текущих загруженных
   const favoriteProperties = properties.filter((p) => favorites.includes(p.id))
 
   return (
@@ -601,7 +638,6 @@ export default function Home({
             
             <div className="search-panel-card" ref={searchContainerRef}>
               
-              {/* Табы городов */}
               <div className="search-tabs-header">
                 <div 
                   className={`city-tab-item ${selectedCity === '' ? 'active' : ''}`}
@@ -620,11 +656,9 @@ export default function Home({
                 ))}
               </div>
 
-              {/* Поля поиска */}
               <div className="search-inputs-row-wrapper">
                 <div className="search-inputs-row">
                   
-                  {/* Контур выбора района */}
                   <div 
                     className={`search-input-field flex-wide ${selectedDistrict ? 'has-value' : ''}`}
                     onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')} 
@@ -645,7 +679,6 @@ export default function Home({
                     )}
                   </div>
 
-                  {/* Выбор комнат */}
                   <div 
                     className={`search-input-field flex-standard ${selectedRooms ? 'has-value' : ''}`}
                     onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')} 
@@ -666,7 +699,6 @@ export default function Home({
                     )}
                   </div>
 
-                  {/* Статус проекта */}
                   <div 
                     className={`search-input-field flex-standard ${activeStatusFilter ? 'has-value' : ''}`}
                     onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')} 
@@ -698,15 +730,15 @@ export default function Home({
           </div>
         </div>
 
-        {/* Сетка объявлений */}
-        <div style={{ maxWidth: '1200px', margin: '40px auto 0 auto', padding: '0 20px' }}>
+        {/* Сетка объявлений: ширина зафиксирована ровно на 958px */}
+        <div style={{ maxWidth: '958px', margin: '40px auto 0 auto', padding: '0' }}>
           {initialError && (
             <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
               Hata: {initialError}
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', padding: '0 4px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)' }}>
               {activeStatusFilter ? `${activeStatusFilter} Projeleri` : 'Tüm Projeler'} ({totalCount})
             </h2>
@@ -738,7 +770,6 @@ export default function Home({
                 ))}
               </div>
 
-              {/* Постраничная навигация 1 2 3 */}
               {totalPages > 1 && (
                 <div className="pagination-container">
                   <button 
@@ -773,7 +804,6 @@ export default function Home({
         </div>
       </main>
 
-      {/* Ящик избранного */}
       <div className={`cabinet-drawer ${isFavoritesOpen ? 'open' : ''}`}>
         <div className="drawer-header">
           <span className="drawer-title" style={{ color: 'var(--text-main)' }}>Favorilerim ({favorites.length})</span>
@@ -814,7 +844,6 @@ export default function Home({
   )
 }
 
-// Серверная обработка данных, фильтрация и пагинация
 export async function getServerSideProps(context) {
   try {
     const { query } = context
@@ -823,7 +852,6 @@ export async function getServerSideProps(context) {
     const from = (currentPage - 1) * limit
     const to = currentPage * limit - 1
 
-    // Получаем список фильтров (быстрый запрос метаданных без JOIN картинок)
     const { data: metaData } = await supabase
       .from('properties')
       .select('city, district, "İlçe/Semt", rooms, "card odalar", status, konutcesit')
@@ -833,32 +861,23 @@ export async function getServerSideProps(context) {
     const roomsList = Array.from(new Set(metaData?.map(x => x.rooms || x["card odalar"]).filter(Boolean))).sort()
     const statuses = Array.from(new Set(metaData?.map(x => x.status || x["konutcesit"]).filter(Boolean))).sort()
 
-    // Начинаем сбор основного запроса для сетки
     let dbQuery = supabase
       .from('properties')
       .select('*, property_images(image_url)', { count: 'exact' })
 
-    // Применение фильтрации по городу (City)
     if (query.city) {
       dbQuery = dbQuery.ilike('city', `%${query.city}%`)
     }
-
-    // Применение фильтрации по району (District)
     if (query.district) {
       dbQuery = dbQuery.or(`district.ilike.%${query.district}%,"İlçe/Semt".ilike.%${query.district}%`)
     }
-
-    // Применение фильтрации по комнатам (Rooms)
     if (query.rooms) {
       dbQuery = dbQuery.or(`rooms.eq.${query.rooms},"card odalar".eq.${query.rooms}`)
     }
-
-    // Применение фильтрации по статусу (Status)
     if (query.status) {
       dbQuery = dbQuery.or(`status.ilike.%${query.status}%,konutcesit.ilike.%${query.status}%`)
     }
 
-    // Сортировка по ID (сначала новые) и пагинация .range()
     dbQuery = dbQuery.order('id', { ascending: false }).range(from, to)
 
     const { data: properties, count, error } = await dbQuery
