@@ -7,7 +7,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Скорректированные пропорции: Фото 68% (квадратное), Текст 32% (плотный)
+// Скорректированные пропорции под уменьшенную на 20px высоту (по 10px с фото и текста)
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -239,22 +239,22 @@ const cssStyles = [
   '}',
   '.dropdown-item:hover { background-color: #f8fafc !important; color: var(--primary) !important; }',
   '',
-  '/* СЕТКА ГРИДА: Расширяем лимиты до 1440px для крупных и сочных карточек */',
+  '/* СЕТКА ГРИДА: Расширенная до 1440px */',
   '.grid-layout {',
   '  display: grid !important;',
-  '  grid-template-columns: repeat(4, 1fr) !important; /* Строго 4 колонки в ряд */',
+  '  grid-template-columns: repeat(4, 1fr) !important; /* Ровно 4 колонки в ряд */',
   '  width: 100% !important;',
-  '  max-width: 1440px !important; /* Увеличили ширину сетки как на ЦИАН */',
+  '  max-width: 1440px !important; /* Увеличена ширина для крупных сочных карточек */',
   '  margin: 24px auto !important;',
   '  column-gap: 16px !important;',
   '  row-gap: 24px !important;',
   '  box-sizing: border-box !important;',
   '}',
   '',
-  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Адаптивное масштабирование aspect-ratio */',
+  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Адаптивное масштабирование aspect-ratio (Укорочено на 20px) */',
   '.cian-card {',
   '  width: 100% !important;',
-  '  aspect-ratio: 227.5 / 302.26 !important; /* Пропорция ЦИАН */',
+  '  aspect-ratio: 227.5 / 282.26 !important; /* Новое компактное соотношение сторон */',
   '  height: auto !important;',
   '  padding: 0 !important;',
   '  margin: 0 !important;',
@@ -274,10 +274,10 @@ const cssStyles = [
   '  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;',
   '}',
   '',
-  '/* КОНТЕЙНЕР КАРТИНКИ: Увеличиваем до 68% высоты (почти квадрат) */',
+  '/* КОНТЕЙНЕР КАРТИНКИ: Укорочено на 10px (Теперь 69.3% от высоты карточки) */',
   '.cian-img-container {',
   '  width: 100% !important;',
-  '  height: 68% !important; /* Фото теперь занимает 68% всей карточки и выглядит крупно */',
+  '  height: 69.3% !important; /* Фото занимает 69.3% и выглядит плотно, без пустоты */',
   '  margin: 0 !important;',
   '  border-radius: 8px 8px 0 0 !important;',
   '  position: relative !important;',
@@ -290,15 +290,15 @@ const cssStyles = [
   '  object-fit: cover !important;',
   '}',
   '',
-  '/* БЛОК ИНФОРМАЦИИ: Сжимаем до 32% высоты для плотного прилегания текстов */',
+  '/* БЛОК ИНФОРМАЦИИ: Укорочено на 10px (Теперь 30.7% от высоты карточки) */',
   '.cian-info {',
   '  width: 100% !important;',
-  '  height: 32% !important; /* Всего 32% высоты - элементы прижаты плотно друг к другу */',
+  '  height: 30.7% !important; /* Сокращено для плотного прилегания без щелей */',
   '  margin: 0 auto !important;',
-  '  padding: 10px 14px 12px 14px !important; /* Плотные отступы */',
+  '  padding: 8px 14px 10px 14px !important; /* Слегка уменьшили вертикальный padding */',
   '  display: flex !important;',
   '  flex-direction: column !important;',
-  '  justify-content: space-between !important; /* Разносит верхний блок и нижний адрес */',
+  '  justify-content: space-between !important;',
   '  box-sizing: border-box !important;',
   '}',
   '',
@@ -343,10 +343,10 @@ const cssStyles = [
   '  box-shadow: 0 2px 8px rgba(0, 164, 166, 0.3) !important;',
   '}',
   '',
-  '/* ЦЕНА: Крупная (22px) */',
+  '/* ЦЕНА: 22px */',
   '.cian-price {',
   '  width: 100% !important;',
-  '  font-size: 22px !important; /* Жирный и крупный шрифт как в ЦИАН */',
+  '  font-size: 22px !important;',
   '  font-weight: 800 !important;',
   '  color: #1E293B !important;',
   '  white-space: nowrap !important;',
@@ -722,7 +722,7 @@ export default function Home({
           </div>
         </div>
 
-        {/* Секция сетки объявлений: ширина 1440px для крупных карточек */}
+        {/* Секция сетки объявлений: ширина 1440px */}
         <div style={{ width: '100%', maxWidth: '1440px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
           {initialError && (
             <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
