@@ -7,7 +7,6 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Новые точные стили: укороченная карточка, крупное квадратное фото, чистые шрифты Mulish
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -343,7 +342,7 @@ const cssStyles = [
   '  box-shadow: 0 2px 8px rgba(0, 164, 166, 0.3) !important;',
   '}',
   '',
-  '/* ЦЕНА ЦИАН: Теперь на чистом шрифте Mulish, вес 700 */',
+  '/* ЦЕНА ЦИАН: Теперь на чистом шрифте Mulish, вес 700 без точек */',
   '.cian-price {',
   '  width: 100% !important;',
   '  font-size: 22px !important;',
@@ -357,10 +356,10 @@ const cssStyles = [
   '  line-height: 1.1 !important;',
   '}',
   '',
-  '/* Характеристики: Размер увеличен до 16px, плотность 600 */',
+  '/* Характеристики: Размер строго 15px, плотность 500 (нормальная) */',
   '.cian-specs {',
-  '  font-size: 16px !important;',
-  '  font-weight: 600 !important;',
+  '  font-size: 15px !important;',
+  '  font-weight: 500 !important;',
   '  color: #3F536C !important;',
   '  font-family: var(--font-main) !important;',
   '  margin-top: 1px !important;',
@@ -369,9 +368,10 @@ const cssStyles = [
   '  text-overflow: ellipsis !important;',
   '}',
   '',
-  '/* Локация и POI: Размер увеличен до 16px, вертикальное выравнивание */',
+  '/* Локация и POI: Размер строго 15px, плотность 500 (нормальная) */',
   '.cian-location {',
-  '  font-size: 16px !important;',
+  '  font-size: 15px !important;',
+  '  font-weight: 500 !important;',
   '  font-family: var(--font-main) !important;',
   '  display: inline-flex !important;',
   '  align-items: center !important;',
@@ -718,7 +718,6 @@ export default function Home({
           </div>
         </div>
 
-        {/* Сетка объявлений: ширина 1440px для максимальной сочности */}
         <div style={{ width: '100%', maxWidth: '1440px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
           {initialError && (
             <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
