@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-// 1. Конфигурация приоритетов городов в формате чистого JavaScript
+// 1. Конфигурация приоритетов городов в формате чистого JavaScript (без типов TypeScript)
 const cityPoiPriorities = {
   istanbul: {
     priorities: ['transport', 'business', 'infrastructure', 'leisure'],
@@ -24,34 +24,8 @@ const cityPoiPriorities = {
   }
 };
 
-// Функция определения класса цвета для турецких линий метро
-const getMetroColorClass = (stationName) => {
-  if (!stationName) return 'text-emerald-600';
-  const nameUpper = stationName.toUpperCase();
-  
-  if (nameUpper.includes('M1')) return 'text-red-600';
-  if (nameUpper.includes('M2')) return 'text-green-600';
-  if (nameUpper.includes('M3')) return 'text-sky-500';
-  if (nameUpper.includes('M4')) return 'text-pink-600';
-  if (nameUpper.includes('M5')) return 'text-purple-600';
-  if (nameUpper.includes('M7')) return 'text-fuchsia-400';
-  if (nameUpper.includes('M11')) return 'text-indigo-700';
-  
-  return 'text-emerald-600'; // Базовый цвет метро по умолчанию
-};
-
-// Функция очистки первой буквы "M" у метро, чтобы избежать дублирования "MM4"
-const cleanPoiName = (name, category) => {
-  if (!name) return '';
-  if (category === 'transport') {
-    // Регулярное выражение убирает букву "M" в начале строки, если за ней идет цифра
-    return name.replace(/^M(\d)/i, '$1');
-  }
-  return name;
-};
-
-// 2. Вспомогательная функция для получения структурированных POI-данных
-function getBestPoi(property) {
+// 2. Вспомогательная функция на чистом JavaScript (без типов TypeScript)
+function getBestPoiBadge(property) {
   const poiData = property?.poi_data;
   
   if (!poiData || typeof poiData !== 'object' || Object.keys(poiData).length === 0) {
@@ -64,21 +38,19 @@ function getBestPoi(property) {
   for (const category of config.priorities) {
     const poi = poiData[category];
     if (poi) {
+      const modeText = poi.travel_mode === 'walking' ? 'yürüme' : 'araçla';
+      
       if (poi.travel_mode === 'walking' && poi.travel_time_minutes <= config.maxWalkingTimeMinutes) {
         return {
-          name: poi.name,
-          duration: poi.travel_time_minutes,
-          category,
-          travel_mode: poi.travel_mode
+          text: `${poi.name}'na ${poi.travel_time_minutes} dk ${modeText}`,
+          type: category
         };
       }
       
       if (poi.travel_mode === 'driving' && poi.travel_time_minutes <= 15) {
         return {
-          name: poi.name,
-          duration: poi.travel_time_minutes,
-          category,
-          travel_mode: poi.travel_mode
+          text: `${poi.name}'na ${poi.travel_time_minutes} dk ${modeText}`,
+          type: category
         };
       }
     }
@@ -90,11 +62,10 @@ function getBestPoi(property) {
       const closest = allPois.reduce((prev, curr) => 
         prev[1].distance_meters < curr[1].distance_meters ? prev : curr
       );
+      const modeText = closest[1].travel_mode === 'walking' ? 'yürüme' : 'araçla';
       return {
-        name: closest[1].name,
-        duration: closest[1].travel_time_minutes,
-        category: closest[0],
-        travel_mode: closest[1].travel_mode
+        text: `${closest[1].name}'na ${closest[1].travel_time_minutes} dk ${modeText}`,
+        type: closest[0]
       };
     }
   } catch (e) {
@@ -118,8 +89,8 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pStatus = property?.status || property?.["konutcesit"] || '';
   const pAddress = property?.address || property?.adress || '';
 
-  // Получаем приоритетный объект инфраструктуры
-  const poi = getBestPoi(property);
+  // Получаем приоритетный бейдж преимуществ инфраструктуры
+  const poiBadge = getBestPoiBadge(property);
 
   // Изображения забираем из связанной таблицы property_images
   const imagesList = property?.property_images || [];
@@ -164,12 +135,36 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL";
   }
 
-  // Форматируем параметры (комнаты, площадь, этаж) в одну красивую строку через среднюю точку
-  const specsArray = [];
-  if (pRooms) specsArray.push(pRooms);
-  if (pArea) specsArray.push(`${pArea} m²`);
-  if (pFloor) specsArray.push(`${pFloor} Kat`);
-  const specsString = specsArray.join(' · ');
+  const renderProximityIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'transport':
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#EF4444' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <rect x="4" y="3" width="16" height="14" rx="2" />
+            <path d="M4 11h16M12 3v8M8 17l-2 4M16 17l2 4" />
+            <circle cx="8" cy="14" r="1" fill="currentColor" />
+            <circle cx="16" cy="14" r="1" fill="currentColor" />
+          </svg>
+        )
+      case 'leisure':
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
+            <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
+          </svg>
+        )
+      case 'infrastructure':
+      case 'business':
+      case 'default':
+      default:
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: 'var(--primary)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        )
+    }
+  }
 
   return (
     <div 
@@ -177,7 +172,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка "избранное" поверх фото */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, pId)}
@@ -187,23 +181,21 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Обертка контейнера с изображением */}
+      {pStatus && (
+        <span className="card-status-badge">
+          {pStatus}
+        </span>
+      )}
+
       <div 
-        className="cian-img-container relative" 
+        className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
-        {/* Аккуратный тег-статус объекта исключительно в верхнем углу фотографии */}
-        {pStatus && (
-          <span className="absolute top-2.5 left-2.5 z-10 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-2.5 py-1 rounded shadow-sm select-none">
-            {pStatus}
-          </span>
-        )}
-
         {hasPhotos ? (
           <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
         ) : (
           <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
-            <svg viewBox="0 0 24 24" style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span style={{ fontSize: '11px', fontWeight: '700' }}>Görsel Yok</span>
           </div>
         )}
@@ -216,76 +208,34 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Контентная область под фото */}
-      <div 
-        className="cian-info p-4 flex flex-col gap-1 cursor-pointer" 
-        onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
-      >
-        {/* 1. Цена (крупная, четкая, снижена жирность) */}
-        <div className="text-xl font-semibold text-gray-900 tracking-tight" title={formatPriceVal(pPrice)}>
-          {formatPriceVal(pPrice)}
+      <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
+        <div>
+          <div className="cian-price" title={formatPriceVal(pPrice)}>
+            {formatPriceVal(pPrice)}
+          </div>
+          <div className="cian-specs">
+            {pRooms ? `${pRooms} · ` : ''}
+            {pArea ? `${pArea} m²` : ''}
+            {pFloor ? ` · ${pFloor} Kat` : ''}
+          </div>
         </div>
-
-        {/* 2. Основные параметры (ровно 16px) */}
-        {specsString && (
-          <div className="text-base font-normal text-gray-800 leading-tight">
-            {specsString}
-          </div>
-        )}
         
-        {/* 3. Строка инфраструктуры POI (ровно 16px) */}
-        {poi ? (
-          <div className="flex items-center text-base text-gray-800 gap-1.5 mt-0.5 truncate">
-            {/* Иконки по категориям */}
-            {poi.category === 'transport' ? (
-              <span className={`font-black ${getMetroColorClass(poi.name)} shrink-0 leading-none select-none`}>
-                M
-              </span>
-            ) : poi.category === 'leisure' ? (
-              <span className="shrink-0 select-none">🌴</span>
-            ) : (
-              <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="text-emerald-600 shrink-0 fill-none stroke-current" strokeWidth="2.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-            )}
-
-            {/* Название станции / объекта (с очисткой дублирующей буквы M) */}
-            <span className="truncate text-gray-800 font-medium" title={poi.name}>
-              {cleanPoiName(poi.name, poi.category)}
-            </span>
-
-            {/* Иконка способа передвижения и только числовое значение минут */}
-            <span className="inline-flex items-center gap-0.5 text-gray-400 shrink-0 ml-0.5">
-              {poi.travel_mode === 'driving' ? (
-                <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="fill-current">
-                  <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="fill-current">
-                  <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 21.5h2.1l1.9-8.2 2.1 2v6.2h2v-7.5l-2.1-2 .6-3c1 1.15 2.41 1.9 4 1.9v-2c-1.15 0-2.17-.58-2.8-1.5l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.6.1-.9.2L6 8.3V13h2V9.6l1.8-.7z"/>
-                </svg>
-              )}
-              <span className="text-gray-500 font-normal">{poi.duration}</span>
-            </span>
+        <div>
+          <div className="cian-location">
+            {poiBadge ? (
+              <>
+                {renderProximityIcon(poiBadge.type)}
+                <span style={{ marginLeft: '2px' }} title={poiBadge.text}>{poiBadge.text}</span>
+              </>
+            ) : pAddress ? (
+              <>
+                {renderProximityIcon('default')}
+                <span style={{ marginLeft: '2px' }} title={pAddress}>{pAddress}</span>
+              </>
+            ) : null}
           </div>
-        ) : pAddress ? (
-          /* Обычный адрес (если нет POI) */
-          <div className="flex items-center text-base text-gray-500 gap-1.5 mt-0.5 truncate" title={pAddress}>
-            <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="text-gray-400 shrink-0 fill-none stroke-current" strokeWidth="2.5">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            <span className="truncate">{pAddress}</span>
-          </div>
-        ) : null}
-
-        {/* Название проекта / объявления (неяркий вспомогательный текст снизу) */}
-        {pTitle && (
-          <div className="text-sm text-gray-400 mt-0.5 truncate" title={pTitle}>
-            {pTitle}
-          </div>
-        )}
+          <div className="cian-address" title={pTitle}>{pTitle}</div>
+        </div>
       </div>
     </div>
   )
