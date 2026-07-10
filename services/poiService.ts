@@ -2,21 +2,19 @@ import { createClient } from '@supabase/supabase-js';
 
 const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
 
-// Инициализация административного клиента для беспрепятственного обхода RLS
+// Инициализируем административный клиент для обхода RLS
 const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-// Спецификация для конфигурации категорий
 export interface CategoryConfig {
-  searchQuery: string;        // Поисковый запрос на турецком для Яндекса
-  weight: number;             // Вес/Важность категории (от 1.0 до 3.0)
-  maxWalkingMinutes: number;  // Максимальный порог для пешего пути
-  maxDrivingMinutes: number;  // Максимальный порог для автомобильного пути
-  displayBadge: string;       // Значение, которое запишется в proximity_type
+  searchQuery: string;
+  weight: number;
+  maxWalkingMinutes: number;
+  maxDrivingMinutes: number;
+  displayBadge: string;
 }
 
-// 1. Модульная конфигурация весов инфраструктуры (Профессиональный справочник)
 export const INFRASTRUCTURE_CONFIG: Record<string, CategoryConfig> = {
   metro: { searchQuery: 'metro istasyonu', weight: 3.0, maxWalkingMinutes: 15, maxDrivingMinutes: 10, displayBadge: 'Metro' },
   metrobus: { searchQuery: 'metrobüs durağı', weight: 3.0, maxWalkingMinutes: 15, maxDrivingMinutes: 10, displayBadge: 'Metrobüs' },
@@ -37,20 +35,48 @@ interface PoiDetail {
   distance_meters: number;
   travel_time_minutes: number;
   travel_mode: 'walking' | 'driving';
-  raw_score: number;       // Оценка удаленности (0-100)
-  weighted_score: number;  // Итоговая оценка с учетом веса категории
+  raw_score: number;
+  weighted_score: number;
 }
 
-// Поиск координат адреса
-async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
-  if (!YANDEX_API_KEY) return null;
-  const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
-
+// 1. Безопасная функция-обертка для предотвращения падений при XML-ошибках Яндекса
+async function safeFetchJson(url: string): Promise<any | null> {
   try {
     const res = await fetch(url);
-    const data = await res.json();
-    const foundPlaces = data?.response?.GeoObjectCollection?.featureMember;
+    
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[Yandex API Error] HTTP ${res.status}: ${errText}`);
+      return null;
+    }
 
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Текст ответа: ${text}`);
+      return null;
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error(`[Yandex API Fetch Exception] Не удалось выполнить запрос:`, err);
+    return null;
+  }
+}
+
+// Преобразование текстового адреса в координаты [lat, lng]
+async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
+  if (!YANDEX_API_KEY) {
+    console.error('YANDEX_MAPS_API_KEY отсутствует для геокодирования');
+    return null;
+  }
+
+  // ПОПЫТКА 1: Через стандартный HTTP Геокодер
+  const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  const data = await safeFetchJson(geocoderUrl);
+
+  if (data) {
+    const foundPlaces = data?.response?.GeoObjectCollection?.featureMember;
     if (foundPlaces && foundPlaces.length > 0) {
       const pos = foundPlaces[0].GeoObject.Point.pos; 
       const [lngStr, latStr] = pos.split(' ');
@@ -58,39 +84,36 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
       const lat = parseFloat(latStr);
       if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
     }
-  } catch (err) {
-    console.warn(`[Geocoder fallback] Стандартный геокодер недоступен, пробуем Поиск по организациям...`);
   }
 
-  // Резервный поиск координат через Поиск по организациям
-  try {
-    const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
-    const res = await fetch(searchUrl);
-    const data = await res.json();
-    if (data.features && data.features.length > 0) {
-      const [lng, lat] = data.features[0].geometry.coordinates;
-      if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+  // ПОПЫТКА 2 (РЕЗЕРВНАЯ): Через API Поиска по организациям (который точно активен у вас)
+  console.log('Запуск резервного геокодирования через Поиск по организациям...');
+  const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
+  const searchData = await safeFetchJson(searchUrl);
+
+  if (searchData && searchData.features && searchData.features.length > 0) {
+    const feature = searchData.features[0];
+    const [lng, lat] = feature.geometry.coordinates;
+    if (!isNaN(lat) && !isNaN(lng)) {
+      console.log(`Резервное геокодирование успешно! Координаты: lat: ${lat}, lng: ${lng}`);
+      return { lat, lng };
     }
-  } catch (err) {
-    console.error('Ошибка резервного геокодирования:', err);
   }
+
   return null;
 }
 
 // Поиск ближайшей организации
 async function findNearestYandexPoi(lat: number, lng: number, searchText: string): Promise<any | null> {
   const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.features && data.features.length > 0) return data.features[0];
-  } catch (err) {
-    console.error(`Ошибка геопоиска по запросу "${searchText}":`, err);
+  const data = await safeFetchJson(url);
+  if (data && data.features && data.features.length > 0) {
+    return data.features[0];
   }
   return null;
 }
 
-// Расчет расстояния и времени через матрицу расстояний Яндекса
+// Расчет расстояния и времени через Яндекс Матрицу Расстояний
 async function calculateYandexMatrix(
   originLat: number, 
   originLng: number, 
@@ -99,23 +122,19 @@ async function calculateYandexMatrix(
   mode: 'walking' | 'driving'
 ): Promise<{ distance: number; duration: number } | null> {
   const url = `https://api.routing.yandex.net/v2/distancematrix?origins=${originLat},${originLng}&destinations=${destLat},${destLng}&mode=${mode}&apikey=${YANDEX_API_KEY}`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.rows && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
-      const element = data.rows[0].elements[0];
-      return {
-        distance: element.distance.value,
-        duration: Math.ceil(element.duration.value / 60)
-      };
-    }
-  } catch (err) {
-    console.error(`Ошибка матрицы расстояний (${mode}):`, err);
+  const data = await safeFetchJson(url);
+  
+  if (data && data.rows && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
+    const element = data.rows[0].elements[0];
+    return {
+      distance: element.distance.value,
+      duration: Math.ceil(element.duration.value / 60)
+    };
   }
   return null;
 }
 
-// 2. Расчет базовой оценки (raw_score) на основе времени в пути
+// Расчет оценки на основе времени
 function calculatePoiScore(durationMinutes: number, mode: 'walking' | 'driving', config: CategoryConfig): number {
   if (mode === 'walking') {
     if (durationMinutes <= 5) return 100;
@@ -124,7 +143,6 @@ function calculatePoiScore(durationMinutes: number, mode: 'walking' | 'driving',
     if (durationMinutes <= config.maxWalkingMinutes) return 25;
     return 0;
   } else {
-    // Автомобильная доступность ценится ниже пешей
     if (durationMinutes <= 5) return 50;
     if (durationMinutes <= 10) return 35;
     if (durationMinutes <= 15) return 20;
@@ -147,7 +165,7 @@ function cleanPoiName(name: string): string {
   return cleaned;
 }
 
-// 3. Основная бэкенд-функция глубокого анализа
+// Основная бэкенд-функция скоринг-анализа
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   if (!YANDEX_API_KEY) {
     console.error('YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
@@ -175,10 +193,10 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   const cityPrefix = property.city ? `${property.city}, ` : '';
   const fullAddress = `${cityPrefix}${rawAddress}`;
 
-  // Получаем координаты
+  // Получаем координаты (стандартным или резервным методом)
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
-    console.error(`Не удалось определить координаты для адреса "${fullAddress}"`);
+    console.error(`Ни один из методов геокодирования не смог определить координаты для адреса "${fullAddress}"`);
     return;
   }
 
@@ -191,7 +209,6 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   let bestCategoryKey: string | null = null;
   let highestWeightedScore = -1;
 
-  // Безопасный перебор всех 12 категорий (ошибки в одной категории не прервут цикл)
   for (const [categoryKey, config] of Object.entries(INFRASTRUCTURE_CONFIG)) {
     try {
       const nearestPlace = await findNearestYandexPoi(lat, lng, config.searchQuery);
@@ -204,7 +221,6 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
       let travelMode: 'walking' | 'driving' = 'walking';
       let matrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'walking');
 
-      // Если пешком идти слишком далеко (больше лимита), пересчитываем на авто
       if (!matrix || matrix.duration > 20) {
         const drivingMatrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'driving');
         if (drivingMatrix) {
@@ -226,11 +242,9 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
           weighted_score: weightedScore
         };
 
-        // Накопление скоринга
         totalWeightedScoreSum += weightedScore;
         totalWeightsSum += config.weight;
 
-        // Выбор абсолютного «Главного преимущества»
         if (weightedScore > highestWeightedScore && rawScore > 0) {
           highestWeightedScore = weightedScore;
           bestCategoryKey = categoryKey;
@@ -241,24 +255,20 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     }
   }
 
-  // Расчет математического взвешенного Livability Score (от 0 до 100)
   const livabilityScore = totalWeightsSum > 0 
     ? Math.min(Math.round((totalWeightedScoreSum / (totalWeightsSum * 100)) * 100), 100)
     : 0;
 
-  // Определение значения для proximity_type на основе победителя
   const chosenProximityType = bestCategoryKey 
     ? INFRASTRUCTURE_CONFIG[bestCategoryKey].displayBadge 
     : null;
 
-  // Структурированный JSON на сохранение
   const resultPayload = {
     pois: finalPoiData,
     livability_score: livabilityScore,
     calculated_at: new Date().toISOString()
   };
 
-  // Сохранение результатов в Supabase
   const { error } = await supabaseAdmin
     .from('properties')
     .update({ 
