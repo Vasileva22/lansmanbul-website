@@ -39,33 +39,45 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// 1. Функция-обертка с подменой Referer для прохождения проверки авторизации Яндекса
+// 1. Безопасная функция-обертка с детальным логированием ответов Яндекса
 async function safeFetchJson(url: string): Promise<any | null> {
+  const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
+  console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
+
   try {
     const res = await fetch(url, {
       headers: {
-        // Подменяем Referer на домен, указанный в ограничениях вашего API-ключа Яндекса
         'Referer': 'https://increase-fine-snappea.tilda.ws/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }
     });
     
+    console.log(`[Yandex API Response] HTTP Status: ${res.status}`);
+
     if (!res.ok) {
       const errText = await res.text();
-      console.warn(`[Yandex API Error] HTTP ${res.status}: ${errText}`);
+      console.error(`[Yandex API Error] HTTP ${res.status} от Яндекса. Текст ошибки: ${errText}`);
       return null;
     }
 
     const contentType = res.headers.get('content-type') || '';
+    const text = await res.text();
+
     if (!contentType.includes('application/json')) {
-      const text = await res.text();
-      console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Текст ответа: ${text}`);
+      console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Ответ: ${text}`);
       return null;
     }
 
-    return await res.json();
-  } catch (err) {
-    console.error(`[Yandex API Fetch Exception] Не удалось выполнить запрос:`, err);
+    const json = JSON.parse(text);
+    console.log(`[Yandex API Success] Получен успешный JSON-ответ от Яндекса.`);
+    
+    if (json.error) {
+      console.error(`[Yandex API Internal Error] Внутри ответа Яндекса обнаружена ошибка: ${JSON.stringify(json.error)}`);
+    }
+
+    return json;
+  } catch (err: any) {
+    console.error(`[Yandex API Fetch Exception] Не удалось выполнить запрос к Яндексу:`, err.message || err);
     return null;
   }
 }
@@ -73,9 +85,11 @@ async function safeFetchJson(url: string): Promise<any | null> {
 // Преобразование текстового адреса в координаты [lat, lng]
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
   if (!YANDEX_API_KEY) {
-    console.error('YANDEX_MAPS_API_KEY отсутствует для геокодирования');
+    console.error('[Geocoder] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return null;
   }
+
+  console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
   // ПОПЫТКА 1: Через стандартный HTTP Геокодер
   const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
@@ -83,29 +97,39 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
   if (data) {
     const foundPlaces = data?.response?.GeoObjectCollection?.featureMember;
+    console.log(`[Geocoder] Найдено объектов (Попытка 1): ${foundPlaces ? foundPlaces.length : 0}`);
     if (foundPlaces && foundPlaces.length > 0) {
       const pos = foundPlaces[0].GeoObject.Point.pos; 
+      console.log(`[Geocoder] Сырые координаты (Попытка 1): "${pos}"`);
       const [lngStr, latStr] = pos.split(' ');
       const lng = parseFloat(lngStr);
       const lat = parseFloat(latStr);
-      if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+      if (!isNaN(lat) && !isNaN(lng)) {
+        console.log(`[Geocoder] Успешно распознано: lat=${lat}, lng=${lng}`);
+        return { lat, lng };
+      }
     }
   }
 
   // ПОПЫТКА 2 (РЕЗЕРВНАЯ): Через API Поиска по организациям
-  console.log('Запуск резервного геокодирования через Поиск по организациям...');
+  console.log('[Geocoder] Попытка 1 не дала результатов. Запуск резервной попытки через Поиск по организациям...');
   const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
   const searchData = await safeFetchJson(searchUrl);
 
-  if (searchData && searchData.features && searchData.features.length > 0) {
-    const feature = searchData.features[0];
-    const [lng, lat] = feature.geometry.coordinates;
-    if (!isNaN(lat) && !isNaN(lng)) {
-      console.log(`Резервное геокодирование успешно! Координаты: lat: ${lat}, lng: ${lng}`);
-      return { lat, lng };
+  if (searchData) {
+    const features = searchData.features;
+    console.log(`[Geocoder] Найдено объектов (Попытка 2): ${features ? features.length : 0}`);
+    if (features && features.length > 0) {
+      const feature = features[0];
+      const [lng, lat] = feature.geometry.coordinates;
+      if (!isNaN(lat) && !isNaN(lng)) {
+        console.log(`[Geocoder] Успешно распознано в резервном режиме: lat=${lat}, lng=${lng}`);
+        return { lat, lng };
+      }
     }
   }
 
+  console.error(`[Geocoder] Внимание: Ни одна из попыток геокодирования не вернула координаты для "${addressText}"`);
   return null;
 }
 
@@ -173,8 +197,10 @@ function cleanPoiName(name: string): string {
 
 // Основная бэкенд-функция скоринг-анализа
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
+  console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
+
   if (!YANDEX_API_KEY) {
-    console.error('YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
+    console.error('[POI Service] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return;
   }
 
@@ -186,13 +212,15 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .single();
 
   if (fetchError || !property) {
-    console.error(`Не удалось получить объект ${propertyId} из БД:`, fetchError);
+    console.error(`[POI Service] Не удалось получить объявление ID: ${propertyId} из БД:`, fetchError);
     return;
   }
 
   const rawAddress = property.adress;
+  console.log(`[POI Service] Извлечен адрес из БД: "${rawAddress}", город: "${property.city}"`);
+
   if (!rawAddress) {
-    console.warn(`У объекта ${propertyId} отсутствует текстовый адрес`);
+    console.warn(`[POI Service] Предупреждение: у объекта ${propertyId} пустой текстовый адрес. Расчет остановлен.`);
     return;
   }
 
@@ -202,11 +230,12 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   // Получаем координаты (стандартным или резервным методом)
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
-    console.error(`Ни один из методов геокодирования не смог определить координаты для адреса "${fullAddress}"`);
+    console.error(`[POI Service] Не удалось определить координаты для адреса "${fullAddress}". Анализ отменен.`);
     return;
   }
 
   const { lat, lng } = coordinates;
+  console.log(`[POI Service] Успешно найдены координаты: lat: ${lat}, lng: ${lng}`);
 
   const finalPoiData: Record<string, PoiDetail> = {};
   let totalWeightedScoreSum = 0;
@@ -257,7 +286,7 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
         }
       }
     } catch (catErr) {
-      console.error(`[Resilience] Ошибка при обработке категории "${categoryKey}":`, catErr);
+      console.error(`[POI Service] Ошибка при обработке категории "${categoryKey}":`, catErr);
     }
   }
 
@@ -286,8 +315,8 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .eq('id', propertyId);
 
   if (error) {
-    console.error(`Ошибка сохранения результатов для объекта ${propertyId}:`, error);
+    console.error(`[POI Service] Ошибка сохранения результатов в БД для объекта ${propertyId}:`, error);
   } else {
-    console.log(`Объект ${propertyId} успешно проанализирован. Индекс привлекательности: ${livabilityScore}/100. Главное преимущество: "${chosenProximityType}".`);
+    console.log(`[POI Service] Объект ${propertyId} успешно проанализирован. Индекс: ${livabilityScore}/100. Преимущество: "${chosenProximityType}".`);
   }
 }
