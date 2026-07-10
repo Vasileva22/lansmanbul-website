@@ -7,7 +7,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
 
-// Скорректированные пропорции под уменьшенную на 20px высоту (по 10px с фото и текста)
+// Новые точные стили: укороченная карточка, крупное квадратное фото, чистые шрифты
 const cssStyles = [
   ':root {',
   '  --primary: #00A4A6;',
@@ -239,22 +239,22 @@ const cssStyles = [
   '}',
   '.dropdown-item:hover { background-color: #f8fafc !important; color: var(--primary) !important; }',
   '',
-  '/* СЕТКА ГРИДА: Расширенная до 1440px */',
+  '/* СЕТКА ГРИДА: Ровно 4 колонки в ряд на ширине 1440px */',
   '.grid-layout {',
   '  display: grid !important;',
-  '  grid-template-columns: repeat(4, 1fr) !important; /* Ровно 4 колонки в ряд */',
+  '  grid-template-columns: repeat(4, 1fr) !important;',
   '  width: 100% !important;',
-  '  max-width: 1440px !important; /* Увеличена ширина для крупных сочных карточек */',
+  '  max-width: 1440px !important; /* Увеличено для максимальной сочности */',
   '  margin: 24px auto !important;',
   '  column-gap: 16px !important;',
   '  row-gap: 24px !important;',
   '  box-sizing: border-box !important;',
   '}',
   '',
-  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Адаптивное масштабирование aspect-ratio (Укорочено на 20px) */',
+  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Новые пропорции за вычетом 20px высоты */',
   '.cian-card {',
   '  width: 100% !important;',
-  '  aspect-ratio: 227.5 / 282.26 !important; /* Новое компактное соотношение сторон */',
+  '  aspect-ratio: 227.5 / 282.26 !important; /* Компактный и эстетичный вид */',
   '  height: auto !important;',
   '  padding: 0 !important;',
   '  margin: 0 !important;',
@@ -274,10 +274,10 @@ const cssStyles = [
   '  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;',
   '}',
   '',
-  '/* КОНТЕЙНЕР КАРТИНКИ: Укорочено на 10px (Теперь 69.3% от высоты карточки) */',
+  '/* КОНТЕЙНЕР КАРТИНКИ: Ровно 69.3% высоты (почти квадрат) */',
   '.cian-img-container {',
   '  width: 100% !important;',
-  '  height: 69.3% !important; /* Фото занимает 69.3% и выглядит плотно, без пустоты */',
+  '  height: 69.3% !important; /* Увеличено, чтобы фото доминировало */',
   '  margin: 0 !important;',
   '  border-radius: 8px 8px 0 0 !important;',
   '  position: relative !important;',
@@ -290,12 +290,12 @@ const cssStyles = [
   '  object-fit: cover !important;',
   '}',
   '',
-  '/* БЛОК ИНФОРМАЦИИ: Укорочено на 10px (Теперь 30.7% от высоты карточки) */',
+  '/* БЛОК ИНФОРМАЦИИ: Ровно 30.7% высоты для плотного текста */',
   '.cian-info {',
   '  width: 100% !important;',
-  '  height: 30.7% !important; /* Сокращено для плотного прилегания без щелей */',
+  '  height: 30.7% !important; /* Сокращено для исключения пустоты */',
   '  margin: 0 auto !important;',
-  '  padding: 8px 14px 10px 14px !important; /* Слегка уменьшили вертикальный padding */',
+  '  padding: 8px 14px 10px 14px !important; /* Плотный вертикальный padding */',
   '  display: flex !important;',
   '  flex-direction: column !important;',
   '  justify-content: space-between !important;',
@@ -343,12 +343,13 @@ const cssStyles = [
   '  box-shadow: 0 2px 8px rgba(0, 164, 166, 0.3) !important;',
   '}',
   '',
-  '/* ЦЕНА: 22px */',
+  '/* ЦЕНА ЦИАН: Шрифт Segoe UI / Apple-system, вес 700 (более строгий и аккуратный) */',
   '.cian-price {',
   '  width: 100% !important;',
-  '  font-size: 22px !important;',
-  '  font-weight: 800 !important;',
-  '  color: #1E293B !important;',
+  '  font-size: 22px !important; /* Крупный и сочный размер */',
+  '  font-weight: 700 !important; /* Уменьшено с 800 до 700 для чистоты начертания */',
+  '  font-family: system-ui, -apple-system, sans-serif !important; /* Шрифт ЦИАН */',
+  '  color: #11162e !important;',
   '  white-space: nowrap !important;',
   '  overflow: hidden !important;',
   '  text-overflow: ellipsis !important;',
@@ -356,11 +357,11 @@ const cssStyles = [
   '  line-height: 1.1 !important;',
   '}',
   '',
-  '/* Характеристики */',
+  '/* Характеристики: Крупнее (14px) и контрастнее */',
   '.cian-specs {',
-  '  font-size: 13px !important;',
+  '  font-size: 14px !important; /* Увеличено с 13px */',
   '  font-weight: 500 !important;',
-  '  color: var(--text-muted) !important;',
+  '  color: #475569 !important; /* Более темный, читаемый серый цвет */',
   '  margin-top: 3px !important;',
   '  white-space: nowrap !important;',
   '  overflow: hidden !important;',
@@ -722,7 +723,7 @@ export default function Home({
           </div>
         </div>
 
-        {/* Секция сетки объявлений: ширина 1440px */}
+        {/* Сетка объявлений: ширина 1440px для максимальной сочности */}
         <div style={{ width: '100%', maxWidth: '1440px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
           {initialError && (
             <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
@@ -746,7 +747,7 @@ export default function Home({
 
           {properties.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '18px', fontWeight: '700' }}>Aradığınız kriterlere uygun ilan bulunamadı.</p>
+              <p style={{ fontSize: '18px', fontWeight: '700' }}>Aradığınız критериям uygun ilan bulunamadı.</p>
             </div>
           ) : (
             <>
