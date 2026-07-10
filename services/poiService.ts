@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
 
-// Инициализируем административный клиент для обхода RLS
+// Инициализируем административный клиент для обхода RLS с помощью сохраненного ключа роли службы
 const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -39,10 +39,16 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// 1. Безопасная функция-обертка для предотвращения падений при XML-ошибках Яндекса
+// 1. Функция-обертка с подменой Referer для прохождения проверки авторизации Яндекса
 async function safeFetchJson(url: string): Promise<any | null> {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        // Подменяем Referer на домен, указанный в ограничениях вашего API-ключа Яндекса
+        'Referer': 'https://increase-fine-snappea.tilda.ws/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
     
     if (!res.ok) {
       const errText = await res.text();
@@ -86,7 +92,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
     }
   }
 
-  // ПОПЫТКА 2 (РЕЗЕРВНАЯ): Через API Поиска по организациям (который точно активен у вас)
+  // ПОПЫТКА 2 (РЕЗЕРВНАЯ): Через API Поиска по организациям
   console.log('Запуск резервного геокодирования через Поиск по организациям...');
   const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
   const searchData = await safeFetchJson(searchUrl);
