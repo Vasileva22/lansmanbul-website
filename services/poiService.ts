@@ -96,10 +96,10 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     return;
   }
 
-  // Запрашиваем текстовый адрес у БД через административный клиент
+  // Запрашиваем только те колонки, которые гарантированно есть в вашей базе (adress и city)
   const { data: property, error: fetchError } = await supabaseAdmin
     .from('properties')
-    .select('address, adress, city')
+    .select('adress, city')
     .eq('id', propertyId)
     .single();
 
@@ -108,9 +108,9 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     return;
   }
 
-  const rawAddress = property.address || property.adress;
+  const rawAddress = property.adress; // Используем только существующую колонку adress
   if (!rawAddress) {
-    console.warn(`У объекта ${propertyId} отсутствует текстовый адрес (колонки address и adress пусты)`);
+    console.warn(`У объекта ${propertyId} отсутствует текстовый адрес (колонка adress пуста)`);
     return;
   }
 
