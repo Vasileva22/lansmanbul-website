@@ -1,6 +1,12 @@
-import { supabase } from '../supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
+
+// Инициализируем административный клиент для обхода RLS (Row Level Security) на бэкенде Vercel.
+// Если в переменных окружения прописан SUPABASE_SERVICE_ROLE_KEY, клиент получит права суперадмина.
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 interface PoiResult {
   name: string;
@@ -9,7 +15,7 @@ interface PoiResult {
   travel_mode: 'walking' | 'driving';
 }
 
-// 1. Геокодирование: преобразование текста адреса в [lat, lng] через Яндекс Геокодер
+// 1. Преобразование текстового адреса в координаты [lat, lng] через Яндекс Геокодер
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
   if (!YANDEX_API_KEY) {
     console.error('YANDEX_MAPS_API_KEY отсутствует для геокодирования');
@@ -24,7 +30,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
     const foundPlaces = data?.response?.GeoObjectCollection?.featureMember;
 
     if (foundPlaces && foundPlaces.length > 0) {
-      // Геокодер Яндекса возвращает точку в формате "Долгота Широта" через пробел
+      // Геокодер Яндекса возвращает координаты в формате "Долгота Широта"
       const pos = foundPlaces[0].GeoObject.Point.pos; 
       const [lngStr, latStr] = pos.split(' ');
       const lng = parseFloat(lngStr);
@@ -83,48 +89,48 @@ async function calculateYandexMatrix(
   return null;
 }
 
-// 4. Основная бэкенд-функция: теперь принимает ТОЛЬКО propertyId
+// 4. Основная бэкенд-функция обновления инфраструктуры
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   if (!YANDEX_API_KEY) {
     console.error('YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return;
   }
 
-  // Шаг 4.1: Получаем текстовый адрес объекта из Supabase
-  const { data: property, error: fetchError } = await supabase
+  // Запрашиваем текстовый адрес у БД через административный клиент
+  const { data: property, error: fetchError } = await supabaseAdmin
     .from('properties')
     .select('address, adress, city')
     .eq('id', propertyId)
     .single();
 
   if (fetchError || !property) {
-    console.error(`Не удалось найти объект ${propertyId} в базе данных:`, fetchError);
+    console.error(`Не удалось получить объект ${propertyId} из базы данных:`, fetchError);
     return;
   }
 
   const rawAddress = property.address || property.adress;
   if (!rawAddress) {
-    console.warn(`У объекта ${propertyId} нет текстового адреса (колонки address/adress пусты)`);
+    console.warn(`У объекта ${propertyId} отсутствует текстовый адрес (колонки address и adress пусты)`);
     return;
   }
 
-  // Конструируем полный адрес (например: "Istanbul, Kadıköy, Cemil Topuzlu Cd.") для точности геокодирования
+  // Конструируем полный адрес
   const cityPrefix = property.city ? `${property.city}, ` : '';
   const fullAddress = `${cityPrefix}${rawAddress}`;
 
-  console.log(`Начало геокодирования для объекта ${propertyId}: "${fullAddress}"`);
-
-  // Шаг 4.2: Получаем географические координаты через Геокодер
+  console.log(`Начало геокодирования адреса для объекта ${propertyId}: "${fullAddress}"`);
+  
+  // Получаем координаты из Геокодера
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
-    console.error(`Геокодер не вернул координаты для адреса "${fullAddress}"`);
+    console.error(`Геокодер Яндекса не смог определить координаты для адреса "${fullAddress}"`);
     return;
   }
 
   const { lat, lng } = coordinates;
-  console.log(`Адрес успешно преобразован в координаты: Широта: ${lat}, Долгота: ${lng}`);
+  console.log(`Координаты получены успешно: lat: ${lat}, lng: ${lng}`);
 
-  // Шаг 4.3: Запросы инфраструктуры по полученным координатам
+  // Определение поисковых фраз на турецком языке
   const poiSearchQueries = {
     transport: 'metro', 
     leisure: 'plaj', 
@@ -161,8 +167,8 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     }
   }
 
-  // Шаг 4.4: Сохраняем и poi_data, и автоматически найденные координаты обратно в базу
-  const { error } = await supabase
+  // Обновляем данные строки через административный клиент (обходя RLS)
+  const { error } = await supabaseAdmin
     .from('properties')
     .update({ 
       poi_data: finalPoiData,
@@ -172,8 +178,8 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .eq('id', propertyId);
 
   if (error) {
-    console.error(`Ошибка при сохранении POI для объекта ${propertyId}:`, error);
+    console.error(`Ошибка при сохранении POI и координат для объекта ${propertyId}:`, error);
   } else {
-    console.log(`Объект ${propertyId} успешно обработан. Координаты и инфраструктура сохранены.`);
+    console.log(`Объект ${propertyId} успешно обработан. Координаты и данные POI сохранены в базе данных.`);
   }
 }
