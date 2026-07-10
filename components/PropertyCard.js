@@ -4,48 +4,28 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  // Универсальный маппинг колонок (поддерживает любые вариации из Airtable и Supabase)
+  // Нормализованные данные объекта
   const pId = property?.id || '';
-  const pRooms = property?.["card odalar"] || property?.rooms || '';
-  const pArea = property?.["card-area"] || property?.area || '';
-  const pFloor = property?.["Kat Sayısı"] || property?.["Kat_Sayisi"] || property?.["katsayisi"] || property?.kat_sayisi || '';
-  const pPrice = property?.["Fiyat"] || property?.price || '';
-  const pDistrict = property?.["İlçe/Semt"] || property?.district || '';
-  const pTitle = property?.["testproje"] || property?.title || '';
-  const pStatus = property?.["konutcesit"] || property?.status || '';
-  const pDescription = property?.["Açıklama"] || property?.description || '';
+  const pRooms = property?.rooms || property?.["card odalar"] || '';
+  const pArea = property?.area || property?.["card-area"] || '';
+  const pFloor = property?.kat_sayisi || property?.["Kat Sayısı"] || '';
+  const pPrice = property?.price || property?.["Fiyat"] || '';
+  const pTitle = property?.title || property?.["testproje"] || '';
+  const pStatus = property?.status || property?.["konutcesit"] || '';
+  
+  // Новые поля для инфраструктуры и адреса
+  const pProxText = property?.proximity_text || '';
+  const pProxType = property?.proximity_type || '';
+  const pAddress = property?.address || property?.adress || '';
 
-  // Умный поиск колонки с фотографиями в вашей базе данных
-  const getPhotosFromDB = (item) => {
-    if (!item) return [];
-    const possibleKeys = ["Foto", "Kapak Fotoğrafı", "images", "Images", "photo", "photos", "Resim", "resim", "Görsel"];
-    for (const key of possibleKeys) {
-      if (item[key] !== undefined && item[key] !== null) {
-        return item[key];
-      }
-    }
-    return [];
-  };
+  // Подгружаем массив изображений из связи property_images
+  const imagesList = property?.property_images || [];
+  const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
 
-  let dbImages = getPhotosFromDB(property);
-  if (typeof dbImages === 'string') {
-    try {
-      dbImages = JSON.parse(dbImages);
-    } catch {
-      dbImages = dbImages.split(',').map(s => s.trim()).filter(Boolean);
-    }
-  }
-
-  const photoUrls = (Array.isArray(dbImages) ? dbImages : []).map(p => {
-    if (!p) return '';
-    if (typeof p === 'string') return p;
-    return p.url || p.URL || (p.thumbnails?.large?.url) || '';
-  }).filter(Boolean);
-
-  // Если фото нет в вашей базе, выводим стильную пустую серую плашку, а не чужую виллу с бассейном
   const hasPhotos = photoUrls.length > 0;
   const photos = hasPhotos ? photoUrls : [''];
 
+  // Логика слайдера картинок при наведении мыши
   const handleMouseEnter = () => {
     if (photos.length <= 1 || !hasPhotos) return
     autoplayTimer.current = setInterval(() => {
@@ -76,10 +56,42 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
   }
 
+  // Форматирование цены под турецкий стиль
   const formatPriceVal = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
-    return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
+    return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL";
+  }
+
+  // Функция для отрисовки правильной SVG-иконки
+  const renderProximityIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'metro':
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#EF4444' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <rect x="4" y="3" width="16" height="14" rx="2" />
+            <path d="M4 11h16M12 3v8M8 17l-2 4M16 17l2 4" />
+            <circle cx="8" cy="14" r="1" fill="currentColor" />
+            <circle cx="16" cy="14" r="1" fill="currentColor" />
+          </svg>
+        )
+      case 'sea':
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
+            <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
+          </svg>
+        )
+      case 'highway':
+      case 'street':
+      default:
+        return (
+          <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: 'var(--primary)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        )
+    }
   }
 
   return (
@@ -88,7 +100,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Лайка */}
+      {/* Кнопка Избранного (круглая, 40px * 40px) */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, pId)}
@@ -98,14 +110,14 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Бейдж Статуса */}
+      {/* Верхняя статус-плашка (Lansman и др.) */}
       {pStatus && (
-        <span className={"card-badge status-" + (pStatus.toLowerCase() === "lansman" ? "lansman" : "other")}>
+        <span className="card-status-badge">
           {pStatus}
         </span>
       )}
 
-      {/* Контейнер картинки */}
+      {/* Контейнер изображения (226.17px * 180.93px) */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
@@ -115,7 +127,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         ) : (
           <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span style={{ fontSize: '12px', fontWeight: '700' }}>Görsel Yok</span>
+            <span style={{ fontSize: '11px', fontWeight: '700' }}>Görsel Yok</span>
           </div>
         )}
         
@@ -127,22 +139,37 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Информация о проекте */}
+      {/* Информационный текстовый блок (202.17px * 100px) */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
-          <div className="cian-price">{formatPriceVal(pPrice)}</div>
+          {/* Цена: зафиксирована 113.14px * 28px */}
+          <div className="cian-price" title={formatPriceVal(pPrice)}>
+            {formatPriceVal(pPrice)}
+          </div>
+          {/* Характеристики с автообрезанием (ellipsis как на ЦИАН) */}
           <div className="cian-specs">
             {pRooms ? `${pRooms} · ` : ''}
             {pArea ? `${pArea} m²` : ''}
             {pFloor ? ` · ${pFloor} Kat` : ''}
           </div>
         </div>
+        
         <div>
+          {/* Инфраструктура (метро / море / адрес) */}
           <div className="cian-location">
-            <span className="cian-geo-dot"></span>
-            {pDistrict}
+            {pProxText ? (
+              <>
+                {renderProximityIcon(pProxType)}
+                <span style={{ marginLeft: '2px' }} title={pProxText}>{pProxText}</span>
+              </>
+            ) : pAddress ? (
+              <>
+                {renderProximityIcon('default')}
+                <span style={{ marginLeft: '2px' }} title={pAddress}>{pAddress}</span>
+              </>
+            ) : null}
           </div>
-          <div className="cian-address" title={pTitle + ", " + pDescription}>{pTitle}</div>
+          <div className="cian-address" title={pTitle}>{pTitle}</div>
         </div>
       </div>
     </div>
