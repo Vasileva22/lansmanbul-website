@@ -4,7 +4,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
 
-  // Нормализованные данные объекта
   const pId = property?.id || '';
   const pRooms = property?.rooms || property?.["card odalar"] || '';
   const pArea = property?.area || property?.["card-area"] || '';
@@ -13,19 +12,17 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pTitle = property?.title || property?.["testproje"] || '';
   const pStatus = property?.status || property?.["konutcesit"] || '';
   
-  // Новые поля для инфраструктуры и адреса
   const pProxText = property?.proximity_text || '';
   const pProxType = property?.proximity_type || '';
   const pAddress = property?.address || property?.adress || '';
 
-  // Подгружаем массив изображений из связи property_images
+  // Подгружаем изображения из связи property_images
   const imagesList = property?.property_images || [];
   const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
 
   const hasPhotos = photoUrls.length > 0;
   const photos = hasPhotos ? photoUrls : [''];
 
-  // Логика слайдера картинок при наведении мыши
   const handleMouseEnter = () => {
     if (photos.length <= 1 || !hasPhotos) return
     autoplayTimer.current = setInterval(() => {
@@ -56,14 +53,12 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
   }
 
-  // Форматирование цены под турецкий стиль
   const formatPriceVal = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
     return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL";
   }
 
-  // Функция для отрисовки правильной SVG-иконки
   const renderProximityIcon = (type) => {
     switch (type?.toLowerCase()) {
       case 'metro':
@@ -100,7 +95,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Кнопка Избранного (круглая, 40px * 40px) */}
+      {/* Кнопка Лайка (40px * 40px) */}
       <button 
         className={"card-fav-btn" + (isLiked ? " liked" : "")}
         onClick={(e) => onToggleLike && onToggleLike(e, pId)}
@@ -110,20 +105,20 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </svg>
       </button>
 
-      {/* Верхняя статус-плашка (Lansman и др.) */}
+      {/* Бейдж Статуса */}
       {pStatus && (
         <span className="card-status-badge">
           {pStatus}
         </span>
       )}
 
-      {/* Контейнер изображения (226.17px * 180.93px) */}
+      {/* Контейнер картинки (Ровно 51.2% от высоты адаптивной карточки) */}
       <div 
         className="cian-img-container" 
         onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
       >
         {hasPhotos ? (
-          <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
+          <img src={photoUrls[currentIdx]} className="cian-img" alt={pTitle || ''} />
         ) : (
           <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -131,7 +126,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           </div>
         )}
         
-        {hasPhotos && photos.length > 1 && (
+        {hasPhotos && photoUrls.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
             <button className="slider-arrow arrow-right" onClick={handleNextPhoto}>❯</button>
@@ -139,14 +134,14 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         )}
       </div>
 
-      {/* Информационный текстовый блок (202.17px * 100px) */}
+      {/* Текстовый блок (Ровно 48.8% от высоты адаптивной карточки) */}
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
-          {/* Цена: зафиксирована 113.14px * 28px */}
+          {/* Цена: 22px */}
           <div className="cian-price" title={formatPriceVal(pPrice)}>
             {formatPriceVal(pPrice)}
           </div>
-          {/* Характеристики с автообрезанием (ellipsis как на ЦИАН) */}
+          {/* Характеристики */}
           <div className="cian-specs">
             {pRooms ? `${pRooms} · ` : ''}
             {pArea ? `${pArea} m²` : ''}
@@ -155,7 +150,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </div>
         
         <div>
-          {/* Инфраструктура (метро / море / адрес) */}
+          {/* Локация/Метро */}
           <div className="cian-location">
             {pProxText ? (
               <>
