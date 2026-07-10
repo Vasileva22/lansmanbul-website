@@ -40,6 +40,16 @@ const getMetroColorClass = (stationName) => {
   return 'text-emerald-600'; // Базовый цвет метро по умолчанию
 };
 
+// Функция очистки первой буквы "M" у метро, чтобы избежать дублирования "MM4"
+const cleanPoiName = (name, category) => {
+  if (!name) return '';
+  if (category === 'transport') {
+    // Регулярное выражение убирает букву "M" в начале строки, если за ней идет цифра
+    return name.replace(/^M(\d)/i, '$1');
+  }
+  return name;
+};
+
 // 2. Вспомогательная функция для получения структурированных POI-данных
 function getBestPoi(property) {
   const poiData = property?.poi_data;
@@ -193,7 +203,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           <img src={photos[currentIdx]} className="cian-img" alt={pTitle || ''} />
         ) : (
           <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <svg viewBox="0 0 24 24" style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span style={{ fontSize: '11px', fontWeight: '700' }}>Görsel Yok</span>
           </div>
         )}
@@ -234,25 +244,25 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
             ) : poi.category === 'leisure' ? (
               <span className="shrink-0 select-none">🌴</span>
             ) : (
-              <svg className="w-4 h-4 text-emerald-600 shrink-0 fill-none stroke-current" strokeWidth="2.5" viewBox="0 0 24 24">
+              <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="text-emerald-600 shrink-0 fill-none stroke-current" strokeWidth="2.5">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
             )}
 
-            {/* Название станции / объекта */}
+            {/* Название станции / объекта (с очисткой дублирующей буквы M) */}
             <span className="truncate text-gray-800 font-medium" title={poi.name}>
-              {poi.name}
+              {cleanPoiName(poi.name, poi.category)}
             </span>
 
             {/* Иконка способа передвижения и только числовое значение минут */}
             <span className="inline-flex items-center gap-0.5 text-gray-400 shrink-0 ml-0.5">
               {poi.travel_mode === 'driving' ? (
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="fill-current">
                   <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
                 </svg>
               ) : (
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="fill-current">
                   <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 21.5h2.1l1.9-8.2 2.1 2v6.2h2v-7.5l-2.1-2 .6-3c1 1.15 2.41 1.9 4 1.9v-2c-1.15 0-2.17-.58-2.8-1.5l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.6.1-.9.2L6 8.3V13h2V9.6l1.8-.7z"/>
                 </svg>
               )}
@@ -262,7 +272,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         ) : pAddress ? (
           /* Обычный адрес (если нет POI) */
           <div className="flex items-center text-base text-gray-500 gap-1.5 mt-0.5 truncate" title={pAddress}>
-            <svg className="w-4 h-4 text-gray-400 shrink-0 fill-none stroke-current" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg viewBox="0 0 24 24" style={{ width: '15px', height: '15px', display: 'inline-block' }} className="text-gray-400 shrink-0 fill-none stroke-current" strokeWidth="2.5">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
