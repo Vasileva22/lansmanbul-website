@@ -1,5 +1,85 @@
 import React, { useState, useEffect, useRef } from 'react'
 
+// Встроенный конфигуратор приоритетов по городам Турции для solo-разработчика
+const cityPoiPriorities = {
+  istanbul: {
+    priorities: ['transport', 'business', 'infrastructure', 'leisure'],
+    maxWalkingTimeMinutes: 15,
+  },
+  antalya: {
+    priorities: ['leisure', 'infrastructure', 'transport', 'business'],
+    maxWalkingTimeMinutes: 20,
+  },
+  mugla: {
+    priorities: ['leisure', 'infrastructure', 'transport', 'business'],
+    maxWalkingTimeMinutes: 20,
+  },
+  ankara: {
+    priorities: ['transport', 'infrastructure', 'business', 'leisure'],
+    maxWalkingTimeMinutes: 15,
+  },
+  default: {
+    priorities: ['infrastructure', 'transport', 'leisure', 'business'],
+    maxWalkingTimeMinutes: 15,
+  }
+};
+
+// Функция подбора самого привлекательного инфраструктурного объекта на основе приоритетов города
+function getBestPoiBadge(property) {
+  const poiData = property?.poi_data;
+  
+  // Если данных по POI нет или они пустые, возвращаем null
+  if (!poiData || typeof poiData !== 'object' || Object.keys(poiData).length === 0) {
+    return null;
+  }
+
+  const cityKey = (property?.city || 'default').toLowerCase().trim();
+  const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
+
+  // Идем строго по цепочке приоритетов города
+  for (const category of config.priorities) {
+    const poi = poiData[category];
+    if (poi) {
+      const modeText = poi.travel_mode === 'walking' ? 'yürüme' : 'araçla';
+      
+      // Если это пешая доступность в пределах нормы
+      if (poi.travel_mode === 'walking' && poi.travel_time_minutes <= config.maxWalkingTimeMinutes) {
+        return {
+          text: `${poi.name}'na ${poi.travel_time_minutes} dk ${modeText}`,
+          type: category
+        };
+      }
+      
+      // Если поездка на машине, но объект близко (до 15 минут)
+      if (poi.travel_mode === 'driving' && poi.travel_time_minutes <= 15) {
+        return {
+          text: `${poi.name}'na ${poi.travel_time_minutes} dk ${modeText}`,
+          type: category
+        };
+      }
+    }
+  }
+
+  // Если приоритетные объекты далеко, выводим физически самый близкий из всех найденных
+  try {
+    const allPois = Object.entries(poiData);
+    if (allPois.length > 0) {
+      const closest = allPois.reduce((prev, curr) => 
+        (prev[1].distance_meters < curr[1].distance_meters) ? prev : curr
+      );
+      const modeText = closest[1].travel_mode === 'walking' ? 'yürüme' : 'araçla';
+      return {
+        text: `${closest[1].name}'na ${closest[1].travel_time_minutes} dk ${modeText}`,
+        type: closest[0]
+      };
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  return null;
+}
+
 export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLightbox }) {
   const [currentIdx, setCurrentImageIndex] = useState(0)
   const autoplayTimer = useRef(null)
@@ -12,10 +92,12 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pTitle = property?.title || property?.["testproje"] || '';
   const pStatus = property?.status || property?.["konutcesit"] || '';
   
-  const pProxText = property?.proximity_text || '';
-  const pProxType = property?.proximity_type || '';
   const pAddress = property?.address || property?.adress || '';
 
+  // Получаем приоритетный бейдж преимуществ инфраструктуры
+  const poiBadge = getBestPoiBadge(property);
+
+  // Изображения забираем из связанной таблицы property_images
   const imagesList = property?.property_images || [];
   const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
 
@@ -60,6 +142,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
 
   const renderProximityIcon = (type) => {
     switch (type?.toLowerCase()) {
+      case 'transport':
       case 'metro':
         return (
           <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#EF4444' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -69,6 +152,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
             <circle cx="16" cy="14" r="1" fill="currentColor" />
           </svg>
         )
+      case 'leisure':
       case 'sea':
         return (
           <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -76,8 +160,9 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
             <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
           </svg>
         )
-      case 'highway':
-      case 'street':
+      case 'infrastructure':
+      case 'business':
+      case 'default':
       default:
         return (
           <svg className="input-icon-svg" style={{ width: '13px', height: '13px', color: 'var(--primary)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -132,9 +217,11 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
 
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
         <div>
+          {/* Цена: 22px, шрифт и жирность точно как в ЦИАН */}
           <div className="cian-price" title={formatPriceVal(pPrice)}>
             {formatPriceVal(pPrice)}
           </div>
+          {/* Характеристики: Крупнее (14px) и контрастнее */}
           <div className="cian-specs">
             {pRooms ? `${pRooms} · ` : ''}
             {pArea ? `${pArea} m²` : ''}
@@ -143,11 +230,12 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
         </div>
         
         <div>
+          {/* Умная инфраструктура (POI) с авто-приоритетом по городам */}
           <div className="cian-location">
-            {pProxText ? (
+            {poiBadge ? (
               <>
-                {renderProximityIcon(pProxType)}
-                <span style={{ marginLeft: '2px' }} title={pProxText}>{pProxText}</span>
+                {renderProximityIcon(poiBadge.type)}
+                <span style={{ marginLeft: '2px' }} title={poiBadge.text}>{poiBadge.text}</span>
               </>
             ) : pAddress ? (
               <>
