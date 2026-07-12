@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Импортируем ключи из переменных окружения Vercel
-const YANDEX_GEOCODER_KEY = process.env.YANDEX_MAPS_API_KEY;
-const YANDEX_SEARCH_KEY = process.env.YANDEX_SEARCH_API_KEY;
+// Используем один супер-ключ для всех запросов Яндекса
+const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
 
 // Инициализируем административный клиент для обхода RLS с помощью сохраненного ключа роли службы
 const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -41,7 +40,7 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// Безопасная функция-обертка для HTTP-запросов к Яндексу
+// Безопасная функция-обертка для HTTP-запросов к Яндексу с подменой Referer
 async function safeFetchJson(url: string): Promise<any | null> {
   const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
   console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
@@ -84,9 +83,9 @@ async function safeFetchJson(url: string): Promise<any | null> {
   }
 }
 
-// Преобразование текстового адреса в координаты [lat, lng] (используем КЛЮЧ ГЕОКОДЕРА)
+// Преобразование текстового адреса в координаты [lat, lng]
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
-  if (!YANDEX_GEOCODER_KEY) {
+  if (!YANDEX_API_KEY) {
     console.error('[Geocoder] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return null;
   }
@@ -94,7 +93,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
   console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
   // Стандартный HTTP Геокодер
-  const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
   const data = await safeFetchJson(geocoderUrl);
 
   if (data) {
@@ -115,7 +114,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
   // Резервный поиск через Поиск организаций
   console.log('[Geocoder] Попытка 1 не дала результатов. Запуск резервной попытки...');
-  const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
+  const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
   const searchData = await safeFetchJson(searchUrl);
 
   if (searchData) {
@@ -135,13 +134,13 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
   return null;
 }
 
-// Поиск ближайшей организации (используем КЛЮЧ ПОИСКА ОРГАНИЗАЦИЙ)
+// Поиск ближайшей организации
 async function findNearestYandexPoi(lat: number, lng: number, searchText: string): Promise<any | null> {
-  if (!YANDEX_SEARCH_KEY) {
-    console.error('[POI Search] Ошибка: YANDEX_SEARCH_API_KEY отсутствует в переменных окружения');
+  if (!YANDEX_API_KEY) {
+    console.error('[POI Search] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return null;
   }
-  const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
+  const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
   const data = await safeFetchJson(url);
   if (data && data.features && data.features.length > 0) {
     return data.features[0];
@@ -158,7 +157,7 @@ function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: n
   const a = 
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * 
-    Math.sin(dLon / 2) * dLon / 2; // Упрощенный Хаверсинус
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const straightLineDistance = R * c; // Расстояние по прямой в метрах
@@ -213,11 +212,11 @@ function cleanPoiName(name: string): string {
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
 
-  // ВРЕМЕННАЯ ДЕБАГ-СТРОКА: Проверяем, какой ключ видит сервер Vercel в реальности
-  console.log(`[DEBUG] Первые 5 символов ключа поиска: "${YANDEX_SEARCH_KEY?.substring(0, 5)}..."`);
+  // ВРЕМЕННАЯ ДЕБАГ-СТРОКА: Проверяем супер-ключ в логах
+  console.log(`[DEBUG] Первые 5 символов супер-ключа: "${YANDEX_API_KEY?.substring(0, 5)}..."`);
 
-  if (!YANDEX_GEOCODER_KEY || !YANDEX_SEARCH_KEY) {
-    console.error('[POI Service] Ошибка: Не все API-ключи Яндекса (YANDEX_MAPS_API_KEY или YANDEX_SEARCH_API_KEY) заданы в переменных окружения.');
+  if (!YANDEX_API_KEY) {
+    console.error('[POI Service] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения.');
     return;
   }
 
