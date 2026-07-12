@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const YANDEX_API_KEY = process.env.YANDEX_MAPS_API_KEY;
+// Используем два бесплатных ключа
+const YANDEX_GEOCODER_KEY = process.env.YANDEX_MAPS_API_KEY;
+const YANDEX_SEARCH_KEY = process.env.YANDEX_SEARCH_API_KEY;
 
 // Инициализируем административный клиент для обхода RLS с помощью сохраненного ключа роли службы
 const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -39,7 +41,7 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// 1. Безопасная функция-обертка с детальным логированием ответов Яндекса
+// Безопасная функция-обертка для HTTP-запросов к Яндексу
 async function safeFetchJson(url: string): Promise<any | null> {
   const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
   console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
@@ -82,17 +84,17 @@ async function safeFetchJson(url: string): Promise<any | null> {
   }
 }
 
-// Преобразование текстового адреса в координаты [lat, lng]
+// Преобразование текстового адреса в координаты [lat, lng] (используем КЛЮЧ ГЕОКОДЕРА)
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
-  if (!YANDEX_API_KEY) {
+  if (!YANDEX_GEOCODER_KEY) {
     console.error('[Geocoder] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
     return null;
   }
 
   console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
-  // ПОПЫТКА 1: Через стандартный HTTP Геокодер
-  const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  // Стандартный HTTP Геокодер
+  const geocoderUrl = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
   const data = await safeFetchJson(geocoderUrl);
 
   if (data) {
@@ -111,9 +113,9 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
     }
   }
 
-  // ПОПЫТКА 2 (РЕЗЕРВНАЯ): Через API Поиска по организациям
-  console.log('[Geocoder] Попытка 1 не дала результатов. Запуск резервной попытки через Поиск по организациям...');
-  const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
+  // Резервный поиск через Поиск организаций
+  console.log('[Geocoder] Попытка 1 не дала результатов. Запуск резервной попытки...');
+  const searchUrl = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(addressText)}&lang=tr_TR&results=1`;
   const searchData = await safeFetchJson(searchUrl);
 
   if (searchData) {
@@ -133,9 +135,13 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
   return null;
 }
 
-// Поиск ближайшей организации
+// Поиск ближайшей организации (используем КЛЮЧ ПОИСКА ОРГАНИЗАЦИЙ)
 async function findNearestYandexPoi(lat: number, lng: number, searchText: string): Promise<any | null> {
-  const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
+  if (!YANDEX_SEARCH_KEY) {
+    console.error('[POI Search] Ошибка: YANDEX_SEARCH_API_KEY отсутствует в переменных окружения');
+    return null;
+  }
+  const url = `https://search-maps.yandex.ru/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
   const data = await safeFetchJson(url);
   if (data && data.features && data.features.length > 0) {
     return data.features[0];
@@ -143,28 +149,36 @@ async function findNearestYandexPoi(lat: number, lng: number, searchText: string
   return null;
 }
 
-// Расчет расстояния и времени через Яндекс Матрицу Расстояний
-async function calculateYandexMatrix(
-  originLat: number, 
-  originLng: number, 
-  destLat: number, 
-  destLng: number, 
-  mode: 'walking' | 'driving'
-): Promise<{ distance: number; duration: number } | null> {
-  const url = `https://api.routing.yandex.net/v2/distancematrix?origins=${originLat},${originLng}&destinations=${destLat},${destLng}&mode=${mode}&apikey=${YANDEX_API_KEY}`;
-  const data = await safeFetchJson(url);
+// Бесплатный математический расчет расстояния (Формула Хаверсинуса с учетом дорог)
+function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Радиус Земли в метрах
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   
-  if (data && data.rows && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
-    const element = data.rows[0].elements[0];
-    return {
-      distance: element.distance.value,
-      duration: Math.ceil(element.duration.value / 60)
-    };
-  }
-  return null;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const straightLineDistance = R * c; // Расстояние по прямой в метрах
+
+  // Умножаем на коэффициент дорог 1.3 (в среднем дороги длиннее прямой линии на 30%)
+  return Math.round(straightLineDistance * 1.3);
 }
 
-// Расчет оценки на основе времени
+// Расчет времени пути на основе расстояния
+function estimateTravelTime(distanceMeters: number, mode: 'walking' | 'driving'): number {
+  if (mode === 'walking') {
+    // Средняя скорость пешехода ~ 4.8 км/ч (это примерно 80 метров в минуту)
+    return Math.ceil(distanceMeters / 80);
+  } else {
+    // Средняя скорость машины в городе с учетом светофоров ~ 24 км/ч (400 метров в минуту)
+    return Math.ceil(distanceMeters / 400);
+  }
+}
+
+// Оценка влияния времени пути на скоринг
 function calculatePoiScore(durationMinutes: number, mode: 'walking' | 'driving', config: CategoryConfig): number {
   if (mode === 'walking') {
     if (durationMinutes <= 5) return 100;
@@ -199,8 +213,8 @@ function cleanPoiName(name: string): string {
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
 
-  if (!YANDEX_API_KEY) {
-    console.error('[POI Service] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
+  if (!YANDEX_GEOCODER_KEY || !YANDEX_SEARCH_KEY) {
+    console.error('[POI Service] Ошибка: Не все API-ключи Яндекса (YANDEX_MAPS_API_KEY или YANDEX_SEARCH_API_KEY) заданы в переменных окружения.');
     return;
   }
 
@@ -220,14 +234,14 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   console.log(`[POI Service] Извлечен адрес из БД: "${rawAddress}", город: "${property.city}"`);
 
   if (!rawAddress) {
-    console.warn(`[POI Service] Предупреждение: у объекта ${propertyId} пустой текстовый адрес. Расчет остановлен.`);
+    console.warn(`[POI Service] Предупреждение: у объекта ${propertyId} пустой адрес. Расчет остановлен.`);
     return;
   }
 
   const cityPrefix = property.city ? `${property.city}, ` : '';
   const fullAddress = `${cityPrefix}${rawAddress}`;
 
-  // Получаем координаты (стандартным или резервным методом)
+  // Получаем координаты
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
     console.error(`[POI Service] Не удалось определить координаты для адреса "${fullAddress}". Анализ отменен.`);
@@ -253,37 +267,36 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
       const destLat = nearestPlace.geometry.coordinates[1];
       const placeName = cleanPoiName(nearestPlace.properties.CompanyMetaData.name);
 
+      // Рассчитываем расстояние математически и мгновенно!
+      const distance = calculateMathDistance(lat, lng, destLat, destLng);
+      
       let travelMode: 'walking' | 'driving' = 'walking';
-      let matrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'walking');
+      let duration = estimateTravelTime(distance, 'walking');
 
-      if (!matrix || matrix.duration > 20) {
-        const drivingMatrix = await calculateYandexMatrix(lat, lng, destLat, destLng, 'driving');
-        if (drivingMatrix) {
-          travelMode = 'driving';
-          matrix = drivingMatrix;
-        }
+      // Если пешком идти слишком далеко (дольше 20 минут), переключаемся на авто
+      if (duration > 20) {
+        duration = estimateTravelTime(distance, 'driving');
+        travelMode = 'driving';
       }
 
-      if (matrix) {
-        const rawScore = calculatePoiScore(matrix.duration, travelMode, config);
-        const weightedScore = parseFloat((rawScore * config.weight).toFixed(2));
+      const rawScore = calculatePoiScore(duration, travelMode, config);
+      const weightedScore = parseFloat((rawScore * config.weight).toFixed(2));
 
-        finalPoiData[categoryKey] = {
-          name: placeName,
-          distance_meters: matrix.distance,
-          travel_time_minutes: matrix.duration,
-          travel_mode: travelMode,
-          raw_score: rawScore,
-          weighted_score: weightedScore
-        };
+      finalPoiData[categoryKey] = {
+        name: placeName,
+        distance_meters: distance,
+        travel_time_minutes: duration,
+        travel_mode: travelMode,
+        raw_score: rawScore,
+        weighted_score: weightedScore
+      };
 
-        totalWeightedScoreSum += weightedScore;
-        totalWeightsSum += config.weight;
+      totalWeightedScoreSum += weightedScore;
+      totalWeightsSum += config.weight;
 
-        if (weightedScore > highestWeightedScore && rawScore > 0) {
-          highestWeightedScore = weightedScore;
-          bestCategoryKey = categoryKey;
-        }
+      if (weightedScore > highestWeightedScore && rawScore > 0) {
+        highestWeightedScore = weightedScore;
+        bestCategoryKey = categoryKey;
       }
     } catch (catErr) {
       console.error(`[POI Service] Ошибка при обработке категории "${categoryKey}":`, catErr);
