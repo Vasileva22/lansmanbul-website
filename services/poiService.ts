@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Используем два бесплатных ключа
+// Импортируем ключи из переменных окружения Vercel
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_MAPS_API_KEY;
 const YANDEX_SEARCH_KEY = process.env.YANDEX_SEARCH_API_KEY;
 
@@ -158,7 +158,7 @@ function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: n
   const a = 
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.sin(dLon / 2) * dLon / 2; // Упрощенный Хаверсинус
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const straightLineDistance = R * c; // Расстояние по прямой в метрах
@@ -212,6 +212,9 @@ function cleanPoiName(name: string): string {
 // Основная бэкенд-функция скоринг-анализа
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
+
+  // ВРЕМЕННАЯ ДЕБАГ-СТРОКА: Проверяем, какой ключ видит сервер Vercel в реальности
+  console.log(`[DEBUG] Первые 5 символов ключа поиска: "${YANDEX_SEARCH_KEY?.substring(0, 5)}..."`);
 
   if (!YANDEX_GEOCODER_KEY || !YANDEX_SEARCH_KEY) {
     console.error('[POI Service] Ошибка: Не все API-ключи Яндекса (YANDEX_MAPS_API_KEY или YANDEX_SEARCH_API_KEY) заданы в переменных окружения.');
