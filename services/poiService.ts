@@ -88,7 +88,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
   console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
-  const geocoderUrl = `https://geocode-maps.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  const geocoderUrl =`https://geocode-maps.api.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
   const data = await safeFetchJson(geocoderUrl);
 
   if (data) {
@@ -112,7 +112,7 @@ async function findNearestYandexPoi(lat: number, lng: number, searchText: string
     console.error('[POI Search] Ошибка: YANDEX_SEARCH_API_KEY отсутствует в переменных окружения');
     return null;
   }
-  const url = `https://search-maps.yandex.com/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
+  const url = `https://search-maps.api.yandex.com/v1/?apikey=${YANDEX_SEARCH_KEY}&text=${encodeURIComponent(searchText)}&lang=tr_TR&ll=${lng},${lat}&spn=0.03,0.03&results=1`;
   const data = await safeFetchJson(url);
   if (data && data.features && data.features.length > 0) {
     return data.features[0];
