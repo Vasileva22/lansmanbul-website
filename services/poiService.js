@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cityPoiPriorities } from '../config/poi-priorities';
 
+// Инициализируем Supabase внутри сервиса (используем service_role ключ для обхода любых RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -8,10 +9,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
+/**
+ * Категоризация объектов под требования скоринга и интерфейса PropertyCard
+ */
 function categorizePoi(categories) {
   const name = (categories?.[0]?.name || '').toLowerCase();
   const id = categories?.[0]?.id;
 
+  // 1. Транспорт (metro, metrobus, train, tram)
   if (
     name.includes('metro') || 
     name.includes('subway') || 
@@ -23,6 +28,7 @@ function categorizePoi(categories) {
     return { group: 'transport', type: 'metro' };
   }
 
+  // 2. Пляжи и досуг (beach, park)
   if (
     name.includes('beach') || 
     name.includes('sea') || 
@@ -43,6 +49,7 @@ function categorizePoi(categories) {
     return { group: 'leisure', type: 'leisure' };
   }
 
+  // 3. Медицина
   if (
     name.includes('hospital') || 
     name.includes('clinic') || 
@@ -54,6 +61,7 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'hospital' };
   }
 
+  // 4. Образование
   if (
     name.includes('university') || 
     name.includes('college') || 
@@ -72,6 +80,7 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'school' };
   }
 
+  // 5. Покупки, аптеки, банки
   if (
     name.includes('market') || 
     name.includes('grocery') || 
@@ -85,6 +94,7 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'infrastructure' };
   }
 
+  // 6. Офисы
   if (name.includes('office') || name.includes('corporate') || name.includes('business')) {
     return { group: 'business', type: 'infrastructure' };
   }
@@ -92,6 +102,9 @@ function categorizePoi(categories) {
   return { group: 'infrastructure', type: 'infrastructure' };
 }
 
+/**
+ * 1. Запрос координат у Яндекса через официальный домен .ru
+ */
 async function getCoordinatesFromAddress(addressText) {
   console.log(`[Geocoder] Запрос координат для адреса: "${addressText}"`);
 
@@ -106,8 +119,8 @@ async function getCoordinatesFromAddress(addressText) {
     const cleanKey = encodeURIComponent(rawKey);
     const cleanGeocode = encodeURIComponent(addressText.trim());
     
-    // Безопасный URL без двойных слэшей
-    const url = `https://geocode-maps.yandex.com/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
+    // Использование домена .ru предотвращает редиректные ошибки 404 на стороне Яндекса
+    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
 
     console.log(`[Geocoder Link Check] Отправляем запрос на URL: ${url}`);
     
@@ -139,6 +152,9 @@ async function getCoordinatesFromAddress(addressText) {
   }
 }
 
+/**
+ * 2. Сбор инфраструктуры через Foursquare API
+ */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
 
@@ -176,6 +192,9 @@ async function fetchFoursquarePOIs(lat, lng) {
   }
 }
 
+/**
+ * 3. Главная функция обновления объекта в базе данных
+ */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
@@ -208,7 +227,7 @@ export async function updatePropertyPOIs(propertyId) {
             geocoder_status: "FAILED_OR_EMPTY",
             foursquare_status: "NOT_STARTED",
             total_found: 0,
-            error_message: "Яндекс Геокодер не вернул координаты."
+            error_message: "Яндекс Геокодер не вернул координаты. Проверь адрес."
           }
         }
       }).eq('id', propertyId);
@@ -216,16 +235,19 @@ export async function updatePropertyPOIs(propertyId) {
       return false;
     }
 
+    // Сохраняем координаты в отдельные колонки
     await supabase.from('properties').update({
       latitude: coordinates.lat,
       longitude: coordinates.lng
     }).eq('id', propertyId);
 
+    // Запрашиваем POI у Foursquare
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
     const cityKey = (property.city || 'istanbul').toLowerCase().trim();
     const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
 
+    // Оставляем только самую близкую точку для каждого типа
     const bestPoisByType = {};
 
     for (const item of rawPois) {
@@ -237,6 +259,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
+    // Рассчитываем веса и структурируем объект под требования PropertyCard
     const finalPoisMap = {};
 
     for (const [type, data] of Object.entries(bestPoisByType)) {
