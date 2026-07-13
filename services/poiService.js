@@ -152,7 +152,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (places-api.foursquare.com)
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с обязательным заголовоком версии)
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -170,14 +170,13 @@ async function fetchFoursquarePOIs(lat, lng) {
     : `Bearer ${rawFoursquareKey}`;
 
   const categories = '13000,17000,19000,12000,16000'; 
-  
-  // ВНИМАНИЕ: Смена домена на places-api.foursquare.com и исключение /v3/ из пути для поддержки новых стандартов
   const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=30`;
 
   try {
     const res = await fetch(url, {
       headers: {
         'Authorization': authHeaderValue,
+        'X-Places-Api-Version': '2025-06-17', // СТРОГО ОБЯЗАТЕЛЬНЫЙ ЗАГОЛОВОК ДЛЯ ВЕРСИИ API!
         'Accept': 'application/json'
       }
     });
