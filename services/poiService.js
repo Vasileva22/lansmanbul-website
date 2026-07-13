@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { cityPoiPriorities } from '../config/poi-priorities';
 
-// Инициализируем Supabase внутри сервиса (используем service_role ключ для обхода любых RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -9,38 +8,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
-export interface POIData {
-  pois: Record<string, {
-    name: string;
-    distance: number;
-    travel_time_minutes: string;
-    travel_mode: 'walking' | 'driving';
-    raw_score: number;
-    weighted_score: number;
-  }>;
-  calculated_at: string;
-  livability_score: number;
-  debug_info: {
-    geocoder_status: string;
-    foursquare_status: string;
-    total_found: number;
-    error_message?: string;
-  };
-}
-
-interface CategorizedPoi {
-  group: 'transport' | 'leisure' | 'infrastructure' | 'business';
-  type: 'metro' | 'beach' | 'hospital' | 'school' | 'university' | 'infrastructure';
-}
-
-/**
- * Категоризация объектов Foursquare под требования приоритетов и рендеринга на клиенте
- */
-function categorizePoi(categories: any[]): CategorizedPoi {
+function categorizePoi(categories) {
   const name = (categories?.[0]?.name || '').toLowerCase();
   const id = categories?.[0]?.id;
 
-  // 1. Транспорт (metro, metrobus, train, etc.)
   if (
     name.includes('metro') || 
     name.includes('subway') || 
@@ -52,7 +23,6 @@ function categorizePoi(categories: any[]): CategorizedPoi {
     return { group: 'transport', type: 'metro' };
   }
 
-  // 2. Пляжи и досуг
   if (
     name.includes('beach') || 
     name.includes('sea') || 
@@ -73,7 +43,6 @@ function categorizePoi(categories: any[]): CategorizedPoi {
     return { group: 'leisure', type: 'leisure' };
   }
 
-  // 3. Больницы
   if (
     name.includes('hospital') || 
     name.includes('clinic') || 
@@ -85,7 +54,6 @@ function categorizePoi(categories: any[]): CategorizedPoi {
     return { group: 'infrastructure', type: 'hospital' };
   }
 
-  // 4. Образование
   if (
     name.includes('university') || 
     name.includes('college') || 
@@ -104,7 +72,6 @@ function categorizePoi(categories: any[]): CategorizedPoi {
     return { group: 'infrastructure', type: 'school' };
   }
 
-  // 5. Общественная инфраструктура (магазины, аптеки, ТЦ)
   if (
     name.includes('market') || 
     name.includes('grocery') || 
@@ -118,7 +85,6 @@ function categorizePoi(categories: any[]): CategorizedPoi {
     return { group: 'infrastructure', type: 'infrastructure' };
   }
 
-  // 6. Офисы и бизнес
   if (name.includes('office') || name.includes('corporate') || name.includes('business')) {
     return { group: 'business', type: 'infrastructure' };
   }
@@ -126,10 +92,7 @@ function categorizePoi(categories: any[]): CategorizedPoi {
   return { group: 'infrastructure', type: 'infrastructure' };
 }
 
-/**
- * 1. БЕЗОПАСНЫЙ ГЕОКОДЕР ЯНДЕКСА (БЕЗ ДВОЙНЫХ СЛЭШЕЙ)
- */
-async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
+async function getCoordinatesFromAddress(addressText) {
   console.log(`[Geocoder] Запрос координат для адреса: "${addressText}"`);
 
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
@@ -143,7 +106,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
     const cleanKey = encodeURIComponent(rawKey);
     const cleanGeocode = encodeURIComponent(addressText.trim());
     
-    // Прямая сборка строки URL гарантирует отсутствие двойных слэшей
+    // Безопасный URL без двойных слэшей
     const url = `https://geocode-maps.yandex.com/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
 
     console.log(`[Geocoder Link Check] Отправляем запрос на URL: ${url}`);
@@ -170,16 +133,13 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
     console.log(`[Geocoder Success] Координаты успешно найдены: lat=${lat}, lng=${lng}`);
     return { lat, lng };
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Geocoder Exception] Сетевая ошибка при запросе к Яндексу:', err.message || err);
     return null;
   }
 }
 
-/**
- * 2. СБОР ИНФРАСТРУКТУРЫ ЧЕРЕЗ FOURSQUARE API
- */
-async function fetchFoursquarePOIs(lat: number, lng: number): Promise<any[]> {
+async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
 
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -210,16 +170,13 @@ async function fetchFoursquarePOIs(lat: number, lng: number): Promise<any[]> {
     const results = data.results || [];
     console.log(`[Foursquare Success] Найдено объектов рядом: ${results.length}`);
     return results;
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Foursquare Exception] Ошибка сети при запросе к Foursquare:', err.message || err);
     return [];
   }
 }
 
-/**
- * 3. ГЛАВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ОБЪЕКТА В БАЗЕ
- */
-export async function updatePropertyPOIs(propertyId: string | number): Promise<boolean> {
+export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
   try {
@@ -237,7 +194,6 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
     const actualAddress = property.address || property.adress || '';
     const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
     
-    // 1. Получаем координаты
     const coordinates = await getCoordinatesFromAddress(fullAddress);
 
     if (!coordinates) {
@@ -260,40 +216,32 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       return false;
     }
 
-    // 2. Записываем полученные координаты напрямую в таблицу
     await supabase.from('properties').update({
       latitude: coordinates.lat,
       longitude: coordinates.lng
     }).eq('id', propertyId);
 
-    // 3. Запрашиваем сырые точки инфраструктуры у Foursquare
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
-    // 4. Загружаем конфиг приоритетов для текущего города
     const cityKey = (property.city || 'istanbul').toLowerCase().trim();
     const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
 
-    // 5. Группируем объекты по типам, оставляя только самый близкий объект для каждого типа
-    const bestPoisByType: Record<string, { item: any; group: string; distance: number }> = {};
+    const bestPoisByType = {};
 
     for (const item of rawPois) {
       const { group, type } = categorizePoi(item.categories);
       const distance = item.distance || 9999;
 
-      // Если для данного типа инфраструктуры объект еще не выбран или текущий ближе
       if (!bestPoisByType[type] || distance < bestPoisByType[type].distance) {
         bestPoisByType[type] = { item, group, distance };
       }
     }
 
-    // 6. Формируем финальный объект POI со скорингом и весами
-    const finalPoisMap: Record<string, any> = {};
+    const finalPoisMap = {};
 
     for (const [type, data] of Object.entries(bestPoisByType)) {
-      // Рассчитываем время пешком (~80 метров в минуту)
       const walkMinutes = Math.max(1, Math.round(data.distance / 80));
       
-      // Базовая оценка (raw_score) на основе расстояния
       let rawScore = 0;
       if (data.distance <= 200) rawScore = 10;
       else if (data.distance <= 500) rawScore = 8;
@@ -301,32 +249,30 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       else if (data.distance <= 1500) rawScore = 4;
       else rawScore = 2;
 
-      // Коэффициент веса в зависимости от приоритетов города
-      const priorityIndex = config.priorities.indexOf(data.group as any);
+      const priorityIndex = config.priorities.indexOf(data.group);
       let weight = 1.0;
-      if (priorityIndex === 0) weight = 1.5;      // Максимальный приоритет
+      if (priorityIndex === 0) weight = 1.5;
       else if (priorityIndex === 1) weight = 1.2;
       else if (priorityIndex === 2) weight = 1.0;
-      else if (priorityIndex === 3) weight = 0.8;      // Минимальный приоритет
+      else if (priorityIndex === 3) weight = 0.8;
 
       const weightedScore = parseFloat((rawScore * weight).toFixed(2));
 
       finalPoisMap[type] = {
         name: data.item.name,
         distance: data.distance,
-        travel_time_minutes: `${walkMinutes} мин`, // Будет выведено во встроенный span на клиенте
+        travel_time_minutes: `${walkMinutes} мин`,
         travel_mode: 'walking',
         raw_score: rawScore,
         weighted_score: weightedScore
       };
     }
 
-    // Рассчитываем общий livability score на основе найденного разнообразия (от 1 до 10)
     const foundTypesCount = Object.keys(finalPoisMap).length;
     let score = Math.min(10, Math.floor(foundTypesCount * 1.5));
     if (score === 0 && foundTypesCount > 0) score = 1;
 
-    const finalPoiData: POIData = {
+    const finalPoiData = {
       pois: finalPoisMap,
       calculated_at: new Date().toISOString(),
       livability_score: score,
@@ -337,7 +283,6 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       }
     };
 
-    // 7. Обновляем JSON-колонку в Supabase
     console.log(`[DB Update] Записываем структурированный JSON poi_data в базу для ID: ${propertyId}`);
     const { error: updateError } = await supabase
       .from('properties')
@@ -354,7 +299,7 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
     console.log(`--- [POI Service End] Объект ID ${propertyId} успешно обработан! ---\n`);
     return true;
 
-  } catch (globalErr: any) {
+  } catch (globalErr) {
     console.error(`[POI Service Fatal Error] Крах всей функции для ID ${propertyId}:`, globalErr.message || globalErr);
     return false;
   }
