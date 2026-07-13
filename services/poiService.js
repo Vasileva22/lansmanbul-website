@@ -119,7 +119,6 @@ async function getCoordinatesFromAddress(addressText) {
     const cleanKey = encodeURIComponent(rawKey);
     const cleanGeocode = encodeURIComponent(addressText.trim());
     
-    // Использование домена .ru предотвращает редиректные ошибки 404 на стороне Яндекса
     const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
 
     console.log(`[Geocoder Link Check] Отправляем запрос на URL: ${url}`);
@@ -153,7 +152,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через Foursquare API
+ * 2. Сбор инфраструктуры через Foursquare API (С умной поддержкой Bearer/OAuth)
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -165,13 +164,20 @@ async function fetchFoursquarePOIs(lat, lng) {
     return [];
   }
 
+  // УМНОЕ ОПРЕДЕЛЕНИЕ ТИПА КЛЮЧА:
+  // Если ключ начинается с fsq3_ — передаем как есть (это современный API-ключ).
+  // Если нет — оборачиваем его в формат Bearer-токена для классической OAuth-авторизации.
+  const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') 
+    ? rawFoursquareKey 
+    : `Bearer ${rawFoursquareKey}`;
+
   const categories = '13000,17000,19000,12000,16000'; 
   const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=30`;
 
   try {
     const res = await fetch(url, {
       headers: {
-        'Authorization': rawFoursquareKey,
+        'Authorization': authHeaderValue,
         'Accept': 'application/json'
       }
     });
@@ -227,7 +233,7 @@ export async function updatePropertyPOIs(propertyId) {
             geocoder_status: "FAILED_OR_EMPTY",
             foursquare_status: "NOT_STARTED",
             total_found: 0,
-            error_message: "Яндекс Геокодер не вернул координаты. Проверь адрес."
+            error_message: "Яндекс Геокодер не вернул координаты."
           }
         }
       }).eq('id', propertyId);
@@ -235,19 +241,16 @@ export async function updatePropertyPOIs(propertyId) {
       return false;
     }
 
-    // Сохраняем координаты в отдельные колонки
     await supabase.from('properties').update({
       latitude: coordinates.lat,
       longitude: coordinates.lng
     }).eq('id', propertyId);
 
-    // Запрашиваем POI у Foursquare
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
     const cityKey = (property.city || 'istanbul').toLowerCase().trim();
     const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
 
-    // Оставляем только самую близкую точку для каждого типа
     const bestPoisByType = {};
 
     for (const item of rawPois) {
@@ -259,7 +262,6 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Рассчитываем веса и структурируем объект под требования PropertyCard
     const finalPoisMap = {};
 
     for (const [type, data] of Object.entries(bestPoisByType)) {
@@ -308,11 +310,7 @@ export async function updatePropertyPOIs(propertyId) {
 
     console.log(`[DB Update] Записываем структурированный JSON poi_data в базу для ID: ${propertyId}`);
     const { error: updateError } = await supabase
-      .from('properties')
-      .update({ 
-        poi_data: finalPoiData
-      })
-      .eq('id', propertyId);
+      .from('properties').update({ poi_data: finalPoiData }).eq('id', propertyId);
 
     if (updateError) {
       console.error(`[DB Error] Не удалось сохранить poi_data для ID ${propertyId}:`, updateError.message);
