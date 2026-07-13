@@ -22,35 +22,45 @@ export default async function handler(req, res) {
     }
 
     // УМНАЯ ЗАЩИТА ОТ БЕСКОНЕЧНОЙ РЕКУРСИИ:
-    // Блокируем запуск только тогда, когда обновление в базе произошло ИЗ-ЗА записи новых POI.
-    // Если ты вручную меняешь координаты, адрес или описание — скрипт сработает!
     if (type === 'UPDATE' && old_record) {
-      const newAddress = record?.address || record?.adress;
-      const oldAddress = old_record?.address || old_record?.adress;
-      const newCity = record?.city;
-      const oldCity = old_record?.city;
+      const newAddress = (record?.address || record?.adress || '').trim();
+      const oldAddress = (old_record?.address || old_record?.adress || '').trim();
+      const newCity = (record?.city || '').trim();
+      const oldCity = (old_record?.city || '').trim();
 
-      // Сравниваем старый JSON POI с новым
-      const oldPoi = JSON.stringify(old_record?.poi_data);
-      const newPoi = JSON.stringify(record?.poi_data);
-      const poiChanged = oldPoi !== newPoi;
+      // Проверяем, пустые ли новые POI
+      const hasPoiData = record?.poi_data && Object.keys(record.poi_data).length > 0;
 
-      // Предотвращаем бесконечный цикл только если адрес тот же, но POI обновились
-      if (newAddress === oldAddress && newCity === oldCity && poiChanged) {
-        console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (POI уже сохранены).`);
-        return res.status(200).json({ message: 'Prevented infinite loop. Skipped update.' });
+      // Если адрес и город НЕ менялись, а в базе УЖЕ лежат готовые POI,
+      // то это был триггер от нашей собственной записи, глушим его.
+      if (newAddress === oldAddress && newCity === oldCity && hasPoiData) {
+        // Дополнительно убедимся, что мы не зацикливаемся, если изменились только технические поля POI
+        const oldPoi = JSON.stringify(old_record?.poi_data);
+        const newPoi = JSON.stringify(record?.poi_data);
+        
+        if (oldPoi !== newPoi) {
+          console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (POI уже сохранены, адрес не менялся).`);
+          return res.status(200).json({ message: 'Prevented infinite loop. Skipped update.' });
+        }
       }
     }
 
     console.log(`[Webhook] Запуск глубокого анализа инфраструктуры для ID: ${id}`);
     
     // Запускаем наш умный скоринг-сервис
-    await updatePropertyPOIs(id);
+    const success = await updatePropertyPOIs(id);
 
-    return res.status(200).json({ 
-      success: true, 
-      message: `Инфраструктура и Livability Score для ID ${id} успешно рассчитаны и сохранены.` 
-    });
+    if (success) {
+      return res.status(200).json({ 
+        success: true, 
+        message: `Инфраструктура и Livability Score для ID ${id} успешно рассчитаны и сохранены.` 
+      });
+    } else {
+      return res.status(500).json({ 
+        success: false, 
+        error: `Не удалось рассчитать инфраструктуру для ID ${id}. Проверь логи геокодера.` 
+      });
+    }
 
   } catch (err) {
     console.error('[Webhook Error]:', err);
