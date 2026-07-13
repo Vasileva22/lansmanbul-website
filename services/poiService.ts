@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Получаем ключи из настроек Vercel
-const YANDEX_GEOCODER_KEY = process.env.YANDEX_MAPS_API_KEY;
+// Нам нужен только один этот ключ в Vercel!
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 // Инициализируем административный клиент для обхода RLS
@@ -41,81 +40,58 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// Скорректированная функция-обертка для HTTP-запросов к Яндексу (для Геокодера)
-async function safeFetchJson(url: string): Promise<any | null> {
-  const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
-  console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
+// Шаг 1. Находим координаты объекта по его адресу ЧЕРЕЗ FOURSQUARE
+async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
+  if (!FOURSQUARE_API_KEY) {
+    console.error('[Geocoder] Ошибка: FOURSQUARE_API_KEY отсутствует в переменных окружения');
+    return null;
+  }
+
+  console.log(`[Foursquare Geocoder] Ищем координаты для адреса: "${addressText}"`);
+
+  const url = `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(addressText)}&limit=1`;
 
   try {
     const res = await fetch(url, {
+      method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Referer': 'https://lansmanbul.com'
+        'Accept': 'application/json',
+        'Authorization': FOURSQUARE_API_KEY
       }
     });
-    
-    console.log(`[Yandex API Response] HTTP Status: ${res.status}`);
-
-    const text = await res.text();
 
     if (!res.ok) {
-      console.error(`[Yandex API Error] HTTP ${res.status} от Яндекса. Текст ошибки: ${text}`);
+      console.error(`[Foursquare Geocoder Error] Status: ${res.status}`);
       return null;
     }
 
-    const contentType = res.headers.get('content-type') || '';
-
-    if (!contentType.includes('application/json')) {
-      console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Ответ: ${text}`);
-      return null;
-    }
-
-    return JSON.parse(text);
-  } catch (err: any) {
-    console.error(`[Yandex API Fetch Exception] Не удалось выполнить запрос к Яндексу:`, err.message || err);
-    return null;
-  }
-}
-
-// Перевод адреса в координаты [lat, lng] через Яндекс Геокодер
-async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
-  if (!YANDEX_GEOCODER_KEY) {
-    console.error('[Geocoder] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
-    return null;
-  }
-
-  console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
-
-  const url = `https://geocode-maps.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
-  const data = await safeFetchJson(url);
-
-  if (data) {
-    const foundPlaces = data?.response?.GeoObjectCollection?.featureMember;
-    if (foundPlaces && foundPlaces.length > 0) {
-      const pos = foundPlaces[0].GeoObject.Point.pos; 
-      const [lngStr, latStr] = pos.split(' ');
-      const lng = parseFloat(lngStr);
-      const lat = parseFloat(latStr);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        return { lat, lng };
+    const data = await res.json();
+    if (data && data.results && data.results.length > 0) {
+      const mainPlace = data.results[0];
+      if (mainPlace.geocodes?.main) {
+        return {
+          lat: mainPlace.geocodes.main.latitude,
+          lng: mainPlace.geocodes.main.longitude
+        };
       }
     }
+    console.warn(`[Foursquare Geocoder] Не удалось найти координаты для: "${addressText}"`);
+    return null;
+  } catch (err) {
+    console.error('[Foursquare Geocoder Exception]:', err);
+    return null;
   }
-  return null;
 }
 
-// Поиск ближайшей организации через международный Foursquare Places API
+// Шаг 2. Поиск инфраструктуры вокруг координат ЧЕРЕЗ FOURSQUARE
 async function findNearestFoursquarePoi(lat: number, lng: number, searchText: string): Promise<any | null> {
   if (!FOURSQUARE_API_KEY) {
     console.error('[POI Search] Ошибка: FOURSQUARE_API_KEY отсутствует в переменных окружения');
     return null;
   }
 
-  // Ищем в радиусе 20 км (20000м), чтобы зацепить даже крупные объекты инфраструктуры
   const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&query=${encodeURIComponent(searchText)}&radius=20000&limit=1`;
   
-  console.log(`[Foursquare API Request] Поиск инфраструктуры по запросу: "${searchText}"`);
-
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -126,11 +102,7 @@ async function findNearestFoursquarePoi(lat: number, lng: number, searchText: st
       cache: 'no-store'
     });
 
-    console.log(`[Foursquare API Response] HTTP Status: ${res.status}`);
-
     if (!res.ok) {
-      const text = await res.text();
-      console.error(`[Foursquare API Error] HTTP ${res.status} от Foursquare. Ответ: ${text}`);
       return null;
     }
 
@@ -139,13 +111,13 @@ async function findNearestFoursquarePoi(lat: number, lng: number, searchText: st
       return data.results[0];
     }
     return null;
-  } catch (err: any) {
-    console.error(`[Foursquare API Fetch Exception] Не удалось выполнить запрос к Foursquare:`, err.message || err);
+  } catch (err) {
+    console.error(`[Foursquare API Exception] Ошибка поиска для "${searchText}":`, err);
     return null;
   }
 }
 
-// Бесплатный математический расчет расстояния (Формула Хаверсинуса с учетом дорог)
+// Математический расчет расстояния (Формула Хаверсинуса)
 function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -156,19 +128,19 @@ function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: n
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c * 1.3);
+  return Math.round(R * c * 1.3); // коэффицент поправки на дороги
 }
 
-// Расчет времени пути на основе расстояния
+// Расчет времени пути
 function estimateTravelTime(distanceMeters: number, mode: 'walking' | 'driving'): number {
   if (mode === 'walking') {
-    return Math.ceil(distanceMeters / 80);
+    return Math.ceil(distanceMeters / 80); // 80 метров в минуту пешком
   } else {
-    return Math.ceil(distanceMeters / 400);
+    return Math.ceil(distanceMeters / 400); // 400 метров в минуту на авто
   }
 }
 
-// Оценка влияния времени пути на скоринг
+// Скоринг баллов
 function calculatePoiScore(durationMinutes: number, mode: 'walking' | 'driving', config: CategoryConfig): number {
   if (mode === 'walking') {
     if (durationMinutes <= 5) return 100;
@@ -185,7 +157,7 @@ function calculatePoiScore(durationMinutes: number, mode: 'walking' | 'driving',
   }
 }
 
-// Очистка названий станций/объектов
+// Красивая очистка имен
 function cleanPoiName(name: string): string {
   if (!name) return '';
   let cleaned = name;
@@ -199,16 +171,16 @@ function cleanPoiName(name: string): string {
   return cleaned;
 }
 
-// Основная бэкенд-функция скоринг-анализа
+// Главная функция, запускающая весь анализ инфраструктуры
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
-  console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
+  console.log(`[POI Service] Запущен анализ инфраструктуры (Чистый Foursquare) для ID: ${propertyId}`);
 
-  if (!YANDEX_GEOCODER_KEY || !FOURSQUARE_API_KEY) {
-    console.error('[POI Service] Ошибка: Не все API-ключи (YANDEX_MAPS_API_KEY или FOURSQUARE_API_KEY) заданы в переменных окружения.');
+  if (!FOURSQUARE_API_KEY) {
+    console.error('[POI Service] Ошибка: FOURSQUARE_API_KEY отсутствует в Vercel.');
     return;
   }
 
-  // Получаем адрес
+  // Получаем адрес из базы данных
   const { data: property, error: fetchError } = await supabaseAdmin
     .from('properties')
     .select('adress, city')
@@ -216,39 +188,37 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .single();
 
   if (fetchError || !property) {
-    console.error(`[POI Service] Не удалось получить объявление ID: ${propertyId} из БД:`, fetchError);
+    console.error(`[POI Service] Не удалось получить объект ID: ${propertyId}`, fetchError);
     return;
   }
 
   const rawAddress = property.adress;
   if (!rawAddress) {
-    console.warn(`[POI Service] Предупреждение: у объекта ${propertyId} пустой адрес. Расчет остановлен.`);
+    console.warn(`[POI Service] У объекта ${propertyId} пустой адрес. Расчет остановлен.`);
     return;
   }
 
   const cityPrefix = property.city ? `${property.city}, ` : '';
   const fullAddress = `${cityPrefix}${rawAddress}`;
 
-  // Получаем координаты через Яндекс Геокодер
+  // Ищем координаты только через Foursquare!
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
-    console.error(`[POI Service] Не удалось определить координаты для адреса "${fullAddress}". Анализ отменен.`);
+    console.error(`[POI Service] Foursquare не смог определить координаты для "${fullAddress}". Анализ отменен.`);
     return;
   }
 
   const { lat, lng } = coordinates;
-  console.log(`[POI Service] Успешно найдены координаты: lat: ${lat}, lng: ${lng}`);
+  console.log(`[POI Service] Координаты успешно определены Foursquare: lat: ${lat}, lng: ${lng}`);
 
   const finalPoiData: Record<string, PoiDetail> = {};
   let totalWeightedScoreSum = 0;
   let totalWeightsSum = 0;
-
   let bestCategoryKey: string | null = null;
   let highestWeightedScore = -1;
 
   for (const [categoryKey, config] of Object.entries(INFRASTRUCTURE_CONFIG)) {
     try {
-      // Ищем объекты через Foursquare API
       const nearestPlace = await findNearestFoursquarePoi(lat, lng, config.searchQuery);
       if (!nearestPlace || !nearestPlace.geocodes?.main) continue;
 
@@ -256,13 +226,11 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
       const destLat = nearestPlace.geocodes.main.latitude;
       const placeName = cleanPoiName(nearestPlace.name);
 
-      // Рассчитываем расстояние математически
       const distance = calculateMathDistance(lat, lng, destLat, destLng);
       
       let travelMode: 'walking' | 'driving' = 'walking';
       let duration = estimateTravelTime(distance, 'walking');
 
-      // Если пешком идти слишком далеко (дольше 20 минут), переключаемся на авто
       if (duration > 20) {
         duration = estimateTravelTime(distance, 'driving');
         travelMode = 'driving';
@@ -288,7 +256,7 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
         bestCategoryKey = categoryKey;
       }
     } catch (catErr) {
-      console.error(`[POI Service] Ошибка при обработке категории "${categoryKey}":`, catErr);
+      console.error(`[POI Service] Ошибка категории "${categoryKey}":`, catErr);
     }
   }
 
@@ -306,6 +274,7 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     calculated_at: new Date().toISOString()
   };
 
+  // Записываем чистые данные обратно в Supabase
   const { error } = await supabaseAdmin
     .from('properties')
     .update({ 
@@ -317,8 +286,8 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .eq('id', propertyId);
 
   if (error) {
-    console.error(`[POI Service] Ошибка сохранения результатов в БД для объекта ${propertyId}:`, error);
+    console.error(`[POI Service] Ошибка сохранения в БД для объекта ${propertyId}:`, error);
   } else {
-    console.log(`[POI Service] Объект ${propertyId} успешно проанализирован. Индекс: ${livabilityScore}/100. Преимущество: "${chosenProximityType}".`);
+    console.log(`[POI Service] Объект ${propertyId} успешно проанализирован. Индекс: ${livabilityScore}/100.`);
   }
 }
