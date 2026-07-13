@@ -41,7 +41,7 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// Функция-обертка для HTTP-запросов к Яндексу с подменой Referer
+// Скорректированная функция-обертка для HTTP-запросов к Яндексу
 async function safeFetchJson(url: string): Promise<any | null> {
   const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
   console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
@@ -49,21 +49,23 @@ async function safeFetchJson(url: string): Promise<any | null> {
   try {
     const res = await fetch(url, {
       headers: {
-        'Referer': 'https://increase-fine-snappea.tilda.ws/',
+        // Убрали жестко заданный Referer (Tilda). 
+        // Запрос будет проходить независимо от домена.
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }
     });
     
     console.log(`[Yandex API Response] HTTP Status: ${res.status}`);
 
+    // Получаем текст ответа заранее, чтобы использовать его в логах при ошибках
+    const text = await res.text();
+
     if (!res.ok) {
-      const errText = await res.text();
-      console.error(`[Yandex API Error] HTTP ${res.status} от Яндекса. Текст ошибки: ${errText}`);
+      console.error(`[Yandex API Error] HTTP ${res.status} от Яндекса. Текст ошибки: ${text}`);
       return null;
     }
 
     const contentType = res.headers.get('content-type') || '';
-    const text = await res.text();
 
     if (!contentType.includes('application/json')) {
       console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Ответ: ${text}`);
@@ -230,7 +232,7 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
       const destLat = nearestPlace.geometry.coordinates[1];
       const placeName = cleanPoiName(nearestPlace.properties.CompanyMetaData.name);
 
-      // Рассчитываем расстояние математически и мгновенно!
+      // Рассчитываем расстояние математически
       const distance = calculateMathDistance(lat, lng, destLat, destLng);
       
       let travelMode: 'walking' | 'driving' = 'walking';
