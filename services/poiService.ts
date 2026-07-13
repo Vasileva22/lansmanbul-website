@@ -88,7 +88,8 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
   console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
-  const geocoderUrl =`https://geocode-maps.api.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  // СТРОГО ТАК ДЛЯ ГЕОКОДЕРА (убрали .api. и оставили один слэш перед 1.x):
+const url = `https://geocode-maps.yandex.com/1.x/?apikey=${process.env.YANDEX_GEOCODER_API_KEY}&geocode=${encodeURIComponent(address)}&format=json&results=1`;
   const data = await safeFetchJson(geocoderUrl);
 
   if (data) {
