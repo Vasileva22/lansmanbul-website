@@ -9,19 +9,30 @@ const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 /**
- * 1. УМНЫЙ ГЕОКОДЕР ЯНДЕКСА
+ * 1. УМНЫЙ ГЕОКОДЕР ЯНДЕКСА (С ИСПРАВЛЕННЫМ СБОРЩИКОМ URL)
  */
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
   console.log(`[Geocoder] Запрос координат для адреса: "${addressText}"`);
 
-  if (!YANDEX_GEOCODER_KEY) {
+  // Очищаем ключ от возможных лишних пробелов или случайных кавычек из панели Vercel
+  const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
+
+  if (!rawKey) {
     console.error('[Geocoder Error] Критическая ошибка: Переменная YANDEX_GEOCODER_KEY пустая в Vercel!');
     return null;
   }
 
- const url = "https://geocode-maps.yandex.com/1.x/?apikey=" + YANDEX_GEOCODER_KEY + "&geocode=" + encodeURIComponent(addressText) + "&format=json&results=1";
-  
   try {
+    // Используем встроенный конструктор URL — он гарантирует отсутствие двойных слэшей перед "1.x"
+    const urlObj = new URL('https://geocode-maps.yandex.com/1.x/');
+    urlObj.searchParams.set('apikey', rawKey);
+    urlObj.searchParams.set('geocode', addressText);
+    urlObj.searchParams.set('format', 'json');
+    urlObj.searchParams.set('results', '1');
+
+    const url = urlObj.toString();
+    console.log(`[Geocoder Link Check] Отправляем запрос на URL: ${url}`);
+    
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     
     if (!res.ok) {
@@ -56,7 +67,9 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 async function fetchFoursquarePOIs(lat: number, lng: number): Promise<any[]> {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
 
-  if (!FOURSQUARE_API_KEY) {
+  const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
+
+  if (!rawFoursquareKey) {
     console.error('[Foursquare Error] Критическая ошибка: Переменная FOURSQUARE_API_KEY пустая в Vercel!');
     return [];
   }
@@ -68,7 +81,7 @@ async function fetchFoursquarePOIs(lat: number, lng: number): Promise<any[]> {
   try {
     const res = await fetch(url, {
       headers: {
-        'Authorization': FOURSQUARE_API_KEY,
+        'Authorization': rawFoursquareKey,
         'Accept': 'application/json'
       }
     });
@@ -108,7 +121,7 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
   try {
-    // 1. Достаем объект недвижимости из Supabase через '*' (чтобы не упасть из-за имен колонок)
+    // 1. Достаем объект недвижимости из Supabase через '*' (чтобы избежать падений из-за названий колонок)
     const { data: property, error: fetchError } = await supabase
       .from('properties')
       .select('*')
@@ -120,7 +133,7 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       return false;
     }
 
-    // Умный поиск адреса (проверяем и address, и вариант с опечаткой adress)
+    // Умный поиск адреса (проверяем все возможные варианты написания колонки)
     const actualAddress = property.address || property.adress || '';
     const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
     
@@ -139,7 +152,7 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
             geocoder_status: "FAILED_OR_EMPTY",
             foursquare_status: "NOT_STARTED",
             total_found: 0,
-            error_message: "Яндекс Геокодер не вернул координаты. Проверь синтаксис адреса."
+            error_message: "Яндекс Геокодер не вернул координаты. Проверь адрес или API-ключ."
           }
         }
       }).eq('id', propertyId);
@@ -147,8 +160,8 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       return false;
     }
 
-    // 3. Сохраняем координаты в базу (эти колонки точно есть на скриншоте)
-    console.log(`[DB Update] Фиксируем координаты для ID: ${propertyId}`);
+    // 3. Сохраняем полученные координаты напрямую в отдельные колонки базы данных
+    console.log(`[DB Update] Записываем координаты в базу для ID: ${propertyId}`);
     await supabase.from('properties').update({
       latitude: coordinates.lat,
       longitude: coordinates.lng
@@ -157,7 +170,7 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
     // 4. Запрашиваем POI у Foursquare
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
-    // Форматируем массив точек
+    // Форматируем массив точек в понятный JSON-вид
     const formattedPois = rawPois.map((item: any) => ({
       name: item.name,
       distance: item.distance,
@@ -165,11 +178,11 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       address: item.location?.formatted_address || ''
     }));
 
-    // 5. Рассчитываем Livability Score
+    // 5. Рассчитываем рейтинг привлекательности района
     let score = Math.min(10, Math.floor(formattedPois.length / 2));
     if (score === 0 && formattedPois.length > 0) score = 1;
 
-    // 6. Упаковываем всё в структуру JSON
+    // 6. Формируем финальный объект
     const finalPoiData: POIData = {
       pois: formattedPois,
       calculated_at: new Date().toISOString(),
@@ -181,8 +194,8 @@ export async function updatePropertyPOIs(propertyId: string | number): Promise<b
       }
     };
 
-    // 7. Сохраняем итоговый результат в Supabase (только в poi_data, чтобы не рисковать другими колонками)
-    console.log(`[DB Update] Записываем финальный JSON в базу для ID: ${propertyId}`);
+    // 7. Обновляем JSON-колонку в Supabase
+    console.log(`[DB Update] Записываем финальный JSON poi_data в базу для ID: ${propertyId}`);
     const { error: updateError } = await supabase
       .from('properties')
       .update({ 
