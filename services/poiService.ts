@@ -49,9 +49,9 @@ async function safeFetchJson(url: string): Promise<any | null> {
   try {
     const res = await fetch(url, {
       headers: {
-        // Убрали жестко заданный Referer (Tilda). 
-        // Запрос будет проходить независимо от домена.
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        // Передаем правильный домен проекта. Для бэкенд-запросов Поиска организаций это критично
+        'Referer': 'https://lansmanbul.com'
       }
     });
     
@@ -128,8 +128,7 @@ function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: n
   
   const a = 
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c * 1.3);
