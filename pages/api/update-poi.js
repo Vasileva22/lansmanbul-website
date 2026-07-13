@@ -30,16 +30,18 @@ export default async function handler(req, res) {
 
       // Проверяем, пустые ли новые POI
       const hasPoiData = record?.poi_data && Object.keys(record.poi_data).length > 0;
+      
+      // Проверяем статус прошлой попытки. Если была ошибка, разрешаем пересчет.
+      const lastGeocodeStatus = record?.poi_data?.debug_info?.geocoder_status;
+      const isFailedAttempt = lastGeocodeStatus === "FAILED_OR_EMPTY" || lastGeocodeStatus === "FAILED";
 
-      // Если адрес и город НЕ менялись, а в базе УЖЕ лежат готовые POI,
-      // то это был триггер от нашей собственной записи, глушим его.
-      if (newAddress === oldAddress && newCity === oldCity && hasPoiData) {
-        // Дополнительно убедимся, что мы не зацикливаемся, если изменились только технические поля POI
+      // Если адрес и город НЕ менялись, а в базе лежат успешные POI, гасим рекурсию.
+      if (newAddress === oldAddress && newCity === oldCity && hasPoiData && !isFailedAttempt) {
         const oldPoi = JSON.stringify(old_record?.poi_data);
         const newPoi = JSON.stringify(record?.poi_data);
         
         if (oldPoi !== newPoi) {
-          console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (POI уже сохранены, адрес не менялся).`);
+          console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (POI уже успешно сохранены, адрес не менялся).`);
           return res.status(200).json({ message: 'Prevented infinite loop. Skipped update.' });
         }
       }
