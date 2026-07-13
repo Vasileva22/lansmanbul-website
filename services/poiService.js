@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cityPoiPriorities } from '../config/poi-priorities';
 
-// Инициализируем Supabase внутри сервиса (используем service_role ключ для обхода любых RLS)
+// Инициализируем Supabase внутри сервиса
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -152,7 +152,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через Foursquare API (С умной поддержкой Bearer/OAuth)
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (places-api.foursquare.com)
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -164,15 +164,15 @@ async function fetchFoursquarePOIs(lat, lng) {
     return [];
   }
 
-  // УМНОЕ ОПРЕДЕЛЕНИЕ ТИПА КЛЮЧА:
-  // Если ключ начинается с fsq3_ — передаем как есть (это современный API-ключ).
-  // Если нет — оборачиваем его в формат Bearer-токена для классической OAuth-авторизации.
+  // Настройка авторизации: Service API Key типа 'TSX...' строго требует Bearer-формат
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') 
     ? rawFoursquareKey 
     : `Bearer ${rawFoursquareKey}`;
 
   const categories = '13000,17000,19000,12000,16000'; 
-  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=30`;
+  
+  // ВНИМАНИЕ: Смена домена на places-api.foursquare.com и исключение /v3/ из пути для поддержки новых стандартов
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=30`;
 
   try {
     const res = await fetch(url, {
@@ -241,6 +241,7 @@ export async function updatePropertyPOIs(propertyId) {
       return false;
     }
 
+    // Записываем координаты в таблицу
     await supabase.from('properties').update({
       latitude: coordinates.lat,
       longitude: coordinates.lng
@@ -310,7 +311,11 @@ export async function updatePropertyPOIs(propertyId) {
 
     console.log(`[DB Update] Записываем структурированный JSON poi_data в базу для ID: ${propertyId}`);
     const { error: updateError } = await supabase
-      .from('properties').update({ poi_data: finalPoiData }).eq('id', propertyId);
+      .from('properties')
+      .update({ 
+        poi_data: finalPoiData
+      })
+      .eq('id', propertyId);
 
     if (updateError) {
       console.error(`[DB Error] Не удалось сохранить poi_data для ID ${propertyId}:`, updateError.message);
