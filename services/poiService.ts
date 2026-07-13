@@ -19,7 +19,7 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
     return null;
   }
 
- const url = `https://geocode-maps.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+ const url = "https://geocode-maps.yandex.com/1.x/?apikey=" + YANDEX_GEOCODER_KEY + "&geocode=" + encodeURIComponent(addressText) + "&format=json&results=1";
   
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
