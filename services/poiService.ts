@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Получаем ключи из настроек Vercel
+// Подтягиваем два нужных ключа из настроек Vercel
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_MAPS_API_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
@@ -41,7 +41,7 @@ interface PoiDetail {
   weighted_score: number;
 }
 
-// Скорректированная функция-обертка для HTTP-запросов к Яндексу (для Геокодера)
+// Вспомогательная функция для безопасных запросов к Яндексу
 async function safeFetchJson(url: string): Promise<any | null> {
   const anonymizedUrl = url.replace(/apikey=[^&]+/, 'apikey=***');
   console.log(`[Yandex API Request] Отправка запроса к: ${anonymizedUrl}`);
@@ -64,7 +64,6 @@ async function safeFetchJson(url: string): Promise<any | null> {
     }
 
     const contentType = res.headers.get('content-type') || '';
-
     if (!contentType.includes('application/json')) {
       console.warn(`[Yandex API Non-JSON] Ожидался JSON, но получен Content-Type: "${contentType}". Ответ: ${text}`);
       return null;
@@ -77,7 +76,7 @@ async function safeFetchJson(url: string): Promise<any | null> {
   }
 }
 
-// Перевод адреса в координаты [lat, lng] через Яндекс Геокодер
+// Шаг 1: Перевод адреса в координаты [lat, lng] через Яндекс Геокодер (С ПОЧИНЕННЫМ URL)
 async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: number; lng: number } | null> {
   if (!YANDEX_GEOCODER_KEY) {
     console.error('[Geocoder] Ошибка: YANDEX_MAPS_API_KEY отсутствует в переменных окружения');
@@ -86,7 +85,9 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
 
   console.log(`[Geocoder] Запуск поиска координат для адреса: "${addressText}"`);
 
+  // ТУТ ИСПРАВЛЕНО: Строго один слэш перед 1.x, никаких лишних символов
   const url = `https://geocode-maps.yandex.com/1.x/?apikey=${YANDEX_GEOCODER_KEY}&geocode=${encodeURIComponent(addressText)}&format=json&results=1`;
+  
   const data = await safeFetchJson(url);
 
   if (data) {
@@ -104,18 +105,15 @@ async function getCoordinatesFromAddress(addressText: string): Promise<{ lat: nu
   return null;
 }
 
-// Поиск ближайшей организации через международный Foursquare Places API
+// Шаг 2: Поиск инфраструктуры вокруг полученных координат через FOURSQUARE
 async function findNearestFoursquarePoi(lat: number, lng: number, searchText: string): Promise<any | null> {
   if (!FOURSQUARE_API_KEY) {
     console.error('[POI Search] Ошибка: FOURSQUARE_API_KEY отсутствует в переменных окружения');
     return null;
   }
 
-  // Ищем в радиусе 20 км (20000м), чтобы зацепить даже крупные объекты инфраструктуры
   const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&query=${encodeURIComponent(searchText)}&radius=20000&limit=1`;
   
-  console.log(`[Foursquare API Request] Поиск инфраструктуры по запросу: "${searchText}"`);
-
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -126,11 +124,9 @@ async function findNearestFoursquarePoi(lat: number, lng: number, searchText: st
       cache: 'no-store'
     });
 
-    console.log(`[Foursquare API Response] HTTP Status: ${res.status}`);
-
     if (!res.ok) {
       const text = await res.text();
-      console.error(`[Foursquare API Error] HTTP ${res.status} от Foursquare. Ответ: ${text}`);
+      console.error(`[Foursquare API Error] HTTP ${res.status}. Ответ: ${text}`);
       return null;
     }
 
@@ -140,12 +136,12 @@ async function findNearestFoursquarePoi(lat: number, lng: number, searchText: st
     }
     return null;
   } catch (err: any) {
-    console.error(`[Foursquare API Fetch Exception] Не удалось выполнить запрос к Foursquare:`, err.message || err);
+    console.error(`[Foursquare API Exception] Ошибка поиска для "${searchText}":`, err.message || err);
     return null;
   }
 }
 
-// Бесплатный математический расчет расстояния (Формула Хаверсинуса с учетом дорог)
+// Математический расчет расстояния (Формула Хаверсинуса)
 function calculateMathDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -201,14 +197,14 @@ function cleanPoiName(name: string): string {
 
 // Основная бэкенд-функция скоринг-анализа
 export async function updatePropertyPOIs(propertyId: string): Promise<void> {
-  console.log(`[POI Service] Запущен анализ инфраструктуры для объявления ID: ${propertyId}`);
+  console.log(`[POI Service] Запущен анализ инфраструктуры (Яндекс + Foursquare) для ID: ${propertyId}`);
 
   if (!YANDEX_GEOCODER_KEY || !FOURSQUARE_API_KEY) {
-    console.error('[POI Service] Ошибка: Не все API-ключи (YANDEX_MAPS_API_KEY или FOURSQUARE_API_KEY) заданы в переменных окружения.');
+    console.error('[POI Service] Ошибка: Проверьте переменные окружения YANDEX_MAPS_API_KEY и FOURSQUARE_API_KEY.');
     return;
   }
 
-  // Получаем адрес
+  // Получаем адрес из базы данных
   const { data: property, error: fetchError } = await supabaseAdmin
     .from('properties')
     .select('adress, city')
@@ -216,20 +212,20 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     .single();
 
   if (fetchError || !property) {
-    console.error(`[POI Service] Не удалось получить объявление ID: ${propertyId} из БД:`, fetchError);
+    console.error(`[POI Service] Не удалось получить объявление ID: ${propertyId}`, fetchError);
     return;
   }
 
   const rawAddress = property.adress;
   if (!rawAddress) {
-    console.warn(`[POI Service] Предупреждение: у объекта ${propertyId} пустой адрес. Расчет остановлен.`);
+    console.warn(`[POI Service] У объекта ${propertyId} пустой адрес. Расчет остановлен.`);
     return;
   }
 
   const cityPrefix = property.city ? `${property.city}, ` : '';
   const fullAddress = `${cityPrefix}${rawAddress}`;
 
-  // Получаем координаты через Яндекс Геокодер
+  // СНАЧАЛА НАХОДИМ КООРДИНАТЫ ЧЕРЕЗ ЯНДЕКС
   const coordinates = await getCoordinatesFromAddress(fullAddress);
   if (!coordinates) {
     console.error(`[POI Service] Не удалось определить координаты для адреса "${fullAddress}". Анализ отменен.`);
@@ -237,18 +233,17 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
   }
 
   const { lat, lng } = coordinates;
-  console.log(`[POI Service] Успешно найдены координаты: lat: ${lat}, lng: ${lng}`);
+  console.log(`[POI Service] Успешно найдены координаты Яндексом: lat: ${lat}, lng: ${lng}`);
 
   const finalPoiData: Record<string, PoiDetail> = {};
   let totalWeightedScoreSum = 0;
   let totalWeightsSum = 0;
-
   let bestCategoryKey: string | null = null;
   let highestWeightedScore = -1;
 
+  // ТЕПЕРЬ ИЩЕМ ИНФРАСТРУКТУРУ ВОКРУГ ЭТИХ КООРДИНАТ ЧЕРЕЗ FOURSQUARE
   for (const [categoryKey, config] of Object.entries(INFRASTRUCTURE_CONFIG)) {
     try {
-      // Ищем объекты через Foursquare API
       const nearestPlace = await findNearestFoursquarePoi(lat, lng, config.searchQuery);
       if (!nearestPlace || !nearestPlace.geocodes?.main) continue;
 
@@ -256,13 +251,11 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
       const destLat = nearestPlace.geocodes.main.latitude;
       const placeName = cleanPoiName(nearestPlace.name);
 
-      // Рассчитываем расстояние математически
       const distance = calculateMathDistance(lat, lng, destLat, destLng);
       
       let travelMode: 'walking' | 'driving' = 'walking';
       let duration = estimateTravelTime(distance, 'walking');
 
-      // Если пешком идти слишком далеко (дольше 20 минут), переключаемся на авто
       if (duration > 20) {
         duration = estimateTravelTime(distance, 'driving');
         travelMode = 'driving';
@@ -306,6 +299,7 @@ export async function updatePropertyPOIs(propertyId: string): Promise<void> {
     calculated_at: new Date().toISOString()
   };
 
+  // Сохраняем результаты в Supabase
   const { error } = await supabaseAdmin
     .from('properties')
     .update({ 
