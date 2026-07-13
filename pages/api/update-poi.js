@@ -21,17 +21,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No record ID found in payload' });
     }
 
-    // ЗАЩИТА ОТ БЕСКОНЕЧНОЙ РЕКУРСИИ:
-    // Сравниваем старый адрес с новым. Если они совпадают, прерываем выполнение.
+    // УМНАЯ ЗАЩИТА ОТ БЕСКОНЕЧНОЙ РЕКУРСИИ:
+    // Блокируем запуск только тогда, когда обновление в базе произошло ИЗ-ЗА записи новых POI.
+    // Если ты вручную меняешь координаты, адрес или описание — скрипт сработает!
     if (type === 'UPDATE' && old_record) {
       const newAddress = record?.address || record?.adress;
       const oldAddress = old_record?.address || old_record?.adress;
       const newCity = record?.city;
       const oldCity = old_record?.city;
 
-      if (newAddress === oldAddress && newCity === oldCity) {
-        console.log(`[Webhook] Адрес не менялся (ID: ${id}). Пропускаем расчет.`);
-        return res.status(200).json({ message: 'Address did not change. Skipped update.' });
+      // Сравниваем старый JSON POI с новым
+      const oldPoi = JSON.stringify(old_record?.poi_data);
+      const newPoi = JSON.stringify(record?.poi_data);
+      const poiChanged = oldPoi !== newPoi;
+
+      // Предотвращаем бесконечный цикл только если адрес тот же, но POI обновились
+      if (newAddress === oldAddress && newCity === oldCity && poiChanged) {
+        console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (POI уже сохранены).`);
+        return res.status(200).json({ message: 'Prevented infinite loop. Skipped update.' });
       }
     }
 
