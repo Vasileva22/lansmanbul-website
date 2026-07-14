@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cityPoiPriorities } from '../config/poi-priorities';
 
+// Инициализируем Supabase внутри сервиса
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -8,90 +9,166 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
-function categorizePoi(categories) {
-  const name = (categories?.[0]?.name || '').toLowerCase();
-  const id = categories?.[0]?.id;
+/**
+ * Детальная категоризация объектов под транспортную и социальную инфраструктуру Турции
+ */
+function categorizePoi(categories, name) {
+  const catName = (categories?.[0]?.name || '').toLowerCase();
+  const catId = categories?.[0]?.id;
+  const lowerName = (name || '').toLowerCase();
 
+  // ==================== ГРУППА А: ТРАНСПОРТ ====================
+  
+  // Метро и Метробус
   if (
-    name.includes('metro') || 
-    name.includes('subway') || 
-    name.includes('train') || 
-    name.includes('tram') ||
-    name.includes('transit') ||
-    id === 19014 || id === 19013
+    lowerName.includes('metro') || 
+    catName.includes('subway') || 
+    catName.includes('metro station') ||
+    catId === 19014
   ) {
+    if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
+      return { group: 'transport', type: 'metrobus' };
+    }
     return { group: 'transport', type: 'metro' };
   }
 
+  if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
+    return { group: 'transport', type: 'metrobus' };
+  }
+
+  // Мармарай
+  if (lowerName.includes('marmaray')) {
+    return { group: 'transport', type: 'marmaray' };
+  }
+
+  // Трамваи
   if (
-    name.includes('beach') || 
-    name.includes('sea') || 
-    name.includes('plaj') || 
-    id === 16003
+    lowerName.includes('tramway') || 
+    lowerName.includes('tramvay') || 
+    catName.includes('tram') ||
+    catId === 19016
   ) {
-    return { group: 'leisure', type: 'beach' };
+    return { group: 'transport', type: 'tram' };
   }
 
+  // Паромы и причалы
   if (
-    name.includes('park') || 
-    name.includes('garden') || 
-    name.includes('forest') || 
-    name.includes('lake') || 
-    name.includes('marina') || 
-    name.includes('playground')
+    lowerName.includes('iskele') || 
+    lowerName.includes('vapur') || 
+    lowerName.includes('ferry') || 
+    catName.includes('ferry') || 
+    catName.includes('pier') ||
+    catId === 19011 || catId === 19012
   ) {
-    return { group: 'leisure', type: 'leisure' };
+    return { group: 'transport', type: 'ferry' };
   }
 
+  // Автобусные остановки
   if (
-    name.includes('hospital') || 
-    name.includes('clinic') || 
-    name.includes('doctor') || 
-    name.includes('medical') || 
-    name.includes('health') || 
-    name.includes('hastane')
+    lowerName.includes('otobüs') || 
+    lowerName.includes('durak') || 
+    lowerName.includes('durağı') || 
+    lowerName.includes('bus stop') ||
+    catName.includes('bus stop') ||
+    catId === 19005
   ) {
-    return { group: 'infrastructure', type: 'hospital' };
+    if (lowerName.includes('minibüs') || lowerName.includes('dolmuş') || lowerName.includes('dolmus')) {
+      return { group: 'transport', type: 'dolmus' };
+    }
+    return { group: 'transport', type: 'bus' };
   }
 
+  // Долмуши / Маршрутки
   if (
-    name.includes('university') || 
-    name.includes('college') || 
-    name.includes('kampüs') ||
-    name.includes('üniversite')
+    lowerName.includes('minibüs') || 
+    lowerName.includes('dolmuş') || 
+    lowerName.includes('dolmus')
   ) {
-    return { group: 'infrastructure', type: 'university' };
+    return { group: 'transport', type: 'dolmus' };
   }
 
+  // ==================== ГРУППА А: ПЛЯЖИ И МОРЕ ====================
   if (
-    name.includes('school') || 
-    name.includes('high school') || 
-    name.includes('okul') ||
-    name.includes('lise')
+    lowerName.includes('beach') || 
+    lowerName.includes('sea') || 
+    lowerName.includes('plaj') || 
+    lowerName.includes('sahil') ||
+    catName.includes('beach') ||
+    catId === 16003
   ) {
-    return { group: 'infrastructure', type: 'school' };
+    return { group: 'leisure_primary', type: 'beach' };
   }
 
+  // ==================== ГРУППА А: СОЦИАЛЬНАЯ СФЕРА ====================
+  // Больницы
   if (
-    name.includes('market') || 
-    name.includes('grocery') || 
-    name.includes('supermarket') || 
-    name.includes('mall') || 
-    name.includes('pharmacy') || 
-    name.includes('bank') ||
-    name.includes('store') ||
-    name.includes('shop')
+    lowerName.includes('hospital') || 
+    lowerName.includes('clinic') || 
+    lowerName.includes('doctor') || 
+    lowerName.includes('medical') || 
+    lowerName.includes('hastane') ||
+    lowerName.includes('tıp merkezi') ||
+    catName.includes('hospital') ||
+    catId === 15014
   ) {
-    return { group: 'infrastructure', type: 'infrastructure' };
+    return { group: 'social', type: 'hospital' };
   }
 
-  if (name.includes('office') || name.includes('corporate') || name.includes('business')) {
-    return { group: 'business', type: 'infrastructure' };
+  // Университеты
+  if (
+    lowerName.includes('university') || 
+    lowerName.includes('college') || 
+    lowerName.includes('kampüs') ||
+    lowerName.includes('üniversite') ||
+    catName.includes('university') ||
+    catId === 12013
+  ) {
+    return { group: 'social', type: 'university' };
   }
 
-  return { group: 'infrastructure', type: 'infrastructure' };
+  // Школы
+  if (
+    lowerName.includes('school') || 
+    lowerName.includes('high school') || 
+    lowerName.includes('okul') ||
+    lowerName.includes('lise') ||
+    catName.includes('school') ||
+    catId === 12009
+  ) {
+    return { group: 'social', type: 'school' };
+  }
+
+  // ==================== ГРУППА Б: ВТОРОСТЕПЕННЫЕ ОБЪЕКТЫ ====================
+  // Парки
+  if (
+    lowerName.includes('park') || 
+    lowerName.includes('garden') || 
+    lowerName.includes('forest') || 
+    lowerName.includes('lake') || 
+    catName.includes('park') ||
+    catId === 16032
+  ) {
+    return { group: 'secondary', type: 'park' };
+  }
+
+  // Торговые центры
+  if (
+    lowerName.includes('avm') || 
+    lowerName.includes('mall') || 
+    lowerName.includes('shopping center') || 
+    catName.includes('shopping mall') ||
+    catId === 17114
+  ) {
+    return { group: 'secondary', type: 'mall' };
+  }
+
+  // Кафе, кондитерские, продуктовые магазины, аптеки
+  return { group: 'secondary', type: 'infrastructure' };
 }
 
+/**
+ * 1. Запрос координат у Яндекса через официальный домен .ru
+ */
 async function getCoordinatesFromAddress(addressText) {
   console.log(`[Geocoder] Запрос координат для адреса: "${addressText}"`);
 
@@ -138,6 +215,9 @@ async function getCoordinatesFromAddress(addressText) {
   }
 }
 
+/**
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с версией 2025-06-17)
+ */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
 
@@ -180,6 +260,9 @@ async function fetchFoursquarePOIs(lat, lng) {
   }
 }
 
+/**
+ * 3. Главная функция обновления объекта в базе данных
+ */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
@@ -220,9 +303,6 @@ export async function updatePropertyPOIs(propertyId) {
       return false;
     }
 
-    // ВАЖНО: Мы больше не делаем здесь промежуточный .update() координат, 
-    // чтобы не провоцировать ложные срабатывания вебхуков базы данных!
-
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
     const cityKey = (property.city || 'istanbul').toLowerCase().trim();
@@ -231,7 +311,7 @@ export async function updatePropertyPOIs(propertyId) {
     const bestPoisByType = {};
 
     for (const item of rawPois) {
-      const { group, type } = categorizePoi(item.categories);
+      const { group, type } = categorizePoi(item.categories, item.name);
       const distance = item.distance || 9999;
 
       if (!bestPoisByType[type] || distance < bestPoisByType[type].distance) {
@@ -242,29 +322,55 @@ export async function updatePropertyPOIs(propertyId) {
     const finalPoisMap = {};
 
     for (const [type, data] of Object.entries(bestPoisByType)) {
-      const walkMinutes = Math.max(1, Math.round(data.distance / 80));
-      
+      let travel_mode = 'walking';
+      let travel_time_minutes = '';
       let rawScore = 0;
-      if (data.distance <= 200) rawScore = 10;
-      else if (data.distance <= 500) rawScore = 8;
-      else if (data.distance <= 1000) rawScore = 6;
-      else if (data.distance <= 1500) rawScore = 4;
-      else rawScore = 2;
 
-      const priorityIndex = config.priorities.indexOf(data.group);
+      const D = data.distance;
+
+      // Правило 25 минут (2000 метров):
+      if (D <= 2000) {
+        // Пешком
+        travel_mode = 'walking';
+        const walkMinutes = Math.max(1, Math.round(D / 80));
+        travel_time_minutes = `${walkMinutes} мин`;
+        
+        if (D <= 400) rawScore = 10;
+        else if (D <= 800) rawScore = 8;
+        else if (D <= 1200) rawScore = 6;
+        else rawScore = 4;
+      } else {
+        // На машине (driving)
+        travel_mode = 'driving';
+        const driveMinutes = Math.max(1, Math.round(D / 330));
+        travel_time_minutes = `${driveMinutes} мин на авто`;
+        
+        if (D <= 3300) rawScore = 5;
+        else if (D <= 6600) rawScore = 3;
+        else rawScore = 1;
+      }
+
+      // Вычисляем веса приоритетов
       let weight = 1.0;
-      if (priorityIndex === 0) weight = 1.5;
-      else if (priorityIndex === 1) weight = 1.2;
-      else if (priorityIndex === 2) weight = 1.0;
-      else if (priorityIndex === 3) weight = 0.8;
+      if (data.group === 'transport') {
+        weight = (cityKey === 'antalya' || cityKey === 'mugla') ? 1.2 : 1.8;
+      } else if (data.group === 'leisure_primary') {
+        weight = (cityKey === 'antalya' || cityKey === 'mugla') ? 1.8 : 1.2;
+      } else if (data.group === 'social') {
+        weight = 1.3;
+      } else if (data.group === 'secondary') {
+        // Жесткое понижение веса для Группы Б (ТЦ, кафе, парки), 
+        // чтобы они НИКОГДА не перекрывали транспорт или пляж, если те найдены
+        weight = 0.1;
+      }
 
       const weightedScore = parseFloat((rawScore * weight).toFixed(2));
 
       finalPoisMap[type] = {
         name: data.item.name,
         distance: data.distance,
-        travel_time_minutes: `${walkMinutes} мин`,
-        travel_mode: 'walking',
+        travel_time_minutes,
+        travel_mode,
         raw_score: rawScore,
         weighted_score: weightedScore
       };
@@ -285,8 +391,6 @@ export async function updatePropertyPOIs(propertyId) {
       }
     };
 
-    // ОДИН ЕДИНСТВЕННЫЙ ЗАПРОС К БД: 
-    // Записываем и координаты (latitude, longitude) и JSON (poi_data) одновременно!
     console.log(`[DB Update] Сохраняем координаты и poi_data в базу ОДНИМ запросом для ID: ${propertyId}`);
     const { error: updateError } = await supabase
       .from('properties')
