@@ -229,7 +229,8 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (увеличено количество результатов до 50)
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare
+ * Изменено: добавлен ID категории 15000 (Медицина), радиус поиска уменьшен до 1000 метров.
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -245,9 +246,11 @@ async function fetchFoursquarePOIs(lat, lng) {
     ? rawFoursquareKey 
     : `Bearer ${rawFoursquareKey}`;
 
-  const categories = '13000,17000,19000,12000,16000'; 
-  // Лимит увеличен с 30 до 50, чтобы в выборку гарантированно попадали транспортные узлы
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=50`;
+  // Добавлена категория 15000 (медицинские учреждения)
+  const categories = '13000,15000,17000,19000,12000,16000'; 
+  
+  // Радиус уменьшен с 1500м до 1000м для точности пешеходной доступности
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1000&categories=${categories}&limit=50`;
 
   try {
     const res = await fetch(url, {
@@ -393,7 +396,7 @@ export async function updatePropertyPOIs(propertyId) {
     // --- ОПРЕДЕЛЕНИЕ ХАРАКТЕРНОГО ОБЪЕКТА (FEATURED POI) ДЛЯ ОТОБРАЖЕНИЯ НА КАРТОЧКЕ ---
     const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(cityKey);
     
-    // Задаем строгий порядок выбора единственного главного POI
+    // Изменено: Для некурортных городов из списка исключены все категории, кроме транспортных
     const priorityOrder = isResortCity
       ? [
           'beach',
@@ -404,10 +407,7 @@ export async function updatePropertyPOIs(propertyId) {
         ]
       : [
           'metro', 'metrobus', 'marmaray', 'tram', 'ferry',
-          'bus', 'dolmus',
-          'hospital', 'university', 'school',
-          'beach',
-          'park', 'mall', 'infrastructure'
+          'bus', 'dolmus'
         ];
 
     let featuredPoi = null;
