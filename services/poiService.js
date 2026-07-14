@@ -152,7 +152,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с исправленным заголовком стабильной версии)
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с версией 2025-06-17)
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -176,7 +176,7 @@ async function fetchFoursquarePOIs(lat, lng) {
     const res = await fetch(url, {
       headers: {
         'Authorization': authHeaderValue,
-        'X-Places-Api-Version': '2023-10-01', // СТАБИЛЬНАЯ РАБОЧАЯ ВЕРСИЯ API ДЛЯ ВСЕХ ТАРИФОВ!
+        'X-Places-Api-Version': '2025-06-17', // ПРАВИЛЬНАЯ ВЕРСИЯ ДЛЯ НОВОГО СЕРВЕРА!
         'Accept': 'application/json'
       }
     });
