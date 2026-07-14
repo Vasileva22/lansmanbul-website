@@ -10,6 +10,19 @@ const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 /**
+ * Вспомогательная функция для надежной нормализации названий городов (с учетом турецкой специфики)
+ */
+function normalizeCity(city) {
+  if (!city) return 'istanbul';
+  return city
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Удаляет диакритические знаки (например, g вместо ğ)
+    .replace(/ı/g, 'i');            // Корректно заменяет турецкую безточечную ı на i
+}
+
+/**
  * Детальная категоризация объектов под транспортную и социальную инфраструктуру Турции
  */
 function categorizePoi(categories, name) {
@@ -216,7 +229,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с версией 2025-06-17)
+ * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (увеличено количество результатов до 50)
  */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
@@ -233,7 +246,8 @@ async function fetchFoursquarePOIs(lat, lng) {
     : `Bearer ${rawFoursquareKey}`;
 
   const categories = '13000,17000,19000,12000,16000'; 
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=30`;
+  // Лимит увеличен с 30 до 50, чтобы в выборку гарантированно попадали транспортные узлы
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=1500&categories=${categories}&limit=50`;
 
   try {
     const res = await fetch(url, {
@@ -305,7 +319,7 @@ export async function updatePropertyPOIs(propertyId) {
 
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
-    const cityKey = (property.city || 'istanbul').toLowerCase().trim();
+    const cityKey = normalizeCity(property.city);
     const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
 
     const bestPoisByType = {};
@@ -350,18 +364,18 @@ export async function updatePropertyPOIs(propertyId) {
         else rawScore = 1;
       }
 
-      // Вычисляем веса приоритетов
+      // Вычисляем веса приоритетов на основе внешнего файла настроек или дефолтных значений
       let weight = 1.0;
+      const isResort = (cityKey === 'antalya' || cityKey === 'mugla');
+
       if (data.group === 'transport') {
-        weight = (cityKey === 'antalya' || cityKey === 'mugla') ? 1.2 : 1.8;
+        weight = config?.transport ?? (isResort ? 1.2 : 2.5); // Для некурортных городов даем высокий приоритет
       } else if (data.group === 'leisure_primary') {
-        weight = (cityKey === 'antalya' || cityKey === 'mugla') ? 1.8 : 1.2;
+        weight = config?.leisure_primary ?? (isResort ? 2.5 : 1.0); // Для курортов в приоритете пляж
       } else if (data.group === 'social') {
-        weight = 1.3;
+        weight = config?.social ?? 1.3;
       } else if (data.group === 'secondary') {
-        // Жесткое понижение веса для Группы Б (ТЦ, кафе, парки), 
-        // чтобы они НИКОГДА не перекрывали транспорт или пляж, если те найдены
-        weight = 0.1;
+        weight = config?.secondary ?? 0.1; // Существенное понижение веса для коммерческих объектов
       }
 
       const weightedScore = parseFloat((rawScore * weight).toFixed(2));
@@ -376,12 +390,49 @@ export async function updatePropertyPOIs(propertyId) {
       };
     }
 
+    // --- ОПРЕДЕЛЕНИЕ ХАРАКТЕРНОГО ОБЪЕКТА (FEATURED POI) ДЛЯ ОТОБРАЖЕНИЯ НА КАРТОЧКЕ ---
+    const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(cityKey);
+    
+    // Задаем строгий порядок выбора единственного главного POI
+    const priorityOrder = isResortCity
+      ? [
+          'beach',
+          'metro', 'metrobus', 'marmaray', 'tram', 'ferry',
+          'bus', 'dolmus',
+          'hospital', 'university', 'school',
+          'park', 'mall', 'infrastructure'
+        ]
+      : [
+          'metro', 'metrobus', 'marmaray', 'tram', 'ferry',
+          'bus', 'dolmus',
+          'hospital', 'university', 'school',
+          'beach',
+          'park', 'mall', 'infrastructure'
+        ];
+
+    let featuredPoi = null;
+    for (const type of priorityOrder) {
+      if (finalPoisMap[type]) {
+        featuredPoi = {
+          type,
+          name: finalPoisMap[type].name,
+          distance: finalPoisMap[type].distance,
+          travel_time_minutes: finalPoisMap[type].travel_time_minutes,
+          travel_mode: finalPoisMap[type].travel_mode,
+          group: bestPoisByType[type].group,
+          weighted_score: finalPoisMap[type].weighted_score
+        };
+        break; // Прерываем цикл, как только нашли самый подходящий по иерархии объект
+      }
+    }
+
     const foundTypesCount = Object.keys(finalPoisMap).length;
     let score = Math.min(10, Math.floor(foundTypesCount * 1.5));
     if (score === 0 && foundTypesCount > 0) score = 1;
 
     const finalPoiData = {
       pois: finalPoisMap,
+      featured_poi: featuredPoi, // Записываем выбранный приоритетный объект
       calculated_at: new Date().toISOString(),
       livability_score: score,
       debug_info: {
