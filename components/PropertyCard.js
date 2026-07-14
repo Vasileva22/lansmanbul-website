@@ -17,7 +17,7 @@ function getMetroColor(stationName) {
   return '#E11D48'; 
 }
 
-// Поиск лучшего POI на основе взвешенного скоринга бэкенда
+// ИСПРАВЛЕНО: Чтение приоритетного объекта с бэкенда с умным фолбеком для старой базы
 function getBestPoiBadge(property) {
   let poiPayload = property?.poi_data;
   if (!poiPayload) return null;
@@ -31,15 +31,42 @@ function getBestPoiBadge(property) {
     }
   }
 
+  // Сценарий 1 (Основной): Берем строго готовый featured_poi, рассчитанный на бэкенде
+  if (poiPayload.featured_poi && poiPayload.featured_poi.name) {
+    return {
+      name: poiPayload.featured_poi.name,
+      time: poiPayload.featured_poi.travel_time_minutes,
+      mode: poiPayload.featured_poi.travel_mode,
+      type: poiPayload.featured_poi.type
+    };
+  }
+
+  // Сценарий 2 (Обратная совместимость): Если бэкенд для этого объекта еще не перезапускался,
+  // фильтруем старый pois прямо на клиенте, убирая все школы, парки, магазины.
   const pois = poiPayload.pois || {};
-  if (Array.isArray(pois)) return null;
+  if (Array.isArray(pois) || Object.keys(pois).length === 0) return null;
 
-  const allPois = Object.entries(pois).filter(([_, poi]) => poi && poi.raw_score > 0);
+  const city = (property?.city || 'istanbul').toLowerCase().trim();
+  const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(city);
 
-  if (allPois.length === 0) return null;
+  // Оставляем строго только транспорт для некурортных городов, и транспорт + пляжи для курортных
+  const allowedPois = Object.entries(pois).filter(([type, poi]) => {
+    if (!poi || poi.raw_score <= 0) return false;
+
+    const transportTypes = ['metro', 'metrobus', 'marmaray', 'tram', 'ferry', 'bus', 'dolmus'];
+    
+    if (isResortCity) {
+      return type.toLowerCase() === 'beach' || transportTypes.includes(type.toLowerCase());
+    } else {
+      return transportTypes.includes(type.toLowerCase());
+    }
+  });
+
+  if (allowedPois.length === 0) return null;
 
   try {
-    const best = allPois.reduce((prev, curr) => 
+    // Выбираем лучший по весу из оставшихся объектов (чтобы временно спасти отображение старой базы)
+    const best = allowedPois.reduce((prev, curr) => 
       prev[1].weighted_score > curr[1].weighted_score ? prev : curr
     );
 
@@ -47,11 +74,12 @@ function getBestPoiBadge(property) {
       name: best[1].name,
       time: best[1].travel_time_minutes,
       mode: best[1].travel_mode,
-      type: best[0] // Вернет 'metro', 'marmaray', 'bus', 'beach', 'hospital' и т.д.
+      type: best[0]
     };
   } catch (e) {
-    console.error("Ошибка getBestPoiBadge:", e);
+    console.error("Ошибка в getBestPoiBadge (fallback):", e);
   }
+
   return null;
 }
 
@@ -150,37 +178,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           <svg style={{ ...iconStyle, color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <rect x="4" y="3" width="16" height="15" rx="2" />
             <path d="M4 11h16M12 3v15M8 21l-2 3M16 21l2 3" />
-          </svg>
-        )
-      case 'hospital':
-        return (
-          // Иконка медицинского креста / пульса (Красный)
-          <svg style={{ ...iconStyle, color: '#E11D48' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-          </svg>
-        )
-      case 'university':
-      case 'school':
-        return (
-          // Иконка образования (Фиолетовый)
-          <svg style={{ ...iconStyle, color: '#6366F1' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-          </svg>
-        )
-      case 'park':
-        return (
-          // Зеленые зоны / парки (Зеленый)
-          <svg style={{ ...iconStyle, color: '#10B981' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 20V10M18 10a6 6 0 0 0-12 0" />
-            <path d="M12 4a4 4 0 0 0-4 4v2h8V8a4 4 0 0 0-4-4z" />
-          </svg>
-        )
-      case 'mall':
-        return (
-          // Торговые центры / AVM (Оранжевый)
-          <svg style={{ ...iconStyle, color: '#F59E0B' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" />
           </svg>
         )
       case 'infrastructure':
