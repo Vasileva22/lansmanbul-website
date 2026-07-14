@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { cityPoiPriorities } from '../config/poi-priorities';
 
-// Инициализируем Supabase внутри сервиса
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -9,14 +8,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
-/**
- * Категоризация объектов под требования скоринга и интерфейса PropertyCard
- */
 function categorizePoi(categories) {
   const name = (categories?.[0]?.name || '').toLowerCase();
   const id = categories?.[0]?.id;
 
-  // 1. Транспорт (metro, metrobus, train, tram)
   if (
     name.includes('metro') || 
     name.includes('subway') || 
@@ -28,7 +23,6 @@ function categorizePoi(categories) {
     return { group: 'transport', type: 'metro' };
   }
 
-  // 2. Пляжи и досуг (beach, park)
   if (
     name.includes('beach') || 
     name.includes('sea') || 
@@ -49,7 +43,6 @@ function categorizePoi(categories) {
     return { group: 'leisure', type: 'leisure' };
   }
 
-  // 3. Медицина
   if (
     name.includes('hospital') || 
     name.includes('clinic') || 
@@ -61,7 +54,6 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'hospital' };
   }
 
-  // 4. Образование
   if (
     name.includes('university') || 
     name.includes('college') || 
@@ -80,7 +72,6 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'school' };
   }
 
-  // 5. Покупки, аптеки, банки
   if (
     name.includes('market') || 
     name.includes('grocery') || 
@@ -94,7 +85,6 @@ function categorizePoi(categories) {
     return { group: 'infrastructure', type: 'infrastructure' };
   }
 
-  // 6. Офисы
   if (name.includes('office') || name.includes('corporate') || name.includes('business')) {
     return { group: 'business', type: 'infrastructure' };
   }
@@ -102,9 +92,6 @@ function categorizePoi(categories) {
   return { group: 'infrastructure', type: 'infrastructure' };
 }
 
-/**
- * 1. Запрос координат у Яндекса через официальный домен .ru
- */
 async function getCoordinatesFromAddress(addressText) {
   console.log(`[Geocoder] Запрос координат для адреса: "${addressText}"`);
 
@@ -151,9 +138,6 @@ async function getCoordinatesFromAddress(addressText) {
   }
 }
 
-/**
- * 2. Сбор инфраструктуры через новый эндпоинт Foursquare (с версией 2025-06-17)
- */
 async function fetchFoursquarePOIs(lat, lng) {
   console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
 
@@ -164,7 +148,6 @@ async function fetchFoursquarePOIs(lat, lng) {
     return [];
   }
 
-  // Настройка авторизации: Service API Key типа 'TSX...' строго требует Bearer-формат
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') 
     ? rawFoursquareKey 
     : `Bearer ${rawFoursquareKey}`;
@@ -176,7 +159,7 @@ async function fetchFoursquarePOIs(lat, lng) {
     const res = await fetch(url, {
       headers: {
         'Authorization': authHeaderValue,
-        'X-Places-Api-Version': '2025-06-17', // ПРАВИЛЬНАЯ ВЕРСИЯ ДЛЯ НОВОГО СЕРВЕРА!
+        'X-Places-Api-Version': '2025-06-17',
         'Accept': 'application/json'
       }
     });
@@ -197,9 +180,6 @@ async function fetchFoursquarePOIs(lat, lng) {
   }
 }
 
-/**
- * 3. Главная функция обновления объекта в базе данных
- */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
@@ -240,11 +220,8 @@ export async function updatePropertyPOIs(propertyId) {
       return false;
     }
 
-    // Записываем координаты в таблицу
-    await supabase.from('properties').update({
-      latitude: coordinates.lat,
-      longitude: coordinates.lng
-    }).eq('id', propertyId);
+    // ВАЖНО: Мы больше не делаем здесь промежуточный .update() координат, 
+    // чтобы не провоцировать ложные срабатывания вебхуков базы данных!
 
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng);
 
@@ -308,16 +285,20 @@ export async function updatePropertyPOIs(propertyId) {
       }
     };
 
-    console.log(`[DB Update] Записываем структурированный JSON poi_data в базу для ID: ${propertyId}`);
+    // ОДИН ЕДИНСТВЕННЫЙ ЗАПРОС К БД: 
+    // Записываем и координаты (latitude, longitude) и JSON (poi_data) одновременно!
+    console.log(`[DB Update] Сохраняем координаты и poi_data в базу ОДНИМ запросом для ID: ${propertyId}`);
     const { error: updateError } = await supabase
       .from('properties')
       .update({ 
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
         poi_data: finalPoiData
       })
       .eq('id', propertyId);
 
     if (updateError) {
-      console.error(`[DB Error] Не удалось сохранить poi_data для ID ${propertyId}:`, updateError.message);
+      console.error(`[DB Error] Не удалось сохранить данные для ID ${propertyId}:`, updateError.message);
       return false;
     }
 
