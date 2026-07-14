@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-// Функция распределения цветов по веткам метро Турции (M1-M11)
+// Распределение цветов по веткам метро Турции (M1-M11)
 function getMetroColor(stationName) {
-  if (!stationName) return '#E11D48'; // Дефолтный красный
+  if (!stationName) return '#E11D48'; 
   const name = stationName.toLowerCase().trim();
   
   if (name.includes('m1')) return '#E11D48'; 
@@ -17,12 +17,11 @@ function getMetroColor(stationName) {
   return '#E11D48'; 
 }
 
-// Поиск лучшего POI на основе рассчитанных весов из нового скоринга бэкенда
+// Поиск лучшего POI на основе взвешенного скоринга бэкенда
 function getBestPoiBadge(property) {
   let poiPayload = property?.poi_data;
   if (!poiPayload) return null;
 
-  // Если колонка пришла в виде строки (текста), безопасно преобразуем её в объект
   if (typeof poiPayload === 'string') {
     try {
       poiPayload = JSON.parse(poiPayload);
@@ -32,14 +31,14 @@ function getBestPoiBadge(property) {
     }
   }
 
-  // В новой структуре все объекты лежат внутри вложенного объекта `pois`
   const pois = poiPayload.pois || {};
+  if (Array.isArray(pois)) return null;
+
   const allPois = Object.entries(pois).filter(([_, poi]) => poi && poi.raw_score > 0);
 
   if (allPois.length === 0) return null;
 
   try {
-    // Находим объект, который получил наивысшую взвешенную оценку (weighted_score)
     const best = allPois.reduce((prev, curr) => 
       prev[1].weighted_score > curr[1].weighted_score ? prev : curr
     );
@@ -48,10 +47,10 @@ function getBestPoiBadge(property) {
       name: best[1].name,
       time: best[1].travel_time_minutes,
       mode: best[1].travel_mode,
-      type: best[0] // Вернет 'metro', 'beach' и т.д.
+      type: best[0] // Вернет 'metro', 'marmaray', 'bus', 'beach', 'hospital' и т.д.
     };
   } catch (e) {
-    console.error(e);
+    console.error("Ошибка getBestPoiBadge:", e);
   }
   return null;
 }
@@ -68,7 +67,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
   const pStatus = property?.status || property?.["konutcesit"] || '';
   const pAddress = property?.address || property?.adress || '';
 
-  // Получаем лучший POI на основе нового взвешенного скоринга
   const poiBadge = getBestPoiBadge(property);
 
   const imagesList = property?.property_images || [];
@@ -106,7 +104,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
   }
 
-  // Форматирование цены неразрывными пробелами
   const formatPriceVal = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
@@ -114,23 +111,83 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
     return Number(numOnly).toLocaleString('tr-TR').replace(/\./g, '\u00A0') + " TL";
   }
 
+  // Дизайн-система SVG-иконок для турецкой инфраструктуры
   const renderProximityIcon = (type) => {
+    const iconStyle = { width: '15px', height: '15px', flexShrink: 0 };
+    
     switch (type?.toLowerCase()) {
       case 'beach':
-      case 'leisure':
         return (
-          <svg style={{ width: '15px', height: '15px', color: '#0284C7', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          // Иконка пляжа / волн (Голубой)
+          <svg style={{ ...iconStyle, color: '#06B6D4' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
             <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
           </svg>
         )
+      case 'ferry':
+        return (
+          // Иконка водного транспорта / парома (Голубой)
+          <svg style={{ ...iconStyle, color: '#0EA5E9' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M2 17h20M2 13h20M5 13V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5" />
+            <path d="M12 2v4" />
+          </svg>
+        )
+      case 'bus':
+      case 'dolmus':
+        return (
+          // Иконка автобусной остановки / наземного транспорта (Индиго)
+          <svg style={{ ...iconStyle, color: '#4F46E5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <circle cx="8" cy="18" r="1.5" />
+            <circle cx="16" cy="18" r="1.5" />
+            <path d="M6 8h12M6 13h12" />
+          </svg>
+        )
+      case 'tram':
+      case 'marmaray':
+        return (
+          // Иконка рельсового скоростного транспорта (Синий)
+          <svg style={{ ...iconStyle, color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <rect x="4" y="3" width="16" height="15" rx="2" />
+            <path d="M4 11h16M12 3v15M8 21l-2 3M16 21l2 3" />
+          </svg>
+        )
       case 'hospital':
-      case 'school':
+        return (
+          // Иконка медицинского креста / пульса (Красный)
+          <svg style={{ ...iconStyle, color: '#E11D48' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+        )
       case 'university':
+      case 'school':
+        return (
+          // Иконка образования (Фиолетовый)
+          <svg style={{ ...iconStyle, color: '#6366F1' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+          </svg>
+        )
+      case 'park':
+        return (
+          // Зеленые зоны / парки (Зеленый)
+          <svg style={{ ...iconStyle, color: '#10B981' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M12 20V10M18 10a6 6 0 0 0-12 0" />
+            <path d="M12 4a4 4 0 0 0-4 4v2h8V8a4 4 0 0 0-4-4z" />
+          </svg>
+        )
+      case 'mall':
+        return (
+          // Торговые центры / AVM (Оранжевый)
+          <svg style={{ ...iconStyle, color: '#F59E0B' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        )
       case 'infrastructure':
       default:
         return (
-          <svg style={{ width: '15px', height: '15px', color: '#64748B', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          // Стандартная геолокация для прочих объектов
+          <svg style={{ ...iconStyle, color: '#64748B' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
@@ -181,12 +238,10 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
       </div>
 
       <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
-        {/* Цена крупным шрифтом Mulish без точек */}
         <div className="cian-price" title={formatPriceVal(pPrice)}>
           {formatPriceVal(pPrice)}
         </div>
 
-        {/* Характеристики (15px, вес 500) */}
         <div className="cian-specs">
           {[
             pRooms ? `${pRooms}` : null,
@@ -195,7 +250,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
           ].filter(Boolean).join(' · ')}
         </div>
         
-        {/* Инфраструктура со временем пути вплотную к названию */}
         <div className="cian-location">
           {poiBadge ? (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
@@ -215,7 +269,7 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
                   fontFamily: 'var(--font-main)',
                   flexShrink: 0
                 }}>
-                  M
+                  {poiBadge.type === 'metrobus' ? 'MB' : 'M'}
                 </span>
               ) : (
                 renderProximityIcon(poiBadge.type)
@@ -232,7 +286,6 @@ export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLi
                 {poiBadge.name}
               </span>
 
-              {/* Способ пути и минуты сразу после названия */}
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
