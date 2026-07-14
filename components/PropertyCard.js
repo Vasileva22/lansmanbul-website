@@ -1,326 +1,312 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { createClient } from '@supabase/supabase-js';
 
-// Распределение цветов по веткам метро Турции (M1-M11)
-function getMetroColor(stationName) {
-  if (!stationName) return '#E11D48'; 
-  const name = stationName.toLowerCase().trim();
-  
-  if (name.includes('m1')) return '#E11D48'; 
-  if (name.includes('m2') || name.includes('taksim') || name.includes('levent') || name.includes('şişli')) return '#10B981'; 
-  if (name.includes('m3')) return '#0EA5E9'; 
-  if (name.includes('m4') || name.includes('kadıköy') || name.includes('kartal')) return '#EC4899'; 
-  if (name.includes('m5') || name.includes('üsküdar') || name.includes('altunizade')) return '#8B5CF6'; 
-  if (name.includes('m7') || name.includes('mecidiyeköy')) return '#06B6D4'; 
-  if (name.includes('m8')) return '#6366F1'; 
-  if (name.includes('m11')) return '#D946EF'; 
-  
-  return '#E11D48'; 
+// Инициализируем Supabase внутри сервиса
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
+const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
+
+function normalizeCity(city) {
+  if (!city) return 'istanbul';
+  return city
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i');
 }
 
-// ИСПРАВЛЕНО: Чтение приоритетного объекта с бэкенда с умным фолбеком для старой базы
-function getBestPoiBadge(property) {
-  let poiPayload = property?.poi_data;
-  if (!poiPayload) return null;
+/**
+ * Очищенная категоризация: только пляж и транспортные узлы
+ */
+function categorizePoi(categories, name) {
+  const catName = (categories?.[0]?.name || '').toLowerCase();
+  const catId = categories?.[0]?.id;
+  const lowerName = (name || '').toLowerCase();
 
-  if (typeof poiPayload === 'string') {
-    try {
-      poiPayload = JSON.parse(poiPayload);
-    } catch (e) {
-      console.error("Ошибка чтения poi_data:", e);
-      return null;
-    }
+  // Пляж / Береговая линия
+  if (
+    lowerName.includes('beach') || 
+    lowerName.includes('plaj') || 
+    lowerName.includes('sahil') ||
+    catName.includes('beach') ||
+    catId === 16003
+  ) {
+    return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Сценарий 1 (Основной): Берем строго готовый featured_poi, рассчитанный на бэкенде
-  if (poiPayload.featured_poi && poiPayload.featured_poi.name) {
-    return {
-      name: poiPayload.featured_poi.name,
-      time: poiPayload.featured_poi.travel_time_minutes,
-      mode: poiPayload.featured_poi.travel_mode,
-      type: poiPayload.featured_poi.type
-    };
+  // Метро и Метробус
+  if (
+    lowerName.includes('metro') || 
+    catName.includes('subway') || 
+    catName.includes('metro station') ||
+    catId === 19014
+  ) {
+    if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
+      return { group: 'transport', type: 'metrobus' };
+    }
+    return { group: 'transport', type: 'metro' };
   }
 
-  // Сценарий 2 (Обратная совместимость): Если бэкенд для этого объекта еще не перезапускался,
-  // фильтруем старый pois прямо на клиенте, убирая все школы, парки, магазины.
-  const pois = poiPayload.pois || {};
-  if (Array.isArray(pois) || Object.keys(pois).length === 0) return null;
+  if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
+    return { group: 'transport', type: 'metrobus' };
+  }
 
-  const city = (property?.city || 'istanbul').toLowerCase().trim();
-  const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(city);
+  // Мармарай
+  if (lowerName.includes('marmaray')) {
+    return { group: 'transport', type: 'marmaray' };
+  }
 
-  // Оставляем строго только транспорт для некурортных городов, и транспорт + пляжи для курортных
-  const allowedPois = Object.entries(pois).filter(([type, poi]) => {
-    if (!poi || poi.raw_score <= 0) return false;
+  // Трамваи
+  if (
+    lowerName.includes('tramway') || 
+    lowerName.includes('tramvay') || 
+    catName.includes('tram') ||
+    catId === 19016
+  ) {
+    return { group: 'transport', type: 'tram' };
+  }
 
-    const transportTypes = ['metro', 'metrobus', 'marmaray', 'tram', 'ferry', 'bus', 'dolmus'];
-    
-    if (isResortCity) {
-      return type.toLowerCase() === 'beach' || transportTypes.includes(type.toLowerCase());
-    } else {
-      return transportTypes.includes(type.toLowerCase());
+  // Паромы и причалы
+  if (
+    lowerName.includes('iskele') || 
+    lowerName.includes('vapur') || 
+    lowerName.includes('ferry') || 
+    catName.includes('ferry') || 
+    catName.includes('pier') ||
+    catId === 19011 || catId === 19012
+  ) {
+    return { group: 'transport', type: 'ferry' };
+  }
+
+  // Автобусные остановки и маршрутки
+  if (
+    lowerName.includes('otobüs') || 
+    lowerName.includes('durak') || 
+    lowerName.includes('durağı') || 
+    lowerName.includes('bus stop') ||
+    catName.includes('bus stop') ||
+    catId === 19005
+  ) {
+    if (lowerName.includes('minibüs') || lowerName.includes('dolmuş') || lowerName.includes('dolmus')) {
+      return { group: 'transport', type: 'dolmus' };
     }
-  });
+    return { group: 'transport', type: 'bus' };
+  }
 
-  if (allowedPois.length === 0) return null;
+  if (
+    lowerName.includes('minibüs') || 
+    lowerName.includes('dolmuş') || 
+    lowerName.includes('dolmus')
+  ) {
+    return { group: 'transport', type: 'dolmus' };
+  }
+
+  return { group: 'secondary', type: 'infrastructure' };
+}
+
+/**
+ * 1. Получение координат в Яндексе
+ */
+async function getCoordinatesFromAddress(addressText) {
+  console.log(`[Geocoder Link Check] Отправляем запрос на URL: https://geocode-maps.yandex.ru/1.x/?apikey=...&geocode=${encodeURIComponent(addressText)}`);
+  const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
+  if (!rawKey) return null;
 
   try {
-    // Выбираем лучший по весу из оставшихся объектов (чтобы временно спасти отображение старой базы)
-    const best = allowedPois.reduce((prev, curr) => 
-      prev[1].weighted_score > curr[1].weighted_score ? prev : curr
-    );
+    const cleanKey = encodeURIComponent(rawKey);
+    const cleanGeocode = encodeURIComponent(addressText.trim());
+    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
+    
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return null;
 
-    return {
-      name: best[1].name,
-      time: best[1].travel_time_minutes,
-      mode: best[1].travel_mode,
-      type: best[0]
-    };
-  } catch (e) {
-    console.error("Ошибка в getBestPoiBadge (fallback):", e);
+    const data = await res.json();
+    const pos = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject?.Point?.pos;
+    if (!pos) return null;
+
+    const [lngStr, latStr] = pos.split(' ');
+    return { lat: parseFloat(latStr), lng: parseFloat(lngStr) };
+  } catch (err) {
+    console.error('[Geocoder Exception]:', err.message || err);
+    return null;
   }
-
-  return null;
 }
 
-export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLightbox }) {
-  const [currentIdx, setCurrentImageIndex] = useState(0)
-  const autoplayTimer = useRef(null)
+/**
+ * 2. Очищенный Foursquare-запрос
+ */
+async function fetchFoursquarePOIs(lat, lng, isResort) {
+  console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
+  const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
+  if (!rawFoursquareKey) return [];
 
-  const pId = property?.id || '';
-  const pRooms = property?.rooms || property?.["card odalar"] || '';
-  const pArea = property?.area || property?.["card-area"] || '';
-  const pFloor = property?.kat_sayisi || property?.["Kat Sayısı"] || '';
-  const pPrice = property?.price || property?.["Fiyat"] || '';
-  const pStatus = property?.status || property?.["konutcesit"] || '';
-  const pAddress = property?.address || property?.adress || '';
+  const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  const poiBadge = getBestPoiBadge(property);
+  const categories = isResort ? '19000,16003' : '19000';
+  const radius = isResort ? 5000 : 10000;
 
-  const imagesList = property?.property_images || [];
-  const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
-  const hasPhotos = photoUrls.length > 0;
-  const photos = hasPhotos ? photoUrls : [''];
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categories}&limit=50`;
 
-  const handleMouseEnter = () => {
-    if (photos.length <= 1 || !hasPhotos) return
-    autoplayTimer.current = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % photos.length)
-    }, 2000)
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': authHeaderValue,
+        'X-Places-Api-Version': '2025-06-17',
+        'Accept': 'application/json'
+      }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.results || [];
+  } catch (err) {
+    console.error('[Foursquare Exception]:', err.message || err);
+    return [];
   }
+}
 
-  const handleMouseLeave = () => {
-    if (autoplayTimer.current) {
-      clearInterval(autoplayTimer.current)
-      autoplayTimer.current = null
-    }
-  }
+/**
+ * 3. Главная бэкенд-функция с диагностическими логами
+ */
+export async function updatePropertyPOIs(propertyId) {
+  console.log(`\n--- [POI Service Start] Анализ для ID: ${propertyId} ---`);
 
-  useEffect(() => {
-    return () => {
-      if (autoplayTimer.current) clearInterval(autoplayTimer.current)
-    }
-  }, [])
+  try {
+    const { data: property, error: fetchError } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single();
 
-  const handleNextPhoto = (e) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev + 1) % photos.length)
-  }
+    if (fetchError || !property) return false;
 
-  const handlePrevPhoto = (e) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
-  }
-
-  const formatPriceVal = (val) => {
-    if (!val) return "";
-    let numOnly = String(val).replace(/[^0-9]/g, "");
-    if (numOnly === "" || numOnly === "0") return val;
-    return Number(numOnly).toLocaleString('tr-TR').replace(/\./g, '\u00A0') + " TL";
-  }
-
-  // Дизайн-система SVG-иконок для турецкой инфраструктуры
-  const renderProximityIcon = (type) => {
-    const iconStyle = { width: '15px', height: '15px', flexShrink: 0 };
+    const actualAddress = property.address || property.adress || '';
+    const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
     
-    switch (type?.toLowerCase()) {
-      case 'beach':
-        return (
-          // Иконка пляжа / волн (Голубой)
-          <svg style={{ ...iconStyle, color: '#06B6D4' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
-            <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
-          </svg>
-        )
-      case 'ferry':
-        return (
-          // Иконка водного транспорта / парома (Голубой)
-          <svg style={{ ...iconStyle, color: '#0EA5E9' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M2 17h20M2 13h20M5 13V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5" />
-            <path d="M12 2v4" />
-          </svg>
-        )
-      case 'bus':
-      case 'dolmus':
-        return (
-          // Иконка автобусной остановки / наземного транспорта (Индиго)
-          <svg style={{ ...iconStyle, color: '#4F46E5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="4" y="2" width="16" height="20" rx="2" />
-            <circle cx="8" cy="18" r="1.5" />
-            <circle cx="16" cy="18" r="1.5" />
-            <path d="M6 8h12M6 13h12" />
-          </svg>
-        )
-      case 'tram':
-      case 'marmaray':
-        return (
-          // Иконка рельсового скоростного транспорта (Синий)
-          <svg style={{ ...iconStyle, color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="4" y="3" width="16" height="15" rx="2" />
-            <path d="M4 11h16M12 3v15M8 21l-2 3M16 21l2 3" />
-          </svg>
-        )
-      case 'infrastructure':
-      default:
-        return (
-          // Стандартная геолокация для прочих объектов
-          <svg style={{ ...iconStyle, color: '#64748B' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        )
+    const coordinates = await getCoordinatesFromAddress(fullAddress);
+    if (!coordinates) return false;
+
+    const cityKey = normalizeCity(property.city);
+    const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(cityKey);
+
+    const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
+    console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
+
+    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ (ВЫВОДИМ ВСЕ ТОЧКИ ОТ FOURSQUARE) ====================
+    console.log(`\n[Diagnostic] ---- Список всех 50 точек от API Foursquare ----`);
+    rawPois.forEach((item, index) => {
+      const { group, type } = categorizePoi(item.categories, item.name);
+      console.log(`  ${index + 1}. Имя: "${item.name}" | Дистанция: ${item.distance}м | Категория Foursquare: "${item.categories?.[0]?.name}" (ID: ${item.categories?.[0]?.id}) | Определенный тип в коде: "${type}"`);
+    });
+    console.log(`[Diagnostic] -------------------------------------------------\n`);
+    // ==============================================================================
+
+    const finalPoisMap = {};
+
+    for (const item of rawPois) {
+      const { type } = categorizePoi(item.categories, item.name);
+      const D = item.distance || 9999;
+      
+      if (isResortCity && D > 5000) continue;
+      if (!isResortCity && D > 10000) continue;
+
+      let travel_mode = 'walking';
+      let travel_time_minutes = '';
+      let time_val = 0;
+
+      if (D <= 2000) {
+        travel_mode = 'walking';
+        time_val = Math.max(1, Math.round(D / 80));
+        travel_time_minutes = `${time_val} мин`;
+      } else {
+        travel_mode = 'driving';
+        time_val = Math.max(1, Math.round(D / 330));
+        travel_time_minutes = `${time_val} мин на авто`;
+      }
+
+      let priority_score = 0;
+
+      if (type === 'beach' && isResortCity) {
+        priority_score = travel_mode === 'walking' ? (1100 - time_val) : (650 - time_val);
+      } else if (['metro', 'metrobus', 'marmaray'].includes(type)) {
+        priority_score = travel_mode === 'walking' ? (1000 - time_val) : (600 - time_val);
+      } else if (type === 'tram') {
+        priority_score = travel_mode === 'walking' ? (900 - time_val) : (500 - time_val);
+      } else if (type === 'ferry') {
+        priority_score = travel_mode === 'walking' ? (800 - time_val) : (400 - time_val);
+      } else if (['bus', 'dolmus'].includes(type)) {
+        priority_score = travel_mode === 'walking' ? (700 - time_val) : (300 - time_val);
+      }
+
+      if (priority_score > 0) {
+        if (!finalPoisMap[type] || priority_score > finalPoisMap[type].priority_score) {
+          finalPoisMap[type] = {
+            name: item.name,
+            distance: D,
+            travel_time_minutes,
+            travel_mode,
+            priority_score
+          };
+        }
+      }
     }
+
+    // Находим ОДИН лучший объект
+    let featuredPoi = null;
+    let maxScore = -1;
+
+    for (const [type, poi] of Object.entries(finalPoisMap)) {
+      if (poi.priority_score > maxScore) {
+        maxScore = poi.priority_score;
+        featuredPoi = {
+          type,
+          name: poi.name,
+          distance: poi.distance,
+          travel_time_minutes: poi.travel_time_minutes,
+          travel_mode: poi.travel_mode
+        };
+      }
+    }
+
+    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ РАСЧЕТА СКОРИНГА ====================
+    console.log(`[Diagnostic] ---- Расчет финального скоринга ----`);
+    for (const [type, poi] of Object.entries(finalPoisMap)) {
+      console.log(`  -> Тип: "${type}" | Имя: "${poi.name}" | Итоговый балл (Score): ${poi.priority_score} | Режим: ${poi.travel_mode}`);
+    }
+    console.log(`[Diagnostic] В ИТОГЕ ВЫБРАН FEATURED_POI:`, featuredPoi);
+    console.log(`[Diagnostic] ------------------------------------\n`);
+    // ==============================================================================
+
+    const foundTypesCount = Object.keys(finalPoisMap).length;
+    let score = Math.min(10, Math.floor(foundTypesCount * 1.5));
+    if (score === 0 && foundTypesCount > 0) score = 1;
+
+    const finalPoiData = {
+      pois: finalPoisMap,
+      featured_poi: featuredPoi,
+      calculated_at: new Date().toISOString(),
+      livability_score: score
+    };
+
+    const { error: updateError } = await supabase
+      .from('properties')
+      .update({ 
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
+        poi_data: finalPoiData
+      })
+      .eq('id', propertyId);
+
+    if (updateError) return false;
+
+    console.log(`[DB Update] Сохраняем координаты и poi_data в базу ОДНИМ запросом для ID: ${propertyId}`);
+    console.log(`--- [POI Service End] Объект ID ${propertyId} успешно обработан! ---\n`);
+    return true;
+
+  } catch (globalErr) {
+    console.error(`[POI Service Fatal Error]`, globalErr.message || globalErr);
+    return false;
   }
-
-  return (
-    <div 
-      className="cian-card"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <button 
-        className={"card-fav-btn" + (isLiked ? " liked" : "")}
-        onClick={(e) => onToggleLike && onToggleLike(e, pId)}
-      >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-      </button>
-
-      {pStatus && (
-        <span className="card-status-badge">
-          {pStatus}
-        </span>
-      )}
-
-      <div 
-        className="cian-img-container" 
-        onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
-      >
-        {hasPhotos ? (
-          <img src={photos[currentIdx]} className="cian-img" alt="" />
-        ) : (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span style={{ fontSize: '11px', fontWeight: '700' }}>Görsel Yok</span>
-          </div>
-        )}
-        
-        {hasPhotos && photos.length > 1 && (
-          <>
-            <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
-            <button className="slider-arrow arrow-right" onClick={handleNextPhoto}>❯</button>
-          </>
-        )}
-      </div>
-
-      <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
-        <div className="cian-price" title={formatPriceVal(pPrice)}>
-          {formatPriceVal(pPrice)}
-        </div>
-
-        <div className="cian-specs">
-          {[
-            pRooms ? `${pRooms}` : null,
-            pArea ? `${pArea} m²` : null,
-            pFloor ? `${pFloor} Kat` : null
-          ].filter(Boolean).join(' · ')}
-        </div>
-        
-        <div className="cian-location">
-          {poiBadge ? (
-            <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
-              {poiBadge.type === 'metro' || poiBadge.type === 'metrobus' ? (
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '3px',
-                  backgroundColor: getMetroColor(poiBadge.name),
-                  color: '#FFFFFF',
-                  fontWeight: '900',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  fontFamily: 'var(--font-main)',
-                  flexShrink: 0
-                }}>
-                  {poiBadge.type === 'metrobus' ? 'MB' : 'M'}
-                </span>
-              ) : (
-                renderProximityIcon(poiBadge.type)
-              )}
-              
-              <span style={{
-                color: '#1E293B',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                flexShrink: 1
-              }} title={poiBadge.name}>
-                {poiBadge.name}
-              </span>
-
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '2px',
-                color: '#64748B',
-                fontSize: '15px',
-                fontWeight: '500',
-                flexShrink: 0
-              }}>
-                {poiBadge.mode === 'walking' ? (
-                  <svg style={{ width: '14px', height: '14px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                    <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C15.6 11.7 18 13 18 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7" />
-                  </svg>
-                ) : (
-                  <svg style={{ width: '14px', height: '14px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.14-.4.52-.68.96-.68h9.54c.44 0 .82.28.96.68L19 11H5z" />
-                  </svg>
-                )}
-                <span>{poiBadge.time}</span>
-              </span>
-            </div>
-          ) : pAddress ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-              {renderProximityIcon('default')}
-              <span style={{
-                color: '#64748B',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                fontSize: '15px'
-              }} title={pAddress}>
-                {pAddress}
-              </span>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  )
 }
