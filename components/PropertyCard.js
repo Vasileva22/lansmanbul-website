@@ -17,7 +17,7 @@ function getMetroColor(stationName) {
   return '#E11D48'; 
 }
 
-// Поиск лучшего POI на основе взвешенного скоринга бэкенда
+// ИСПРАВЛЕНО: Теперь берем приоритетный POI, который уже рассчитан бэкендом
 function getBestPoiBadge(property) {
   let poiPayload = property?.poi_data;
   if (!poiPayload) return null;
@@ -31,27 +31,18 @@ function getBestPoiBadge(property) {
     }
   }
 
-  const pois = poiPayload.pois || {};
-  if (Array.isArray(pois)) return null;
-
-  const allPois = Object.entries(pois).filter(([_, poi]) => poi && poi.raw_score > 0);
-
-  if (allPois.length === 0) return null;
-
-  try {
-    const best = allPois.reduce((prev, curr) => 
-      prev[1].weighted_score > curr[1].weighted_score ? prev : curr
-    );
-
+  // Напрямую берем предопределенный бэкендом featured_poi
+  const featured = poiPayload.featured_poi;
+  
+  if (featured && featured.name) {
     return {
-      name: best[1].name,
-      time: best[1].travel_time_minutes,
-      mode: best[1].travel_mode,
-      type: best[0] // Вернет 'metro', 'marmaray', 'bus', 'beach', 'hospital' и т.д.
+      name: featured.name,
+      time: featured.travel_time_minutes,
+      mode: featured.travel_mode,
+      type: featured.type // 'metro', 'marmaray', 'bus', 'beach' и т.д.
     };
-  } catch (e) {
-    console.error("Ошибка getBestPoiBadge:", e);
   }
+
   return null;
 }
 
