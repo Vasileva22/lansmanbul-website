@@ -228,6 +228,7 @@ async function fetchFoursquarePOIs(lat, lng) {
     return [];
   }
 
+  // Настройка авторизации: Service API Key типа 'TSX...' строго требует Bearer-формат
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') 
     ? rawFoursquareKey 
     : `Bearer ${rawFoursquareKey}`;
@@ -307,11 +308,21 @@ export async function updatePropertyPOIs(propertyId) {
 
     const cityKey = (property.city || 'istanbul').toLowerCase().trim();
     const config = cityPoiPriorities[cityKey] || cityPoiPriorities['default'];
+    
+    // Определяем, является ли город курортным
+    const isResortCity = cityKey === 'antalya' || cityKey === 'mugla';
 
     const bestPoisByType = {};
 
     for (const item of rawPois) {
       const { group, type } = categorizePoi(item.categories, item.name);
+      
+      // СТРАТЕГИЧЕСКОЕ РЕШЕНИЕ: Если город НЕ курортный, 
+      // мы полностью ИГНОРИРУЕМ любые категории, кроме транспорта!
+      if (!isResortCity && group !== 'transport') {
+        continue;
+      }
+
       const distance = item.distance || 9999;
 
       if (!bestPoisByType[type] || distance < bestPoisByType[type].distance) {
@@ -359,8 +370,6 @@ export async function updatePropertyPOIs(propertyId) {
       } else if (data.group === 'social') {
         weight = 1.3;
       } else if (data.group === 'secondary') {
-        // Жесткое понижение веса для Группы Б (ТЦ, кафе, парки), 
-        // чтобы они НИКОГДА не перекрывали транспорт или пляж, если те найдены
         weight = 0.1;
       }
 
