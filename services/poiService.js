@@ -19,7 +19,7 @@ function normalizeCity(city) {
 }
 
 /**
- * Очищенная категоризация: СТРОГО только пляжи и транспортные узлы
+ * Категоризация: СТРОГО только пляжи и транспортные узлы
  */
 function categorizePoi(categories, name) {
   const catName = (categories?.[0]?.name || '').toLowerCase();
@@ -144,7 +144,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос с поддержкой версионирования
+ * 2. Очищенный Foursquare-запрос на РАБОЧЕМ домене places-api.foursquare.com
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -155,11 +155,12 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Исключаем абсолютно всё кроме транспорта (и пляжей для курортов)
+  // Исключаем всё кроме транспорта (и пляжей для курортов)
   const categoriesList = isResort ? '19000,16003' : '19000';
   const radius = isResort ? 5000 : 10000;
 
-  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
+  // ИСПРАВЛЕНО: Домен изменен на рабочий places-api.foursquare.com
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -168,8 +169,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        // ОБЯЗАТЕЛЬНЫЙ ЗАГОЛОВОК, устраняющий ошибку 410 Gone:
-        'X-Places-Api-Version': '2025-06-17'
+        'X-Places-Api-Version': '2025-06-17' // Версионирование активного API
       }
     });
     if (!res.ok) {
@@ -185,7 +185,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 }
 
 /**
- * 3. Главная бэкенд-функция скоринга
+ * 3. Главная бэкенд-функция
  */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
@@ -211,7 +211,7 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // Вывод всех полученных точек в логи для наглядности
+    // Логи полученных точек
     console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
@@ -233,18 +233,16 @@ export async function updatePropertyPOIs(propertyId) {
       let travel_time_minutes = '';
       let time_val = 0;
 
-      // 25 минут пешком — это примерно 2 км (скорость 80 м/мин)
       if (D <= 2000) {
         travel_mode = 'walking';
         time_val = Math.max(1, Math.round(D / 80));
         travel_time_minutes = `${time_val} мин`;
       } else {
         travel_mode = 'driving';
-        time_val = Math.max(1, Math.round(D / 330)); // 330 м/мин ~ 20 км/ч
+        time_val = Math.max(1, Math.round(D / 330));
         travel_time_minutes = `${time_val} мин на авто`;
       }
 
-      // Начисление иерархических баллов приоритета
       let priority_score = 0;
 
       if (type === 'beach' && isResortCity) {
@@ -272,7 +270,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Выбор одного приоритетного объекта на основе набранных баллов
+    // Находим ОДИН лучший объект
     let featuredPoi = null;
     let maxScore = -1;
 
