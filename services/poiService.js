@@ -163,7 +163,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Запрос к Foursquare Places API с правильным параметром categories и версией 2025-06-17
+ * 2. Запрос к Foursquare Places API с правильной детализацией по конкретным категориям
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -174,15 +174,15 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // ИСПРАВЛЕНО: Передаем строковые хэши категорий v2 в правильный параметр categories
+  // ИСПРАВЛЕНО: Вместо родительских 19000 передаем детальные числовые v3-категории транспорта
   const categoriesList = isResort 
-    ? '4d4b7105d754a06379d81259,4bf58dd8d48988d1e4941735' 
-    : '4d4b7105d754a06379d81259';
+    ? '19014,19005,19010,19018,19015,19016,19011,19012,16003' 
+    : '19014,19005,19010,19018,19015,19016,19011,19012';
 
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Параметр categories + правильная версия API 2025-06-17
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
+  // ИСПРАВЛЕНО: Передаем только fsq_category_ids с детальным списком
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&fsq_category_ids=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
