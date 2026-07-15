@@ -31,7 +31,7 @@ function getBestPoiBadge(property) {
     }
   }
 
-  // Сценарий 1: Берем строго готовый featured_poi, рассчитанный на бэкенде
+  // Сценарий 1: Используем готовый featured_poi с бэкенда
   if (poiPayload.featured_poi && poiPayload.featured_poi.name) {
     return {
       name: poiPayload.featured_poi.name,
@@ -41,13 +41,14 @@ function getBestPoiBadge(property) {
     };
   }
 
-  // Сценарий 2 (Обратная совместимость): Если бэкенд еще не запускался, фильтруем на клиенте
+  // Сценарий 2 (Обратная совместимость): Если бэкенд еще не запускался для этого ID
   const pois = poiPayload.pois || {};
   if (Array.isArray(pois) || Object.keys(pois).length === 0) return null;
 
   const city = (property?.city || 'istanbul').toLowerCase().trim();
   const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(city);
 
+  // Фильтруем старые pois от школ, кафе и парков прямо в браузере
   const allowedPois = Object.entries(pois).filter(([type, poi]) => {
     if (!poi || poi.raw_score <= 0) return false;
     const transportTypes = ['metro', 'metrobus', 'marmaray', 'tram', 'ferry', 'bus', 'dolmus'];
