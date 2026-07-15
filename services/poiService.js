@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Инициализация клиента Supabase
+// Инициализация Supabase-клиента
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -8,9 +8,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
-/**
- * Нормализация названий городов под турецкую диакритику
- */
 function normalizeCity(city) {
   if (!city) return 'istanbul';
   return city
@@ -22,14 +19,14 @@ function normalizeCity(city) {
 }
 
 /**
- * Категоризация: СТРОГО только пляж и транспортные узлы
+ * Очищенная категоризация: СТРОГО только пляжи и транспортные узлы
  */
 function categorizePoi(categories, name) {
   const catName = (categories?.[0]?.name || '').toLowerCase();
   const catId = categories?.[0]?.id;
   const lowerName = (name || '').toLowerCase();
 
-  // Пляжи и набережные
+  // Пляж / Береговая линия
   if (
     lowerName.includes('beach') || 
     lowerName.includes('plaj') || 
@@ -40,7 +37,7 @@ function categorizePoi(categories, name) {
     return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Метро, Метробус и Marmaray
+  // Метро и Метробус
   if (
     lowerName.includes('metro') || 
     catName.includes('subway') || 
@@ -57,6 +54,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'metrobus' };
   }
 
+  // Мармарай
   if (lowerName.includes('marmaray')) {
     return { group: 'transport', type: 'marmaray' };
   }
@@ -71,7 +69,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'tram' };
   }
 
-  // Паромы и причалы (İskele, Vapur)
+  // Паромы и причалы
   if (
     lowerName.includes('iskele') || 
     lowerName.includes('vapur') || 
@@ -83,7 +81,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'ferry' };
   }
 
-  // Автобусные остановки, маршрутки, долмуши
+  // Автобусные остановки и маршрутки
   if (
     lowerName.includes('otobüs') || 
     lowerName.includes('durak') || 
@@ -110,7 +108,7 @@ function categorizePoi(categories, name) {
 }
 
 /**
- * 1. Запрос координат у Яндекса
+ * 1. Получение координат в Яндексе
  */
 async function getCoordinatesFromAddress(addressText) {
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
@@ -146,7 +144,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос строго для транспорта и пляжей
+ * 2. Очищенный Foursquare-запрос с поддержкой версионирования
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -157,9 +155,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Исключаем все сторонние категории (кафе, магазины, школы).
-  // Для курортов ищем транспорт (19000) и пляжи (16003) в радиусе 5 км.
-  // Для обычных городов — строго транспорт (19000) в радиусе 10 км.
+  // Исключаем абсолютно всё кроме транспорта (и пляжей для курортов)
   const categoriesList = isResort ? '19000,16003' : '19000';
   const radius = isResort ? 5000 : 10000;
 
@@ -172,7 +168,8 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        'X-Places-Api-Version': '2025-06-17' // Исключает ошибку 410 Gone
+        // ОБЯЗАТЕЛЬНЫЙ ЗАГОЛОВОК, устраняющий ошибку 410 Gone:
+        'X-Places-Api-Version': '2025-06-17'
       }
     });
     if (!res.ok) {
@@ -188,7 +185,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 }
 
 /**
- * 3. Главная функция обновления инфраструктуры
+ * 3. Главная бэкенд-функция скоринга
  */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
@@ -200,10 +197,7 @@ export async function updatePropertyPOIs(propertyId) {
       .eq('id', propertyId)
       .single();
 
-    if (fetchError || !property) {
-      console.error(`[DB Error] Не удалось загрузить запись с ID ${propertyId}:`, fetchError?.message);
-      return false;
-    }
+    if (fetchError || !property) return false;
 
     const actualAddress = property.address || property.adress || '';
     const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
@@ -217,7 +211,7 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // Диагностический вывод всех найденных точек
+    // Вывод всех полученных точек в логи для наглядности
     console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
@@ -246,11 +240,11 @@ export async function updatePropertyPOIs(propertyId) {
         travel_time_minutes = `${time_val} мин`;
       } else {
         travel_mode = 'driving';
-        time_val = Math.max(1, Math.round(D / 330)); // 330 м/мин ~ 20 км/ч в условиях трафика
+        time_val = Math.max(1, Math.round(D / 330)); // 330 м/мин ~ 20 км/ч
         travel_time_minutes = `${time_val} мин на авто`;
       }
 
-      // ==================== МАТЕМАТИЧЕСКАЯ ИЕРАРХИЯ СКОРИНГА (БАЛЛЫ) ====================
+      // Начисление иерархических баллов приоритета
       let priority_score = 0;
 
       if (type === 'beach' && isResortCity) {
@@ -278,7 +272,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Поиск лучшего объекта по сумме иерархических баллов
+    // Выбор одного приоритетного объекта на основе набранных баллов
     let featuredPoi = null;
     let maxScore = -1;
 
@@ -322,10 +316,7 @@ export async function updatePropertyPOIs(propertyId) {
       })
       .eq('id', propertyId);
 
-    if (updateError) {
-      console.error(`[DB Error] Ошибка сохранения данных в Supabase для ID ${propertyId}:`, updateError.message);
-      return false;
-    }
+    if (updateError) return false;
 
     console.log(`[DB Update] Сохраняем координаты и poi_data в базу ОДНИМ запросом для ID: ${propertyId}`);
     console.log(`--- [POI Service End] Объект ID ${propertyId} успешно обработан! ---\n`);
