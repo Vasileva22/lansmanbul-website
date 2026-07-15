@@ -19,7 +19,7 @@ function normalizeCity(city) {
 }
 
 /**
- * Категоризация: СТРОГО только пляжи и транспортные узлы
+ * Очищенная категоризация: СТРОГО только пляжи и транспортные узлы
  */
 function categorizePoi(categories, name) {
   const catName = (categories?.[0]?.name || '').toLowerCase();
@@ -144,7 +144,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос на РАБОЧЕМ домене places-api.foursquare.com
+ * 2. Очищенный Foursquare-запрос с поддержкой версионирования и рабочим доменом
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -155,11 +155,10 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Исключаем всё кроме транспорта (и пляжей для курортов)
   const categoriesList = isResort ? '19000,16003' : '19000';
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Домен изменен на рабочий places-api.foursquare.com
+  // ИСПРАВЛЕНО: Домен изменен на актуальный рабочий шлюз Foursquare
   const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
@@ -169,7 +168,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        'X-Places-Api-Version': '2025-06-17' // Версионирование активного API
+        'X-Places-Api-Version': '2025-06-17' // Версионирование API
       }
     });
     if (!res.ok) {
@@ -211,7 +210,7 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // Логи полученных точек
+    // Диагностический вывод всех найденных точек
     console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
@@ -270,7 +269,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Находим ОДИН лучший объект
+    // Находим один лучший объект
     let featuredPoi = null;
     let maxScore = -1;
 
