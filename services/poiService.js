@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Инициализируем Supabase внутри сервиса
+// Инициализация клиента Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -8,6 +8,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const YANDEX_GEOCODER_KEY = process.env.YANDEX_GEOCODER_KEY;
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
+/**
+ * Нормализация названий городов под турецкую диакритику
+ */
 function normalizeCity(city) {
   if (!city) return 'istanbul';
   return city
@@ -19,14 +22,14 @@ function normalizeCity(city) {
 }
 
 /**
- * Очищенная категоризация: СТРОГО только пляжи и транспортные узлы
+ * Категоризация: СТРОГО только пляж и транспортные узлы
  */
 function categorizePoi(categories, name) {
   const catName = (categories?.[0]?.name || '').toLowerCase();
   const catId = categories?.[0]?.id;
   const lowerName = (name || '').toLowerCase();
 
-  // Пляж / Береговая линия
+  // Пляжи и набережные
   if (
     lowerName.includes('beach') || 
     lowerName.includes('plaj') || 
@@ -37,7 +40,7 @@ function categorizePoi(categories, name) {
     return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Метро и Метробус
+  // Метро, Метробус и Marmaray
   if (
     lowerName.includes('metro') || 
     catName.includes('subway') || 
@@ -54,7 +57,6 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'metrobus' };
   }
 
-  // Мармарай
   if (lowerName.includes('marmaray')) {
     return { group: 'transport', type: 'marmaray' };
   }
@@ -69,7 +71,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'tram' };
   }
 
-  // Паромы и причалы
+  // Паромы и причалы (İskele, Vapur)
   if (
     lowerName.includes('iskele') || 
     lowerName.includes('vapur') || 
@@ -81,7 +83,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'ferry' };
   }
 
-  // Автобусные остановки и маршрутки
+  // Автобусные остановки, маршрутки, долмуши
   if (
     lowerName.includes('otobüs') || 
     lowerName.includes('durak') || 
@@ -108,11 +110,14 @@ function categorizePoi(categories, name) {
 }
 
 /**
- * 1. Получение координат в Яндексе
+ * 1. Запрос координат у Яндекса
  */
 async function getCoordinatesFromAddress(addressText) {
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawKey) return null;
+  if (!rawKey) {
+    console.error('[Geocoder Error] API ключ Yandex Geocoder не задан в переменных окружения.');
+    return null;
+  }
 
   try {
     const cleanKey = encodeURIComponent(rawKey);
@@ -120,11 +125,17 @@ async function getCoordinatesFromAddress(addressText) {
     const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
     
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[Geocoder HTTP Error] Яндекс вернул статус: ${res.status}`);
+      return null;
+    }
 
     const data = await res.json();
     const pos = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject?.Point?.pos;
-    if (!pos) return null;
+    if (!pos) {
+      console.warn(`[Geocoder Warning] Адрес не найден на карте: "${addressText}"`);
+      return null;
+    }
 
     const [lngStr, latStr] = pos.split(' ');
     return { lat: parseFloat(latStr), lng: parseFloat(lngStr) };
@@ -135,21 +146,24 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос
+ * 2. Очищенный Foursquare-запрос строго для транспорта и пляжей
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawFoursquareKey) return [];
+  if (!rawFoursquareKey) {
+    console.error('[Foursquare Error] API ключ Foursquare не задан в переменных окружения.');
+    return [];
+  }
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Исключаем абсолютно всё кроме транспорта и пляжей
+  // Исключаем все сторонние категории (кафе, магазины, школы).
+  // Для курортов ищем транспорт (19000) и пляжи (16003) в радиусе 5 км.
+  // Для обычных городов — строго транспорт (19000) в радиусе 10 км.
   const categoriesList = isResort ? '19000,16003' : '19000';
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Передаем ОБА возможных параметра фильтрации (categories и fsq_category_ids)
-  // для гарантированной работы на любых версиях API Foursquare.
-  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&fsq_category_ids=${categoriesList}&limit=50`;
+  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -157,7 +171,8 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
     const res = await fetch(url, {
       headers: {
         'Authorization': authHeaderValue,
-        'accept': 'application/json'
+        'accept': 'application/json',
+        'X-Places-Api-Version': '2025-06-17' // Исключает ошибку 410 Gone
       }
     });
     if (!res.ok) {
@@ -173,7 +188,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 }
 
 /**
- * 3. Главная бэкенд-функция
+ * 3. Главная функция обновления инфраструктуры
  */
 export async function updatePropertyPOIs(propertyId) {
   console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
@@ -185,7 +200,10 @@ export async function updatePropertyPOIs(propertyId) {
       .eq('id', propertyId)
       .single();
 
-    if (fetchError || !property) return false;
+    if (fetchError || !property) {
+      console.error(`[DB Error] Не удалось загрузить запись с ID ${propertyId}:`, fetchError?.message);
+      return false;
+    }
 
     const actualAddress = property.address || property.adress || '';
     const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
@@ -199,16 +217,14 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ (ВЫВОДИМ СТРУКТУРУ КАТЕГОРИЙ) ====================
+    // Диагностический вывод всех найденных точек
     console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
-      // Логируем сырой объект категорий (JSON.stringify), чтобы точно увидеть структуру
       const rawCategoriesJSON = JSON.stringify(item.categories || []);
       console.log(`  ${index + 1}. Имя: "${item.name}" | Дистанция: ${item.distance}м | Тип в коде: "${type}" | Сырые категории: ${rawCategoriesJSON}`);
     });
     console.log(`[Diagnostic] -------------------------------------------------\n`);
-    // ==============================================================================
 
     const finalPoisMap = {};
 
@@ -223,16 +239,18 @@ export async function updatePropertyPOIs(propertyId) {
       let travel_time_minutes = '';
       let time_val = 0;
 
+      // 25 минут пешком — это примерно 2 км (скорость 80 м/мин)
       if (D <= 2000) {
         travel_mode = 'walking';
         time_val = Math.max(1, Math.round(D / 80));
         travel_time_minutes = `${time_val} мин`;
       } else {
         travel_mode = 'driving';
-        time_val = Math.max(1, Math.round(D / 330));
+        time_val = Math.max(1, Math.round(D / 330)); // 330 м/мин ~ 20 км/ч в условиях трафика
         travel_time_minutes = `${time_val} мин на авто`;
       }
 
+      // ==================== МАТЕМАТИЧЕСКАЯ ИЕРАРХИЯ СКОРИНГА (БАЛЛЫ) ====================
       let priority_score = 0;
 
       if (type === 'beach' && isResortCity) {
@@ -260,7 +278,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Находим ОДИН лучший объект
+    // Поиск лучшего объекта по сумме иерархических баллов
     let featuredPoi = null;
     let maxScore = -1;
 
@@ -277,14 +295,12 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ РАСЧЕТА СКОРИНГА ====================
     console.log(`[Diagnostic] ---- Расчет финального скоринга ----`);
     for (const [type, poi] of Object.entries(finalPoisMap)) {
       console.log(`  -> Тип: "${type}" | Имя: "${poi.name}" | Итоговый балл (Score): ${poi.priority_score} | Режим: ${poi.travel_mode}`);
     }
     console.log(`[Diagnostic] В ИТОГЕ ВЫБРАН FEATURED_POI:`, featuredPoi);
     console.log(`[Diagnostic] ------------------------------------\n`);
-    // ==============================================================================
 
     const foundTypesCount = Object.keys(finalPoisMap).length;
     let score = Math.min(10, Math.floor(foundTypesCount * 1.5));
@@ -306,7 +322,10 @@ export async function updatePropertyPOIs(propertyId) {
       })
       .eq('id', propertyId);
 
-    if (updateError) return false;
+    if (updateError) {
+      console.error(`[DB Error] Ошибка сохранения данных в Supabase для ID ${propertyId}:`, updateError.message);
+      return false;
+    }
 
     console.log(`[DB Update] Сохраняем координаты и poi_data в базу ОДНИМ запросом для ID: ${propertyId}`);
     console.log(`--- [POI Service End] Объект ID ${propertyId} успешно обработан! ---\n`);
