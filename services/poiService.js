@@ -19,14 +19,12 @@ function normalizeCity(city) {
 }
 
 /**
- * Категоризация: Поддерживает числовые ID v3 и строковые ID v2
+ * Категоризация: Чистые числовые ID v3 (например, 19014 для метро)
  */
 function categorizePoi(categories, name) {
   const firstCat = categories?.[0];
   const catName = (firstCat?.name || '').toLowerCase();
-  
-  // Читаем ID в зависимости от того, в каком формате Foursquare прислал ответ
-  const catId = firstCat?.id || firstCat?.fsq_category_id;
+  const catId = firstCat?.id; // В официальном API v3 это всегда число
   const lowerName = (name || '').toLowerCase();
 
   // Пляж / Береговая линия
@@ -36,20 +34,17 @@ function categorizePoi(categories, name) {
     lowerName.includes('sahil') ||
     catName.includes('beach') ||
     catName.includes('waterfront') ||
-    catId === 16003 || 
-    catId === '4bf58dd8d48988d1e4941735'
+    catId === 16003
   ) {
     return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Метро и Метробус
+  // Метро, Метробус и Marmaray
   if (
     lowerName.includes('metro') || 
     catName.includes('subway') || 
     catName.includes('metro station') ||
-    catId === 19014 ||
-    catId === '4bf58dd8d48988d1fd931735' ||
-    catId === '52f2ab2ebcbc57f1066b8b52'
+    catId === 19014
   ) {
     if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
       return { group: 'transport', type: 'metrobus' };
@@ -70,38 +65,31 @@ function categorizePoi(categories, name) {
     lowerName.includes('tramway') || 
     lowerName.includes('tramvay') || 
     catName.includes('tram') ||
-    catId === 19016 ||
-    catId === '4bf58dd8d48988d1f1931735' ||
-    catId === '52f2ab2ebcbc57f1066b8b51'
+    catId === 19016
   ) {
     return { group: 'transport', type: 'tram' };
   }
 
-  // Паромы и причалы
+  // Паромы и причалы (İskele, Vapur)
   if (
     lowerName.includes('iskele') || 
     lowerName.includes('vapur') || 
     lowerName.includes('ferry') || 
     catName.includes('ferry') || 
     catName.includes('pier') ||
-    catId === 19011 || catId === 19012 ||
-    catId === '4bf58dd8d48988d12d951735' ||
-    catId === '52f2ab2ebcbc57f1066b8b53'
+    catId === 19011 || catId === 19012
   ) {
     return { group: 'transport', type: 'ferry' };
   }
 
-  // Автобусы и маршрутки (Bus / Dolmus)
+  // Автобусные остановки и маршрутки
   if (
     lowerName.includes('otobüs') || 
     lowerName.includes('durak') || 
     lowerName.includes('durağı') || 
     lowerName.includes('bus stop') ||
     catName.includes('bus stop') ||
-    catId === 19005 || catId === 19010 ||
-    catId === '4bf58dd8d48988d1fe931735' ||
-    catId === '52f2ab2ebcbc57f1066b8b50' ||
-    catId === '52f2ab2ebcbc57f1066b8b4f'
+    catId === 19005 || catId === 19010
   ) {
     if (lowerName.includes('minibüs') || lowerName.includes('dolmuş') || lowerName.includes('dolmus')) {
       return { group: 'transport', type: 'dolmus' };
@@ -157,7 +145,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Запрос к официальному Foursquare v3 Places API
+ * 2. Очищенный Foursquare-запрос к официальному v3 API с версионированием
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -168,11 +156,11 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Идентификатор категории v3
+  // Исключаем абсолютно всё кроме транспорта (и пляжей для курортов)
   const categoriesList = isResort ? '19000,16003' : '19000';
   const radius = isResort ? 5000 : 10000;
 
-  // Используем официальный v3 эндпоинт
+  // ОФИЦИАЛЬНЫЙ эндпоинт Foursquare v3
   const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
