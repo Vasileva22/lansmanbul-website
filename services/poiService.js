@@ -19,11 +19,14 @@ function normalizeCity(city) {
 }
 
 /**
- * Очищенная категоризация: СТРОГО только пляжи и транспортные узлы
+ * Двухпротокольная категоризация: поддержка v2 (строковые хэши) и v3 (числа)
  */
 function categorizePoi(categories, name) {
-  const catName = (categories?.[0]?.name || '').toLowerCase();
-  const catId = categories?.[0]?.id;
+  const firstCat = categories?.[0];
+  const catName = (firstCat?.name || '').toLowerCase();
+  
+  // Поддержка и числовых v3 ID, и строковых v2 fsq_category_id
+  const catId = firstCat?.id || firstCat?.fsq_category_id;
   const lowerName = (name || '').toLowerCase();
 
   // Пляж / Береговая линия
@@ -32,17 +35,21 @@ function categorizePoi(categories, name) {
     lowerName.includes('plaj') || 
     lowerName.includes('sahil') ||
     catName.includes('beach') ||
-    catId === 16003
+    catName.includes('waterfront') ||
+    catId === 16003 || 
+    catId === '4bf58dd8d48988d1e4941735'
   ) {
     return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Метро и Метробус
+  // Метро, Метробус и Marmaray
   if (
     lowerName.includes('metro') || 
     catName.includes('subway') || 
     catName.includes('metro station') ||
-    catId === 19014
+    catId === 19014 ||
+    catId === '4bf58dd8d48988d1fd931735' ||
+    catId === '52f2ab2ebcbc57f1066b8b52'
   ) {
     if (lowerName.includes('metrobus') || lowerName.includes('metrobüs')) {
       return { group: 'transport', type: 'metrobus' };
@@ -54,7 +61,6 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'metrobus' };
   }
 
-  // Мармарай
   if (lowerName.includes('marmaray')) {
     return { group: 'transport', type: 'marmaray' };
   }
@@ -64,7 +70,9 @@ function categorizePoi(categories, name) {
     lowerName.includes('tramway') || 
     lowerName.includes('tramvay') || 
     catName.includes('tram') ||
-    catId === 19016
+    catId === 19016 ||
+    catId === '4bf58dd8d48988d1f1931735' ||
+    catId === '52f2ab2ebcbc57f1066b8b51'
   ) {
     return { group: 'transport', type: 'tram' };
   }
@@ -76,19 +84,24 @@ function categorizePoi(categories, name) {
     lowerName.includes('ferry') || 
     catName.includes('ferry') || 
     catName.includes('pier') ||
-    catId === 19011 || catId === 19012
+    catId === 19011 || catId === 19012 ||
+    catId === '4bf58dd8d48988d12d951735' ||
+    catId === '52f2ab2ebcbc57f1066b8b53'
   ) {
     return { group: 'transport', type: 'ferry' };
   }
 
-  // Автобусные остановки и маршрутки
+  // Автобусы и маршрутки
   if (
     lowerName.includes('otobüs') || 
     lowerName.includes('durak') || 
     lowerName.includes('durağı') || 
     lowerName.includes('bus stop') ||
     catName.includes('bus stop') ||
-    catId === 19005
+    catId === 19005 || catId === 19010 ||
+    catId === '4bf58dd8d48988d1fe931735' ||
+    catId === '52f2ab2ebcbc57f1066b8b50' ||
+    catId === '52f2ab2ebcbc57f1066b8b4f'
   ) {
     if (lowerName.includes('minibüs') || lowerName.includes('dolmuş') || lowerName.includes('dolmus')) {
       return { group: 'transport', type: 'dolmus' };
@@ -112,10 +125,7 @@ function categorizePoi(categories, name) {
  */
 async function getCoordinatesFromAddress(addressText) {
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawKey) {
-    console.error('[Geocoder Error] API ключ Yandex Geocoder не задан в переменных окружения.');
-    return null;
-  }
+  if (!rawKey) return null;
 
   try {
     const cleanKey = encodeURIComponent(rawKey);
@@ -123,17 +133,11 @@ async function getCoordinatesFromAddress(addressText) {
     const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
     
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) {
-      console.error(`[Geocoder HTTP Error] Яндекс вернул статус: ${res.status}`);
-      return null;
-    }
+    if (!res.ok) return null;
 
     const data = await res.json();
     const pos = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject?.Point?.pos;
-    if (!pos) {
-      console.warn(`[Geocoder Warning] Адрес не найден на карте: "${addressText}"`);
-      return null;
-    }
+    if (!pos) return null;
 
     const [lngStr, latStr] = pos.split(' ');
     return { lat: parseFloat(latStr), lng: parseFloat(lngStr) };
@@ -144,22 +148,26 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос с поддержкой версионирования и рабочим доменом
+ * 2. Двухпротокольный запрос к Foursquare
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawFoursquareKey) {
-    console.error('[Foursquare Error] API ключ Foursquare не задан в переменных окружения.');
-    return [];
-  }
+  if (!rawFoursquareKey) return [];
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
+  // Идентификаторы категорий v3 (числовые)
   const categoriesList = isResort ? '19000,16003' : '19000';
+  
+  // Идентификаторы категорий v2 (хэш-строки: Travel & Transport и Beach)
+  const legacyCategoriesList = isResort 
+    ? '4d4b7105d754a06379d81259,4bf58dd8d48988d1e4941735' 
+    : '4d4b7105d754a06379d81259';
+
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Домен изменен на актуальный рабочий шлюз Foursquare
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
+  // Отправляем ВСЕ варианты фильтрации во избежание игнорирования параметров сервером
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&fsq_category_ids=${categoriesList}&categoryId=${legacyCategoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -168,13 +176,10 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        'X-Places-Api-Version': '2025-06-17' // Версионирование API
+        'X-Places-Api-Version': '2025-06-17'
       }
     });
-    if (!res.ok) {
-      console.error(`[Foursquare HTTP Error] Статус: ${res.status}`);
-      return [];
-    }
+    if (!res.ok) return [];
     const data = await res.json();
     return data.results || [];
   } catch (err) {
@@ -210,7 +215,6 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // Диагностический вывод всех найденных точек
     console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
@@ -269,7 +273,7 @@ export async function updatePropertyPOIs(propertyId) {
       }
     }
 
-    // Находим один лучший объект
+    // Выбор одного приоритетного объекта
     let featuredPoi = null;
     let maxScore = -1;
 
