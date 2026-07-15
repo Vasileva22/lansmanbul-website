@@ -19,13 +19,13 @@ function normalizeCity(city) {
 }
 
 /**
- * Надежная категоризация: поддержка v2 (хэш-строки) и v3 (числа)
+ * Надежная категоризация: поддержка числовых v3 ID и строковых v2 fsq_category_id
  */
 function categorizePoi(categories, name) {
   const firstCat = categories?.[0];
   const catName = (firstCat?.name || '').toLowerCase();
   
-  // Поддержка и числовых v3 ID, и строковых v2 fsq_category_id
+  // Поддержка числовых v3 ID и строковых v2 fsq_category_id
   const catId = firstCat?.id || firstCat?.fsq_category_id;
   const lowerName = (name || '').toLowerCase();
 
@@ -163,7 +163,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Запрос к Foursquare Places API по современному протоколу fsq_category_ids
+ * 2. Очищенный Foursquare-запрос с поддержкой camelCase параметра categoryId
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -174,11 +174,15 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  const categoriesList = isResort ? '19000,16003' : '19000';
+  // Идентификатор категории v2 (строковые хэши для Travel & Transport и Beach)
+  const legacyCategoriesList = isResort 
+    ? '4d4b7105d754a06379d81259,4bf58dd8d48988d1e4941735' 
+    : '4d4b7105d754a06379d81259';
+
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Используем строго параметр fsq_category_ids без лишних конфликтующих параметров
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&fsq_category_ids=${categoriesList}&limit=50`;
+  // ИСПРАВЛЕНО: Используем строго параметр categoryId для безошибочной фильтрации вplaces-api
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categoryId=${legacyCategoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -187,7 +191,7 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        'X-Places-Api-Version': '2025-06-17' // Фиксированная актуальная версия для домена places-api
+        'X-Places-Api-Version': '2025-06-17'
       }
     });
     if (!res.ok) {
