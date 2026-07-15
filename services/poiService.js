@@ -19,13 +19,13 @@ function normalizeCity(city) {
 }
 
 /**
- * Двухпротокольная категоризация: поддержка v2 (строковые хэши) и v3 (числа)
+ * Категоризация: Поддерживает числовые ID v3 и строковые ID v2
  */
 function categorizePoi(categories, name) {
   const firstCat = categories?.[0];
   const catName = (firstCat?.name || '').toLowerCase();
   
-  // Поддержка и числовых v3 ID, и строковых v2 fsq_category_id
+  // Читаем ID в зависимости от того, в каком формате Foursquare прислал ответ
   const catId = firstCat?.id || firstCat?.fsq_category_id;
   const lowerName = (name || '').toLowerCase();
 
@@ -42,7 +42,7 @@ function categorizePoi(categories, name) {
     return { group: 'leisure_primary', type: 'beach' };
   }
 
-  // Метро, Метробус и Marmaray
+  // Метро и Метробус
   if (
     lowerName.includes('metro') || 
     catName.includes('subway') || 
@@ -91,7 +91,7 @@ function categorizePoi(categories, name) {
     return { group: 'transport', type: 'ferry' };
   }
 
-  // Автобусы и маршрутки
+  // Автобусы и маршрутки (Bus / Dolmus)
   if (
     lowerName.includes('otobüs') || 
     lowerName.includes('durak') || 
@@ -125,7 +125,10 @@ function categorizePoi(categories, name) {
  */
 async function getCoordinatesFromAddress(addressText) {
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawKey) return null;
+  if (!rawKey) {
+    console.error('[Geocoder Error] API ключ Yandex Geocoder не задан в переменных окружения.');
+    return null;
+  }
 
   try {
     const cleanKey = encodeURIComponent(rawKey);
@@ -133,11 +136,17 @@ async function getCoordinatesFromAddress(addressText) {
     const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${cleanKey}&geocode=${cleanGeocode}&format=json&results=1`;
     
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[Geocoder HTTP Error] Яндекс вернул статус: ${res.status}`);
+      return null;
+    }
 
     const data = await res.json();
     const pos = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject?.Point?.pos;
-    if (!pos) return null;
+    if (!pos) {
+      console.warn(`[Geocoder Warning] Адрес не найден на карте: "${addressText}"`);
+      return null;
+    }
 
     const [lngStr, latStr] = pos.split(' ');
     return { lat: parseFloat(latStr), lng: parseFloat(lngStr) };
@@ -148,26 +157,23 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Двухпротокольный запрос к Foursquare
+ * 2. Запрос к официальному Foursquare v3 Places API
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
-  if (!rawFoursquareKey) return [];
+  if (!rawFoursquareKey) {
+    console.error('[Foursquare Error] API ключ Foursquare не задан в переменных окружения.');
+    return [];
+  }
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // Идентификаторы категорий v3 (числовые)
+  // Идентификатор категории v3
   const categoriesList = isResort ? '19000,16003' : '19000';
-  
-  // Идентификаторы категорий v2 (хэш-строки: Travel & Transport и Beach)
-  const legacyCategoriesList = isResort 
-    ? '4d4b7105d754a06379d81259,4bf58dd8d48988d1e4941735' 
-    : '4d4b7105d754a06379d81259';
-
   const radius = isResort ? 5000 : 10000;
 
-  // Отправляем ВСЕ варианты фильтрации во избежание игнорирования параметров сервером
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&fsq_category_ids=${categoriesList}&categoryId=${legacyCategoriesList}&limit=50`;
+  // Используем официальный v3 эндпоинт
+  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -176,10 +182,14 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        'X-Places-Api-Version': '2025-06-17'
+        // ОБЯЗАТЕЛЬНЫЙ заголовок версии для исключения ошибки 410 на домене api.foursquare.com:
+        'X-Places-Api-Version': '2023-10-01'
       }
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[Foursquare HTTP Error] Статус: ${res.status}`);
+      return [];
+    }
     const data = await res.json();
     return data.results || [];
   } catch (err) {
