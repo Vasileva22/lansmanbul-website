@@ -163,7 +163,7 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Запрос к Foursquare Places API с правильным параметром fsq_category_ids и версией 2025-06-17
+ * 2. Запрос к Foursquare Places API с правильным параметром categories и версией 2025-06-17
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
@@ -174,11 +174,15 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  const categoriesList = isResort ? '19000,16003' : '19000';
+  // ИСПРАВЛЕНО: Передаем строковые хэши категорий v2 в правильный параметр categories
+  const categoriesList = isResort 
+    ? '4d4b7105d754a06379d81259,4bf58dd8d48988d1e4941735' 
+    : '4d4b7105d754a06379d81259';
+
   const radius = isResort ? 5000 : 10000;
 
-  // ИСПРАВЛЕНО: Строго fsq_category_ids для фильтрации на домене places-api
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&fsq_category_ids=${categoriesList}&limit=50`;
+  // ИСПРАВЛЕНО: Параметр categories + правильная версия API 2025-06-17
+  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&limit=50`;
 
   console.log(`[Foursquare Request] URL: ${url}`);
 
@@ -187,7 +191,6 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
       headers: {
         'Authorization': authHeaderValue,
         'accept': 'application/json',
-        // ИСПРАВЛЕНО: Строго заголовок версии 2025-06-17, который требует данный домен
         'X-Places-Api-Version': '2025-06-17'
       }
     });
