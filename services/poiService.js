@@ -111,7 +111,6 @@ function categorizePoi(categories, name) {
  * 1. Получение координат в Яндексе
  */
 async function getCoordinatesFromAddress(addressText) {
-  console.log(`[Geocoder Link Check] Отправляем запрос на URL: https://geocode-maps.yandex.ru/1.x/?apikey=...&geocode=${encodeURIComponent(addressText)}`);
   const rawKey = YANDEX_GEOCODER_KEY ? YANDEX_GEOCODER_KEY.trim().replace(/["']/g, '') : '';
   if (!rawKey) return null;
 
@@ -136,30 +135,35 @@ async function getCoordinatesFromAddress(addressText) {
 }
 
 /**
- * 2. Очищенный Foursquare-запрос СТРОГО только для транспорта и пляжей
+ * 2. Очищенный Foursquare-запрос
  */
 async function fetchFoursquarePOIs(lat, lng, isResort) {
-  console.log(`[Foursquare] Ищем места вокруг точки: ${lat}, ${lng}`);
   const rawFoursquareKey = FOURSQUARE_API_KEY ? FOURSQUARE_API_KEY.trim().replace(/["']/g, '') : '';
   if (!rawFoursquareKey) return [];
 
   const authHeaderValue = rawFoursquareKey.startsWith('fsq3_') ? rawFoursquareKey : `Bearer ${rawFoursquareKey}`;
 
-  // СТРОГОЕ ИСКЛЮЧЕНИЕ ВСЕГО КРОМЕ ТРАНСПОРТА И ПЛЯЖЕЙ
-  const categories = isResort ? '19000,16003' : '19000';
-  const radius = isResort ? 5000 : 10000; // 5 км для пляжей, 10 км для транспорта
+  // Исключаем абсолютно всё кроме транспорта и пляжей
+  const categoriesList = isResort ? '19000,16003' : '19000';
+  const radius = isResort ? 5000 : 10000;
 
-  const url = `https://places-api.foursquare.com/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categories}&limit=50`;
+  // ИСПРАВЛЕНО: Передаем ОБА возможных параметра фильтрации (categories и fsq_category_ids)
+  // для гарантированной работы на любых версиях API Foursquare.
+  const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lng}&radius=${radius}&categories=${categoriesList}&fsq_category_ids=${categoriesList}&limit=50`;
+
+  console.log(`[Foursquare Request] URL: ${url}`);
 
   try {
     const res = await fetch(url, {
       headers: {
         'Authorization': authHeaderValue,
-        'X-Places-Api-Version': '2025-06-17',
-        'Accept': 'application/json'
+        'accept': 'application/json'
       }
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[Foursquare HTTP Error] Статус: ${res.status}`);
+      return [];
+    }
     const data = await res.json();
     return data.results || [];
   } catch (err) {
@@ -169,10 +173,10 @@ async function fetchFoursquarePOIs(lat, lng, isResort) {
 }
 
 /**
- * 3. Главная бэкенд-функция с диагностическими логами скоринга
+ * 3. Главная бэкенд-функция
  */
 export async function updatePropertyPOIs(propertyId) {
-  console.log(`\n--- [POI Service Start] Анализ для ID: ${propertyId} ---`);
+  console.log(`\n--- [POI Service Start] Начинаем анализ для ID: ${propertyId} ---`);
 
   try {
     const { data: property, error: fetchError } = await supabase
@@ -195,11 +199,13 @@ export async function updatePropertyPOIs(propertyId) {
     const rawPois = await fetchFoursquarePOIs(coordinates.lat, coordinates.lng, isResortCity);
     console.log(`[Foursquare Success] Найдено объектов рядом: ${rawPois.length}`);
 
-    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ (ВЫВОДИМ ВСЕ ТОЧКИ ОТ FOURSQUARE) ====================
-    console.log(`\n[Diagnostic] ---- Список всех 50 точек от API Foursquare ----`);
+    // ==================== ДИАГНОСТИЧЕСКИЕ ЛОГИ (ВЫВОДИМ СТРУКТУРУ КАТЕГОРИЙ) ====================
+    console.log(`\n[Diagnostic] ---- Список всех полученных точек от API ----`);
     rawPois.forEach((item, index) => {
       const { type } = categorizePoi(item.categories, item.name);
-      console.log(`  ${index + 1}. Имя: "${item.name}" | Дистанция: ${item.distance}м | Категория Foursquare: "${item.categories?.[0]?.name}" (ID: ${item.categories?.[0]?.id}) | Определенный тип в коде: "${type}"`);
+      // Логируем сырой объект категорий (JSON.stringify), чтобы точно увидеть структуру
+      const rawCategoriesJSON = JSON.stringify(item.categories || []);
+      console.log(`  ${index + 1}. Имя: "${item.name}" | Дистанция: ${item.distance}м | Тип в коде: "${type}" | Сырые категории: ${rawCategoriesJSON}`);
     });
     console.log(`[Diagnostic] -------------------------------------------------\n`);
     // ==============================================================================
