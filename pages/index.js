@@ -1,17 +1,54 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic'; // Импортировали dynamic
+import dynamic from 'next/dynamic';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
 import PropertyCard from '../components/PropertyCard';
-import Lightbox from '../components/Lightbox';
 
-// ИСПРАВЛЕНО: Безопасный динамический импорт боковой панели без SSR (Пункт 5)
+// Безопасный динамический импорт боковой панели без SSR
 const SidebarFilters = dynamic(() => import('../components/SidebarFilters'), {
   ssr: false,
 });
+
+// ПУНКТ 7: Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
+function Lightbox({ photos, activeIndex, onClose, onPrev, onRight }) {
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') onRight();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, onPrev, onRight]);
+
+  if (!photos || photos.length === 0) return null;
+
+  return (
+    <div className="custom-lightbox-overlay active" onClick={onClose}>
+      <span className="custom-lightbox-close" onClick={onClose}>&times;</span>
+      
+      <div className="lightbox-slider-container" onClick={(e) => e.stopPropagation()}>
+        <div className="lightbox-slide">
+          <img src={photos[activeIndex]} alt="Büyük Görsel" />
+        </div>
+
+        {photos.length > 1 && (
+          <>
+            <div className="lightbox-arrow lightbox-arrow-left" onClick={onPrev}>❮</div>
+            <div className="lightbox-arrow lightbox-arrow-right" onClick={onRight}>❯</div>
+          </>
+        )}
+      </div>
+
+      <div className="lightbox-counter">
+        {(activeIndex + 1) + ' / ' + photos.length}
+      </div>
+    </div>
+  );
+}
 
 export default function Home({ initialProperties }) {
   const router = useRouter();
@@ -407,7 +444,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   </div>
                   <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik и mali detayları birinci елден öğrenirsiniz.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -415,7 +452,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                   </div>
                   <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                 </div>
               </div>
 
