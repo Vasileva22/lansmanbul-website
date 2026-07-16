@@ -1,3 +1,4 @@
+```javascript
 import { useEffect, useRef, useState } from 'react';
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
@@ -10,29 +11,31 @@ export default function SidebarFilters({
   onClearFilters,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
+  isSidebarHidden, // ПУНКТ 5: СТАЛ РАЗДВИЖНЫМ НА ДЕСКТОПЕ
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const mapLoaded = useRef(false);
 
-  // Ссылки на DOM-элементы для инициализации noUiSlider
   const areaSliderRef = useRef(null);
   const katSliderRef = useRef(null);
   const priceSliderRef = useRef(null);
 
-  // Локальные переменные для хранения инстансов слайдеров (чтобы вовремя уничтожать их)
   const areaSliderInst = useRef(null);
   const katSliderInst = useRef(null);
   const priceSliderInst = useRef(null);
 
-  // Состояние для сворачивания/разворачивания удобств
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
 
-  // ==========================================================================
-  // 1. ИНИЦИАЛИЗАЦИЯ И ОБНОВЛЕНИЕ ЯНДЕКС.КАРТ
-  // ==========================================================================
-  
-  // Ленивая загрузка API Яндекс.Карт на клиенте
+  const [minPriceInput, setMinPriceInput] = useState(filters.priceRange[0]);
+  const [maxPriceInput, setMaxPriceInput] = useState(filters.priceRange[1]);
+
+  useEffect(() => {
+    setMinPriceInput(filters.priceRange[0]);
+    setMaxPriceInput(filters.priceRange[1]);
+  }, [filters.priceRange]);
+
+  // Яндекс.Карта
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -40,7 +43,7 @@ export default function SidebarFilters({
       if (window.ymaps && !mapInstance.current && mapRef.current) {
         window.ymaps.ready(() => {
           mapInstance.current = new window.ymaps.Map(mapRef.current, {
-            center: [39.9334, 32.8597], // Центр по умолчанию (Анкара)
+            center: [39.9334, 32.8597],
             zoom: 10,
             controls: [],
           });
@@ -62,7 +65,6 @@ export default function SidebarFilters({
     }
 
     return () => {
-      // При уничтожении компонента очищаем карту
       if (mapInstance.current) {
         mapInstance.current.destroy();
         mapInstance.current = null;
@@ -71,14 +73,12 @@ export default function SidebarFilters({
     };
   }, []);
 
-  // Отрисовка гео-меток на карте на основе отфильтрованных свойств
   const drawMapPlacemarks = () => {
     if (!mapInstance.current || !mapLoaded.current) return;
 
     mapInstance.current.geoObjects.removeAll();
 
     filteredProperties.forEach((property) => {
-      // Безопасно определяем координаты (из полей lat/lon или из строки Koordinat)
       let lat = parseFloat(property.latitude);
       let lon = parseFloat(property.longitude);
 
@@ -112,7 +112,6 @@ export default function SidebarFilters({
       }
     });
 
-    // Автоматическое масштабирование карты по границам всех маркеров
     if (mapInstance.current.geoObjects.getLength() > 0) {
       mapInstance.current.setBounds(mapInstance.current.geoObjects.getBounds(), {
         checkZoomRange: true,
@@ -121,17 +120,12 @@ export default function SidebarFilters({
     }
   };
 
-  // Перерисовываем метки при каждом изменении отфильтрованного списка свойств
   useEffect(() => {
     drawMapPlacemarks();
   }, [filteredProperties]);
 
-  // ==========================================================================
-  // 2. ИНИЦИАЛИЗАЦИЯ ПОЛЗУНКОВ (noUiSlider)
-  // ==========================================================================
-
+  // Слайдеры ноуи слайдер
   useEffect(() => {
-    // А. Слайдер площади (0 - 500 m²)
     if (areaSliderRef.current && !areaSliderInst.current) {
       areaSliderInst.current = noUiSlider.create(areaSliderRef.current, {
         start: [filters.areaRange[0], filters.areaRange[1]],
@@ -146,7 +140,6 @@ export default function SidebarFilters({
       });
     }
 
-    // Б. Слайдер этажей (0 - 40)
     if (katSliderRef.current && !katSliderInst.current) {
       katSliderInst.current = noUiSlider.create(katSliderRef.current, {
         start: [filters.katRange[0], filters.katRange[1]],
@@ -161,7 +154,6 @@ export default function SidebarFilters({
       });
     }
 
-    // В. Слайдер цен (0 - 50.000.000 TL)
     if (priceSliderRef.current && !priceSliderInst.current) {
       priceSliderInst.current = noUiSlider.create(priceSliderRef.current, {
         start: [filters.priceRange[0], filters.priceRange[1]],
@@ -177,34 +169,18 @@ export default function SidebarFilters({
     }
 
     return () => {
-      // Очищаем слайдеры при размонтировании компонента для предотвращения утечек памяти
-      if (areaSliderInst.current) {
-        areaSliderInst.current.destroy();
-        areaSliderInst.current = null;
-      }
-      if (katSliderInst.current) {
-        katSliderInst.current.destroy();
-        katSliderInst.current = null;
-      }
-      if (priceSliderInst.current) {
-        priceSliderInst.current.destroy();
-        priceSliderInst.current = null;
-      }
+      if (areaSliderInst.current) { areaSliderInst.current.destroy(); areaSliderInst.current = null; }
+      if (katSliderInst.current) { katSliderInst.current.destroy(); katSliderInst.current = null; }
+      if (priceSliderInst.current) { priceSliderInst.current.destroy(); priceSliderInst.current = null; }
     };
   }, []);
 
-  // Синхронизируем положение слайдеров, если фильтры были сброшены извне
   useEffect(() => {
     if (areaSliderInst.current) areaSliderInst.current.set(filters.areaRange);
     if (katSliderInst.current) katSliderInst.current.set(filters.katRange);
     if (priceSliderInst.current) priceSliderInst.current.set(filters.priceRange);
   }, [filters.areaRange, filters.katRange, filters.priceRange]);
 
-  // ==========================================================================
-  // 3. ОБРАБОТЧИКИ ОПЦИЙ ФИЛЬТРАЦИИ
-  // ==========================================================================
-
-  // Выбор/Сброс Удобств (Amenities Tags)
   const handleTagToggle = (tag) => {
     const isSelected = filters.activeFeatureFilters.includes(tag);
     const updated = isSelected
@@ -214,7 +190,6 @@ export default function SidebarFilters({
     setFilters((prev) => ({ ...prev, activeFeatureFilters: updated }));
   };
 
-  // Выбор/Сброс способов оплаты
   const handlePaymentToggle = (payment) => {
     const isChecked = filters.activePaymentFilters.includes(payment);
     const updated = isChecked
@@ -224,25 +199,28 @@ export default function SidebarFilters({
     setFilters((prev) => ({ ...prev, activePaymentFilters: updated }));
   };
 
+  const handleManualPriceApply = () => {
+    setFilters((prev) => ({
+      ...prev,
+      priceRange: [minPriceInput, maxPriceInput],
+    }));
+  };
+
   return (
     <>
-      {/* ФОН ДЛЯ МОБИЛЬНОГО ФИЛЬТРА */}
       <div 
         className={`sidebar-mobile-overlay ${isMobileSidebarOpen ? 'show' : ''}`}
         onClick={() => setIsMobileSidebarOpen(false)}
       ></div>
 
-      <aside className={`luxe-sidebar ${isMobileSidebarOpen ? 'sidebar-mobile-show' : ''}`} id="custom-sidebar">
-        {/* Кнопка закрытия на мобильных */}
+      <aside className={`luxe-sidebar ${isSidebarHidden ? 'sidebar-hidden' : ''} ${isMobileSidebarOpen ? 'sidebar-mobile-show' : ''}`} id="custom-sidebar">
         <span className="sidebar-mobile-close-btn" onClick={() => setIsMobileSidebarOpen(false)}>
           &times;
         </span>
 
         <div className="luxe-sidebar-scrollable-body">
-          {/* Контейнер Яндекс.Карты */}
           <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
 
-          {/* Шапка фильтра со счетчиком */}
           <div className="luxe-sidebar-header">
             <div className="luxe-sidebar-mobile-title-container" style={{ display: 'none' }}>
               <span className="luxe-sidebar-mobile-title c-filter__title fs-20">Filtreleme</span>
@@ -260,7 +238,6 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА 1: ПЛОЩАДЬ */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Metrekare (m²)</span>
             <div className="luxe-range-inputs-row">
@@ -283,7 +260,6 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА 2: ЭТАЖНОСТЬ */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Kat sayısı</span>
             <div className="luxe-range-inputs-row">
@@ -306,41 +282,76 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА 3: ЦЕНА */}
+          {/* ГРУППА ЦЕНА С ЯЧЕЙКАМИ РУЧНОГО ВВОДА (Пункт 5) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-16 fw-600">Fiyat</span>
             <div className="price-live-display">
               <span>{filters.priceRange[0].toLocaleString('tr-TR')} TL</span> — <span>{filters.priceRange[1].toLocaleString('tr-TR')} TL</span>
             </div>
             <div ref={priceSliderRef} className="luxe-slider-track"></div>
+
+            {/* ВЕРНУЛИ УТЕРЯННУЮ ВЕРСТКУ ИЗ ТИЛЬДЫ */}
+            <div className="price-inputs-container">
+              <div className="price-input-box">
+                <span className="price-box-label">En Düşük</span>
+                <div className="price-box-input-wrap">
+                  <input 
+                    type="text" 
+                    className="price-box-input min priceInput py-0" 
+                    value={minPriceInput.toLocaleString('tr-TR')}
+                    onChange={(e) => {
+                      const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                      setMinPriceInput(num);
+                    }}
+                  />
+                  <span className="price-currency">TL</span>
+                </div>
+              </div>
+              <div className="price-input-box">
+                <span className="price-box-label">En Yüksek</span>
+                <div className="price-box-input-wrap">
+                  <input 
+                    type="text" 
+                    className="price-box-input max priceInput py-0" 
+                    value={maxPriceInput.toLocaleString('tr-TR')}
+                    onChange={(e) => {
+                      const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                      setMaxPriceInput(num);
+                    }}
+                  />
+                  <span className="price-currency">TL</span>
+                </div>
+              </div>
+              <button className="price-go-btn" title="Filtrele" onClick={handleManualPriceApply}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
           </div>
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА 4: УДОБСТВА (TAGS) */}
+          {/* ОРИГИНАЛЬНЫЕ SVG-ИКОНКИ ВЕРНУТЫ НА 100% (Пункт 5) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Olanaklar</span>
             <div className={`luxe-tags ${isTagsExpanded ? 'expanded' : ''}`}>
               {[
-                { label: 'Havuz', value: 'Havuz', iconPath: 'M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z' },
-                { label: 'Fitness', value: 'Fitness', iconPath: 'M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z' },
-                { label: 'Güvenlik', value: 'Güvenlik', iconPath: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4z' },
-                { label: 'Otopark', value: 'Otopark', iconPath: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z' },
-                { label: 'Çocuk Parkı', value: 'Çocuk parkı', iconPath: 'M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2z' },
-                { label: 'Site İçerisinde', value: 'Site İçerisinde', iconPath: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z' },
-                { label: 'Spor Salonu', value: 'Spor Salonu', iconPath: 'M20.57 14.86L22 13.43l-1.43-1.43' },
-                { label: 'Sauna', value: 'Sauna', iconPath: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' },
-                { label: 'Hamam', value: 'Hamam', iconPath: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' },
-                { label: 'Oyun Parkı', value: 'Oyun Parkı', iconPath: 'M12 2c1.1 0 2 .9 2 2s-.9 2-2 2' }
+                { label: 'Havuz', value: 'Havuz', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" /></svg> },
+                { label: 'Fitness', value: 'Fitness', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
+                { label: 'Güvenlik', value: 'Güvenlik', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" /></svg> },
+                { label: 'Otopark', value: 'Otopark', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" /></svg> },
+                { label: 'Çocuk Parkı', value: 'Çocuk parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> },
+                { label: 'Site İçerisinde', value: 'Site İçerisinde', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2V7h2v2zm-5 0H8V7h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2z" /></svg> },
+                { label: 'Spor Salonu', value: 'Spor Salonu', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l-2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
+                { label: 'Sauna', value: 'Sauna', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
+                { label: 'Hamam', value: 'Hamam', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
+                { label: 'Oyun Parkı', value: 'Oyun Parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> }
               ].map((tag) => (
                 <div 
                   key={tag.value} 
                   className={`luxe-tag-item ${filters.activeFeatureFilters.includes(tag.value) ? 'active' : ''}`}
                   onClick={() => handleTagToggle(tag.value)}
                 >
-                  <svg viewBox="0 0 24 24" style={{ strokeWidth: 2, fill: 'none' }}>
-                    <path d={tag.iconPath} />
-                  </svg>
+                  {tag.svg}
                   <label style={{ cursor: 'pointer', margin: 0 }}>{tag.label}</label>
                 </div>
               ))}
@@ -355,7 +366,6 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА 5: ОПЛАТА (CHECKBOXES) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Ödeme durumu</span>
             <div className="luxe-checkboxes">
@@ -377,7 +387,6 @@ export default function SidebarFilters({
           </div>
         </div>
 
-        {/* Мобильный футер с кнопкой применения */}
         <div className="luxe-sidebar-mobile-footer" style={{ display: 'none' }}>
           <button 
             className="showList c-button c-button--primary" 
@@ -398,3 +407,4 @@ export default function SidebarFilters({
     </>
   );
 }
+```
