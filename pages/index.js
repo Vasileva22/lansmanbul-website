@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../supabase';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -37,17 +36,31 @@ export default function Home({ initialProperties }) {
     activePaymentFilters: [],
   });
 
-  // Загрузка данных
+  // Безопасный клиентский fetch на случай, если сервер вернул пустой массив
   useEffect(() => {
     async function loadClientData() {
       if (masterProperties.length === 0) {
-        const { data, error } = await supabase
-          .from('properties')
-          .select('*, property_images(*)');
-        if (data) {
-          setMasterProperties(data);
-        } else if (error) {
-          console.error("Supabase veri yükleme hatası:", error);
+        const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
+        const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
+
+        if (!supabaseUrl || !supabaseAnonKey) return;
+
+        try {
+          const res = await fetch(
+            supabaseUrl + '/rest/v1/properties?select=*,property_images(*)',
+            {
+              headers: {
+                'apikey': supabaseAnonKey,
+                'Authorization': 'Bearer ' + supabaseAnonKey,
+              },
+            }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setMasterProperties(data);
+          }
+        } catch (err) {
+          console.error("Client fetch error:", err);
         }
       }
     }
@@ -74,7 +87,6 @@ export default function Home({ initialProperties }) {
 
     if (scrollto) {
       setTimeout(() => {
-        // ИСПРАВЛЕНО: Классическое сложение строк гарантирует успешную компиляцию
         const element = document.querySelector('[data-id="' + scrollto + '"]');
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -373,7 +385,7 @@ export default function Home({ initialProperties }) {
               <div className="v1-intro">
                 <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
                 <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
-                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
+                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenле ulaşmanızı sağlıyoruz.</p>
               </div>
 
               <div className="v1-grid v-grid">
@@ -390,7 +402,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   </div>
                   <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -455,13 +467,35 @@ export default function Home({ initialProperties }) {
   );
 }
 
+// ИСПРАВЛЕНО: Безопасный fetch-запрос к базе данных напрямую без использования SDK
 export async function getServerSideProps() {
-  try {
-    const { data: properties, error } = await supabase
-      .from('properties')
-      .select('*, property_images(*)');
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
+  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
 
-    if (error) throw error;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return {
+      props: {
+        initialProperties: [],
+      },
+    };
+  }
+
+  try {
+    const res = await fetch(
+      supabaseUrl + '/rest/v1/properties?select=*,property_images(*)',
+      {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': 'Bearer ' + supabaseAnonKey,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error('Supabase REST error: ' + res.statusText);
+    }
+
+    const properties = await res.json();
 
     return {
       props: {
