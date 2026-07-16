@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import noUiSlider from 'nouislider';
-import 'nouislider/dist/nouislider.css';
 
 export default function SidebarFilters({
   filteredProperties,
@@ -56,7 +55,6 @@ export default function SidebarFilters({
       const script = document.createElement('script');
       script.id = 'yandex-maps-script';
       
-      // ИСПРАВЛЕНО НА СЛОЖЕНИЕ СТРОК (Прямая компиляция)
       script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
       
       script.type = 'text/javascript';
