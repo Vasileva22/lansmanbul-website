@@ -1,4 +1,3 @@
-```javascript
 import { useEffect, useRef, useState } from 'react';
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
@@ -11,7 +10,7 @@ export default function SidebarFilters({
   onClearFilters,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
-  isSidebarHidden, // ПУНКТ 5: СТАЛ РАЗДВИЖНЫМ НА ДЕСКТОПЕ
+  isSidebarHidden,
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -35,7 +34,7 @@ export default function SidebarFilters({
     setMaxPriceInput(filters.priceRange[1]);
   }, [filters.priceRange]);
 
-  // Яндекс.Карта
+  // Яндекс.Карты
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -56,7 +55,10 @@ export default function SidebarFilters({
     if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
       const script = document.createElement('script');
       script.id = 'yandex-maps-script';
-      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51'}&lang=tr_TR`;
+      
+      // ИСПРАВЛЕНО НА СЛОЖЕНИЕ СТРОК (Прямая компиляция)
+      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
+      
       script.type = 'text/javascript';
       script.onload = initMapInstance;
       document.head.appendChild(script);
@@ -100,8 +102,8 @@ export default function SidebarFilters({
           : "Fiyat Belirtilmemiş";
 
         const placemark = new window.ymaps.Placemark([lat, lon], {
-          balloonContentHeader: `<strong>${title}</strong>`,
-          balloonContentBody: `${priceFormatted}`,
+          balloonContentHeader: '<strong>' + title + '</strong>',
+          balloonContentBody: priceFormatted,
           hintContent: title,
         }, {
           preset: 'islands#dotIcon',
@@ -124,7 +126,7 @@ export default function SidebarFilters({
     drawMapPlacemarks();
   }, [filteredProperties]);
 
-  // Слайдеры ноуи слайдер
+  // noUiSlider
   useEffect(() => {
     if (areaSliderRef.current && !areaSliderInst.current) {
       areaSliderInst.current = noUiSlider.create(areaSliderRef.current, {
@@ -209,11 +211,11 @@ export default function SidebarFilters({
   return (
     <>
       <div 
-        className={`sidebar-mobile-overlay ${isMobileSidebarOpen ? 'show' : ''}`}
+        className={'sidebar-mobile-overlay ' + (isMobileSidebarOpen ? 'show' : '')}
         onClick={() => setIsMobileSidebarOpen(false)}
       ></div>
 
-      <aside className={`luxe-sidebar ${isSidebarHidden ? 'sidebar-hidden' : ''} ${isMobileSidebarOpen ? 'sidebar-mobile-show' : ''}`} id="custom-sidebar">
+      <aside className={'luxe-sidebar ' + (isSidebarHidden ? 'sidebar-hidden' : '') + ' ' + (isMobileSidebarOpen ? 'sidebar-mobile-show' : '')} id="custom-sidebar">
         <span className="sidebar-mobile-close-btn" onClick={() => setIsMobileSidebarOpen(false)}>
           &times;
         </span>
@@ -282,7 +284,6 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ГРУППА ЦЕНА С ЯЧЕЙКАМИ РУЧНОГО ВВОДА (Пункт 5) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-16 fw-600">Fiyat</span>
             <div className="price-live-display">
@@ -290,7 +291,6 @@ export default function SidebarFilters({
             </div>
             <div ref={priceSliderRef} className="luxe-slider-track"></div>
 
-            {/* ВЕРНУЛИ УТЕРЯННУЮ ВЕРСТКУ ИЗ ТИЛЬДЫ */}
             <div className="price-inputs-container">
               <div className="price-input-box">
                 <span className="price-box-label">En Düşük</span>
@@ -330,10 +330,9 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* ОРИГИНАЛЬНЫЕ SVG-ИКОНКИ ВЕРНУТЫ НА 100% (Пункт 5) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Olanaklar</span>
-            <div className={`luxe-tags ${isTagsExpanded ? 'expanded' : ''}`}>
+            <div className={'luxe-tags ' + (isTagsExpanded ? 'expanded' : '')}>
               {[
                 { label: 'Havuz', value: 'Havuz', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" /></svg> },
                 { label: 'Fitness', value: 'Fitness', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
@@ -341,14 +340,14 @@ export default function SidebarFilters({
                 { label: 'Otopark', value: 'Otopark', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" /></svg> },
                 { label: 'Çocuk Parkı', value: 'Çocuk parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> },
                 { label: 'Site İçerisinde', value: 'Site İçerisinde', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2V7h2v2zm-5 0H8V7h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2z" /></svg> },
-                { label: 'Spor Salonu', value: 'Spor Salonu', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l-2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
+                { label: 'Spor Salonu', value: 'Spor Salonu', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
                 { label: 'Sauna', value: 'Sauna', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
                 { label: 'Hamam', value: 'Hamam', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
                 { label: 'Oyun Parkı', value: 'Oyun Parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> }
               ].map((tag) => (
                 <div 
                   key={tag.value} 
-                  className={`luxe-tag-item ${filters.activeFeatureFilters.includes(tag.value) ? 'active' : ''}`}
+                  className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(tag.value) ? 'active' : '')}
                   onClick={() => handleTagToggle(tag.value)}
                 >
                   {tag.svg}
@@ -376,7 +375,7 @@ export default function SidebarFilters({
               ].map((pay) => (
                 <div 
                   key={pay.value} 
-                  className={`luxe-checkbox-item ${filters.activePaymentFilters.includes(pay.value) ? 'checked' : ''}`}
+                  className={'luxe-checkbox-item ' + (filters.activePaymentFilters.includes(pay.value) ? 'checked' : '')}
                   onClick={() => handlePaymentToggle(pay.value)}
                 >
                   <div className="luxe-radio-dot"></div>
@@ -407,4 +406,3 @@ export default function SidebarFilters({
     </>
   );
 }
-```
