@@ -1,6 +1,5 @@
-```css
 /* ==========================================================================
-   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ
+   1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ
    ========================================================================== */
 :root {
     --primary: #00A4A6;
@@ -22,7 +21,7 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   СТИЛИ ШАПКИ ИЗ TILDA
+   2. СТИЛИ ШАПКИ
    ========================================================================== */
 .modern-header {
     position: fixed !important;
@@ -147,7 +146,7 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   СТИЛИ КАТАЛОГА, КАРТОЧЕК, ФИЛЬТРОВ И СЕКЦИИ "О НАС" (ИЗ TILDA)
+   3. СТИЛИ КАТАЛОГА, КАРТОЧЕК И ФИЛЬТРОВ
    ========================================================================== */
 #custom-hero-search {
     height: auto !important;
@@ -379,7 +378,7 @@ body, html, .modern-header, .modern-header * {
     transform: scale(.97);
 }
 
-/* ДЕСКТОПНЫЙ ВЫПАДАЮЩИЙ СПИСОК (ИСПРАВЛЕНО ДЛЯ АБСОЛЮТНОЙ ДЕТАЛИЗАЦИИ) */
+/* ДЕСКТОПНЫЕ ВЫПАДАЮЩИЕ СПИСКИ ИЗ ПОИСКА */
 .custom-dropdown {
     position: absolute !important;
     top: 100% !important;
@@ -540,7 +539,7 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   СТИЛИ БОКОВОГО ФИЛЬТРА И КАРТЫ
+   4. БОКОВОЙ ФИЛЬТР И КАРТА
    ========================================================================== */
 .luxe-sidebar {
     position: absolute !important;
@@ -589,9 +588,6 @@ body, html, .modern-header, .modern-header * {
     font-weight: 700 !important;
     user-select: none !important;
     transition: background .2s ease, left 0.3s ease !important;
-}
-#sidebar-toggle-btn.shifted {
-    left: 0 !important;
 }
 #sidebar-toggle-btn:hover {
     background: #00898B !important;
@@ -684,7 +680,7 @@ body, html, .modern-header, .modern-header * {
     color: #64748B;
 }
 
-/* Ползунки ноуи слайдер */
+/* Слайдер noUiSlider */
 .luxe-slider-track.noUi-target {
     height: 4px !important;
     border: none !important;
@@ -908,7 +904,7 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   СЕТКА И КАРТОЧКА КАТАЛОГА (ИСПРАВЛЕНО НА 60% ВЫСОТЫ КАРТИНКИ)
+   5. СЕТКА И КАРТОЧКА КАТАЛОГА (ИСПРАВЛЕНО НА 60% ВЫСОТЫ КАРТИНКИ)
    ========================================================================== */
 #catalog-content-wrapper {
     margin-left: 330px;
@@ -921,7 +917,7 @@ body, html, .modern-header, .modern-header * {
     padding-top: 0px !important;
 }
 
-/* При скрытии сайдбара контент сдвигается на всю ширину */
+/* При сжатии сайдбара контент сдвигается на всю ширину */
 #catalog-content-wrapper.full-width {
     margin-left: 0px !important;
 }
@@ -2345,6 +2341,3 @@ body, html, .modern-header, .modern-header * {
         display: flex !important;
     }
 }
-```
-
----
