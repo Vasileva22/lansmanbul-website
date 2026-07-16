@@ -1,4 +1,3 @@
-```javascript
 import { useState, useEffect, useRef } from 'react';
 
 export default function HeroSearch({
@@ -14,7 +13,6 @@ export default function HeroSearch({
   
   const dropdownRef = useRef(null);
 
-  // Закрываем выпадающие списки при клике во вне на десктопе
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -25,7 +23,6 @@ export default function HeroSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Блокируем скролл на мобилках при открытой модалке
   useEffect(() => {
     if (activeDropdown && window.innerWidth <= 1024) {
       document.body.style.overflow = 'hidden';
@@ -69,19 +66,19 @@ export default function HeroSearch({
       const count = filters.selectedLocations.length;
       if (count === 0) return 'İlçe / Semt seçiniz';
       if (count === 1) return filters.selectedLocations[0];
-      return `${count} Bölge Seçildi`;
+      return count + ' Bölge Seçildi';
     }
     if (type === 'room') {
       const count = filters.selectedRooms.length;
       if (count === 0) return 'Oda sayısı seçiniz';
       if (count === 1) return filters.selectedRooms[0];
-      return `${count} Oda Tipi Seçildi`;
+      return count + ' Oda Tipi Seçildi';
     }
     if (type === 'status') {
       const count = filters.selectedStatuses.length;
       if (count === 0) return 'Durum seçiniz';
       if (count === 1) return filters.selectedStatuses[0];
-      return `${count} Durum Seçildi`;
+      return count + ' Durum Seçildi';
     }
   };
 
@@ -93,10 +90,9 @@ export default function HeroSearch({
 
         <div className="search-panel-card" ref={dropdownRef}>
           
-          {/* СЕЛЕКТОР ГОРОДОВ */}
           <div className="search-tabs-header" style={{ position: 'relative' }}>
             <div 
-              className={`city-tab-item ${activeDropdown === 'city' ? 'active' : ''}`}
+              className={'city-tab-item ' + (activeDropdown === 'city' ? 'active' : '')}
               onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'city' ? null : 'city'); }}
             >
               <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'currentColor' }}>
@@ -117,7 +113,6 @@ export default function HeroSearch({
               <span className="tab-badge">Yakında</span>
             </div>
 
-            {/* Вложенный селектор городов */}
             {activeDropdown === 'city' && (
               <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
                 <div className="dropdown-mobile-header">
@@ -135,7 +130,7 @@ export default function HeroSearch({
                     </div>
                   </div>
                   {['İstanbul', 'İzmir'].map((city) => (
-                    <div key={city} className="dropdown-item city-yakinda" style={{ opacity: 0.75 }} onClick={() => alert(`${city} projelerimiz çok yakında sizlerle!`)}>
+                    <div key={city} className="dropdown-item city-yakinda" style={{ opacity: 0.75 }} onClick={() => alert(city + ' projelerimiz çok yakında sizlerle!')}>
                       <div className="dropdown-item-left">
                         <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
                       </div>
@@ -153,13 +148,12 @@ export default function HeroSearch({
             )}
           </div>
 
-          {/* ПОЛЯ ВВОДА ДЛЯ ФИЛЬТРАЦИИ С Относительным позиционированием */}
           <div className="search-inputs-row-wrapper">
             <div className="search-inputs-row">
               
               {/* Район */}
               <div 
-                className={`search-input-field flex-wide field-trigger-location ${filters.selectedLocations.length > 0 ? 'has-value' : ''} ${activeDropdown === 'location' ? 'active-field' : ''}`}
+                className={'search-input-field flex-wide field-trigger-location ' + (filters.selectedLocations.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'location' ? 'active-field' : '')}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'location' ? null : 'location'); setSearchQuery(''); }}
                 style={{ position: 'relative' }}
               >
@@ -171,7 +165,6 @@ export default function HeroSearch({
                   <span className="main-label">{getDropdownLabel('location')}</span>
                 </div>
 
-                {/* Вложенный выпадающий список районов */}
                 {activeDropdown === 'location' && (
                   <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
@@ -194,7 +187,7 @@ export default function HeroSearch({
                         .map((loc) => (
                           <div 
                             key={loc} 
-                            className={`dropdown-item ${filters.selectedLocations.includes(loc) ? 'selected' : ''}`}
+                            className={'dropdown-item ' + (filters.selectedLocations.includes(loc) ? 'selected' : '')}
                             onClick={() => handleLocationToggle(loc)}
                           >
                             <div className="dropdown-item-left">
@@ -216,7 +209,7 @@ export default function HeroSearch({
 
               {/* Комнаты */}
               <div 
-                className={`search-input-field flex-standard field-trigger-room ${filters.selectedRooms.length > 0 ? 'has-value' : ''} ${activeDropdown === 'room' ? 'active-field' : ''}`}
+                className={'search-input-field flex-standard field-trigger-room ' + (filters.selectedRooms.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'room' ? 'active-field' : '')}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'room' ? null : 'room'); }}
                 style={{ position: 'relative' }}
               >
@@ -228,7 +221,6 @@ export default function HeroSearch({
                   <span className="main-label">{getDropdownLabel('room')}</span>
                 </div>
 
-                {/* Вложенный выпадающий список комнат */}
                 {activeDropdown === 'room' && (
                   <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
@@ -239,7 +231,7 @@ export default function HeroSearch({
                       {uniqueRooms.map((room) => (
                         <div 
                           key={room} 
-                          className={`dropdown-item ${filters.selectedRooms.includes(room) ? 'selected' : ''}`}
+                          className={'dropdown-item ' + (filters.selectedRooms.includes(room) ? 'selected' : '')}
                           onClick={() => handleRoomToggle(room)}
                         >
                           <div className="dropdown-item-left">
@@ -259,9 +251,9 @@ export default function HeroSearch({
                 )}
               </div>
 
-              {/* Статус проекта */}
+              {/* Статус */}
               <div 
-                className={`search-input-field flex-standard field-trigger-durum ${filters.selectedStatuses.length > 0 ? 'has-value' : ''} ${activeDropdown === 'status' ? 'active-field' : ''}`}
+                className={'search-input-field flex-standard field-trigger-durum ' + (filters.selectedStatuses.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'status' ? 'active-field' : '')}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'status' ? null : 'status'); }}
                 style={{ position: 'relative' }}
               >
@@ -273,7 +265,6 @@ export default function HeroSearch({
                   <span className="main-label">{getDropdownLabel('status')}</span>
                 </div>
 
-                {/* Вложенный выпадающий список статусов */}
                 {activeDropdown === 'status' && (
                   <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
@@ -284,7 +275,7 @@ export default function HeroSearch({
                       {uniqueStatuses.map((status) => (
                         <div 
                           key={status} 
-                          className={`dropdown-item ${filters.selectedStatuses.includes(status) ? 'selected' : ''}`}
+                          className={'dropdown-item ' + (filters.selectedStatuses.includes(status) ? 'selected' : '')}
                           onClick={() => handleStatusToggle(status)}
                         >
                           <div className="dropdown-item-left">
@@ -317,4 +308,3 @@ export default function HeroSearch({
     </section>
   );
 }
-```
