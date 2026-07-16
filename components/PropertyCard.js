@@ -1,9 +1,7 @@
-```javascript
 import { useState } from 'react';
 import Link from 'next/link';
 
 export default function PropertyCard({ property, onImageClick }) {
-  // Получаем и фильтруем изображения проекта
   const photos = property.property_images
     ? property.property_images.map(img => img.image_url).filter(Boolean)
     : [];
@@ -45,7 +43,6 @@ export default function PropertyCard({ property, onImageClick }) {
 
   const olanaklarList = parseFeatures(property.Özellikler);
 
-  // Карта иконок из Tilda
   const iconMap = {
     havuz: (
       <svg className="card-svg-icon" viewBox="0 0 24 24">
@@ -96,13 +93,14 @@ export default function PropertyCard({ property, onImageClick }) {
   };
 
   const waRaw = property.WhatsApp;
+  
+  // ИСПРАВЛЕНО НА СЛОЖЕНИЕ СТРОК (Прямая компиляция)
   const finalWaLink = (waRaw && String(waRaw).startsWith('http'))
     ? waRaw
-    : `https://wa.me/${waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536"}`;
+    : 'https://wa.me/' + (waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536");
 
-  const detailLink = `/properties/${property.id}`;
+  const detailLink = '/properties/' + property.id;
 
-  // ИСПРАВЛЕННАЯ СВЕРКА С ТРИМОМ
   const cleanStatus = property.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
   const isLansman = cleanStatus === "lansman";
 
@@ -113,12 +111,12 @@ export default function PropertyCard({ property, onImageClick }) {
         onClick={() => onImageClick && onImageClick(photos, currentSlide)}
       >
         {photos.length > 0 ? (
-          <div className="slider-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+          <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
             {photos.map((url, idx) => (
               <div 
                 key={idx} 
                 className="slider-item" 
-                style={{ backgroundImage: `url('${url}')` }}
+                style={{ backgroundImage: "url('" + url + "')" }}
               ></div>
             ))}
           </div>
@@ -126,13 +124,13 @@ export default function PropertyCard({ property, onImageClick }) {
           <div className="slider-track">
             <div 
               className="slider-item" 
-              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')` }}
+              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')" }}
             ></div>
           </div>
         )}
 
         {property.konutcesit && (
-          <span className={`badge ${isLansman ? "status-lansman" : "status-other"}`}>
+          <span className={'badge ' + (isLansman ? 'status-lansman' : 'status-other')}>
             {property.konutcesit}
           </span>
         )}
@@ -209,4 +207,3 @@ export default function PropertyCard({ property, onImageClick }) {
     </div>
   );
 }
-```
