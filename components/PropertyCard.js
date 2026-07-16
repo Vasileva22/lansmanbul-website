@@ -1,16 +1,15 @@
+```javascript
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function PropertyCard({ property }) {
-  // 1. Безопасно получаем и фильтруем изображения проекта из связанной таблицы property_images
+export default function PropertyCard({ property, onImageClick }) {
+  // Получаем и фильтруем изображения проекта
   const photos = property.property_images
     ? property.property_images.map(img => img.image_url).filter(Boolean)
     : [];
 
-  // 2. Состояние для локального слайдера изображений в этой конкретной карточке
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Перелистывание слайдов
   const nextSlide = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -27,7 +26,6 @@ export default function PropertyCard({ property }) {
     }
   };
 
-  // 3. Форматирование цены (например, "12.500.000 TL'den" на турецком)
   const formatPrice = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
@@ -36,7 +34,6 @@ export default function PropertyCard({ property }) {
       : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
   };
 
-  // 4. Безопасно парсим строку с удобствами (Özellikler) из Supabase
   const parseFeatures = (featuresString) => {
     if (!featuresString) return [];
     if (Array.isArray(featuresString)) return featuresString;
@@ -48,7 +45,7 @@ export default function PropertyCard({ property }) {
 
   const olanaklarList = parseFeatures(property.Özellikler);
 
-  // 5. Карта иконок удобств (SVGS) для карточки
+  // Карта иконок из Tilda
   const iconMap = {
     havuz: (
       <svg className="card-svg-icon" viewBox="0 0 24 24">
@@ -82,7 +79,6 @@ export default function PropertyCard({ property }) {
     ),
   };
 
-  // Метод для получения SVG-иконки для конкретного удобства по совпадению ключевого слова
   const getOlanakIcon = (item) => {
     const norm = item.toLowerCase()
       .replace(/ı/g, 'i')
@@ -93,27 +89,29 @@ export default function PropertyCard({ property }) {
       .replace(/ü/g, 'u')
       .trim();
     
-    // Проверяем частичное совпадение (например "havuz" или "açık havuz")
     for (let key in iconMap) {
       if (norm.includes(key)) return iconMap[key];
     }
     return null;
   };
 
-  // 6. Формирование ссылки в WhatsApp
   const waRaw = property.WhatsApp;
   const finalWaLink = (waRaw && String(waRaw).startsWith('http'))
     ? waRaw
     : `https://wa.me/${waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536"}`;
 
-  // Ссылки на детальную страницу объекта (согласно Next.js dynamic routing)
   const detailLink = `/properties/${property.id}`;
+
+  // ИСПРАВЛЕННАЯ СВЕРКА С ТРИМОМ
+  const cleanStatus = property.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
+  const isLansman = cleanStatus === "lansman";
 
   return (
     <div className="custom-card" data-id={property.id}>
-      
-      {/* 1. БЛОК СЛАЙДЕРА ИЗОБРАЖЕНИЙ С БЕЙДЖЕМ */}
-      <div className="img-container">
+      <div 
+        className="img-container" 
+        onClick={() => onImageClick && onImageClick(photos, currentSlide)}
+      >
         {photos.length > 0 ? (
           <div className="slider-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
             {photos.map((url, idx) => (
@@ -133,14 +131,12 @@ export default function PropertyCard({ property }) {
           </div>
         )}
 
-        {/* Бейдж Лансман/Другой статус */}
         {property.konutcesit && (
-          <span className={`badge ${property.konutcesit.toLowerCase() === "lansman" ? "status-lansman" : "status-other"}`}>
+          <span className={`badge ${isLansman ? "status-lansman" : "status-other"}`}>
             {property.konutcesit}
           </span>
         )}
 
-        {/* Стрелки навигации слайдера (рендерим только если картинок больше одной) */}
         {photos.length > 1 && (
           <>
             <button className="slider-arrow arrow-left" onClick={prevSlide}>❮</button>
@@ -149,7 +145,6 @@ export default function PropertyCard({ property }) {
         )}
       </div>
 
-      {/* 2. СОДЕРЖИМОЕ КАРТОЧКИ */}
       <div className="card-content">
         <div className="title-price-row">
           <h3 className="card-title">{property.testproje || ''}</h3>
@@ -160,7 +155,6 @@ export default function PropertyCard({ property }) {
           {property.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimle iletişime geçin."}
         </p>
 
-        {/* Технические особенности: Локация, Комнаты, Площадь */}
         <div className="features-row">
           <div className="feat-badge">
             <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
@@ -186,7 +180,6 @@ export default function PropertyCard({ property }) {
           )}
         </div>
 
-        {/* Удобства объекта */}
         {olanaklarList.length > 0 && (
           <div className="olanaklar-row">
             {olanaklarList.map((item, idx) => {
@@ -201,7 +194,6 @@ export default function PropertyCard({ property }) {
           </div>
         )}
 
-        {/* Действия: Детали и WhatsApp */}
         <div className="actions">
           <Link href={detailLink} className="btn btn-outline detay-btn">
             Detaylar
@@ -214,7 +206,7 @@ export default function PropertyCard({ property }) {
           </a>
         </div>
       </div>
-
     </div>
   );
 }
+```
