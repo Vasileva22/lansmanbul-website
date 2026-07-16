@@ -1,905 +1,472 @@
-import React, { useState, useEffect, useRef } from 'react'
-import Head from 'next/head'
-import { useRouter } from 'next/router'
-import { supabase } from '../supabase'
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { supabase } from '../supabase';
 
-import Header from '../components/Header'
-import Footer from '../components/Footer'
-import PropertyCard from '../components/PropertyCard'
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import HeroSearch from '../components/HeroSearch';
+import SidebarFilters from '../components/SidebarFilters';
+import PropertyCard from '../components/PropertyCard';
 
-const cssStyles = [
-  ':root {',
-  '  --primary: #00A4A6;',
-  '  --primary-hover: #00898B;',
-  '  --dark-slate: #1E293B;',
-  '  --text-main: #334155 !important;',
-  '  --text-secondary: #475569 !important;',
-  '  --text-muted: #64748B !important;',
-  '  --border-soft: #CBD5E1;',
-  '  --bg-light: #F1F5F9;',
-  '  --shadow-premium: 0 10px 30px rgba(0, 164, 166, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);',
-  '  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.18);',
-  '  --primary-light: rgba(0, 164, 166, 0.06);',
-  '  --radius-bubble: 36px;',
-  '  --font-main: "Mulish", sans-serif !important;',
-  '}',
-  '',
-  'html, body, *, input, select, button, textarea {',
-  '  font-family: var(--font-main) !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '',
-  '/* Секция поиска */',
-  '.hero-search-container {',
-  '  width: 100%;',
-  '  padding: 35px 20px 25px 20px !important;',
-  '  background-color: var(--bg-light);',
-  '  display: flex;',
-  '  justify-content: center;',
-  '  box-sizing: border-box;',
-  '}',
-  '.search-width-limiter {',
-  '  width: 100%;',
-  '  max-width: 1140px;',
-  '  display: flex;',
-  '  flex-direction: column;',
-  '  align-items: center;',
-  '  box-sizing: border-box;',
-  '}',
-  '.hero-search-title {',
-  '  font-size: 36px;',
-  '  font-weight: 900;',
-  '  color: #3F536C;',
-  '  margin: 0 0 25px 0;',
-  '  line-height: 1.3;',
-  '  text-align: center;',
-  '}',
-  '',
-  '.search-panel-card {',
-  '  width: 100%;',
-  '  background-color: #fff;',
-  '  border-radius: 20px;',
-  '  border: 1px solid var(--border-soft);',
-  '  box-shadow: var(--shadow-premium);',
-  '  padding: 24px 30px 32px 30px;',
-  '  display: flex;',
-  '  flex-direction: column;',
-  '  gap: 20px;',
-  '  position: relative;',
-  '  box-sizing: border-box;',
-  '}',
-  '.panel-bottom-gradient {',
-  '  position: absolute;',
-  '  bottom: 0;',
-  '  left: 0;',
-  '  width: 100%;',
-  '  height: 4px;',
-  '  background: linear-gradient(to right, #7b1fa2, var(--primary), #ffb300);',
-  '  border-radius: 0 0 20px 20px;',
-  '}',
-  '',
-  '/* Табы городов */',
-  '.search-tabs-header {',
-  '  display: flex;',
-  '  gap: 24px;',
-  '  border-bottom: 1px solid var(--border-soft);',
-  '  padding-bottom: 12px;',
-  '  margin-bottom: -1px;',
-  '  box-sizing: border-box;',
-  '}',
-  '.city-tab-item {',
-  '  display: flex;',
-  '  align-items: center;',
-  '  gap: 8px;',
-  '  font-size: 16px;',
-  '  font-weight: 800;',
-  '  color: var(--text-muted);',
-  '  cursor: pointer;',
-  '  position: relative;',
-  '  padding-bottom: 12px;',
-  '  margin-bottom: -13px;',
-  '  transition: color .2s ease;',
-  '  user-select: none;',
-  '}',
-  '.city-tab-item.active {',
-  '  color: var(--primary);',
-  '}',
-  '.city-tab-item.active::after {',
-  '  content: "";',
-  '  position: absolute;',
-  '  bottom: 0;',
-  '  left: 0;',
-  '  width: 100%;',
-  '  height: 3px;',
-  '  background-color: var(--primary);',
-  '  border-radius: 3px 3px 0 0;',
-  '}',
-  '.city-tab-item.disabled {',
-  '  color: #9CA3AF;',
-  '  cursor: pointer;',
-  '}',
-  '.tab-badge {',
-  '  font-size: 9px;',
-  '  background-color: #F3F4F6;',
-  '  color: #9CA3AF;',
-  '  padding: 2px 6px;',
-  '  border-radius: 20px;',
-  '  font-weight: 700;',
-  '  text-transform: uppercase;',
-  '  letter-spacing: .5px;',
-  '}',
-  '',
-  '/* Поля поиска */',
-  '.search-inputs-row-wrapper {',
-  '  display: flex;',
-  '  gap: 16px;',
-  '  width: 100%;',
-  '  align-items: center;',
-  '  box-sizing: border-box;',
-  '}',
-  '.search-inputs-row {',
-  '  display: flex;',
-  '  gap: 16px;',
-  '  align-items: center;',
-  '  flex: 1;',
-  '  box-sizing: border-box;',
-  '}',
-  '.search-input-field {',
-  '  display: flex;',
-  '  align-items: center;',
-  '  gap: 12px;',
-  '  border: 1.5px solid var(--border-soft);',
-  '  border-radius: 10px;',
-  '  height: 60px;',
-  '  padding: 0 16px;',
-  '  background-color: #F8FAFC;',
-  '  transition: border-color .2s, background-color .2s, box-shadow .2s;',
-  '  cursor: pointer;',
-  '  user-select: none;',
-  '  box-sizing: border-box;',
-  '  position: relative !important;',
-  '}',
-  '.search-input-field:hover, .search-input-field.active-field {',
-  '  border-color: var(--primary) !important;',
-  '  background-color: #fff !important;',
-  '  box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;',
-  '}',
-  '.search-input-field.flex-wide { flex: 1.5 !important; }',
-  '.search-input-field.flex-standard { flex: 1 !important; }',
-  '',
-  '.input-icon-svg {',
-  '  width: 18px;',
-  '  height: 18px;',
-  '  flex-shrink: 0;',
-  '}',
-  '.input-icon-svg.icon-fill { fill: var(--text-muted); }',
-  '.input-icon-svg.icon-stroke { fill: none; stroke: var(--text-muted); stroke-width: 2; }',
-  '',
-  '.input-double-label {',
-  '  display: flex;',
-  '  flex-direction: column;',
-  '  gap: 2px;',
-  '  text-align: left;',
-  '  overflow: hidden;',
-  '  width: 100%;',
-  '}',
-  '.input-double-label .sub-label {',
-  '  font-size: 11px;',
-  '  font-weight: 800;',
-  '  color: var(--text-muted);',
-  '  text-transform: uppercase;',
-  '}',
-  '.input-double-label .main-label {',
-  '  font-size: 14px;',
-  '  font-weight: 800;',
-  '  color: #3F536C;',
-  '  white-space: nowrap;',
-  '  overflow: hidden;',
-  '  text-overflow: ellipsis;',
-  '}',
-  '',
-  '.search-submit-btn {',
-  '  background-color: var(--primary);',
-  '  color: #fff;',
-  '  border: none;',
-  '  height: 60px;',
-  '  padding: 0 40px;',
-  '  border-radius: 30px;',
-  '  font-size: 18px;',
-  '  font-weight: 800;',
-  '  cursor: pointer;',
-  '  transition: background-color .2s, transform .1s;',
-  '  flex-shrink: 0;',
-  '}',
-  '.search-submit-btn:hover { background-color: var(--primary-hover); }',
-  '',
-  '.custom-dropdown {',
-  '  position: absolute !important;',
-  '  background-color: #fff !important;',
-  '  border-radius: 16px !important;',
-  '  box-shadow: var(--shadow-dropdown) !important;',
-  '  border: 1.5px solid var(--border-soft) !important;',
-  '  padding: 0 !important;',
-  '  z-index: 99999 !important;',
-  '  display: block;',
-  '  overflow-y: auto !important;',
-  '  max-height: 250px !important;',
-  '  top: 105% !important;',
-  '  left: 0 !important;',
-  '  width: 100% !important;',
-  '}',
-  '.dropdown-item {',
-  '  padding: 12px 20px !important;',
-  '  font-size: 14px !important;',
-  '  font-weight: 700 !important;',
-  '  color: #3F536C !important;',
-  '  cursor: pointer !important;',
-  '  transition: all 0.15s ease !important;',
-  '}',
-  '.dropdown-item:hover { background-color: #f8fafc !important; color: var(--primary) !important; }',
-  '',
-  '/* СЕТКА ГРИДА: Ровно 4 колонки в ряд на ширине 1440px */',
-  '.grid-layout {',
-  '  display: grid !important;',
-  '  grid-template-columns: repeat(4, 1fr) !important;',
-  '  width: 100% !important;',
-  '  max-width: 1440px !important;',
-  '  margin: 24px auto !important;',
-  '  column-gap: 16px !important;',
-  '  row-gap: 24px !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '',
-  '/* КАРТОЧКА ОБЪЯВЛЕНИЯ: Новые пропорции */',
-  '.cian-card {',
-  '  width: 100% !important;',
-  '  aspect-ratio: 227.5 / 282.26 !important;',
-  '  height: auto !important;',
-  '  padding: 0 !important;',
-  '  margin: 0 !important;',
-  '  background: #ffffff !important;',
-  '  border-radius: 8px !important;',
-  '  border: 0.666667px solid rgb(208, 216, 233) !important;',
-  '  overflow: hidden !important;',
-  '  display: flex !important;',
-  '  flex-direction: column !important;',
-  '  transition: transform .2s ease, box-shadow .2s ease !important;',
-  '  position: relative !important;',
-  '  cursor: pointer !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '.cian-card:hover {',
-  '  transform: translateY(-4px) !important;',
-  '  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;',
-  '}',
-  '',
-  '/* КОНТЕЙНЕР КАРТИНКИ: Ровно 69.3% высоты */',
-  '.cian-img-container {',
-  '  width: 100% !important;',
-  '  height: 69.3% !important;',
-  '  margin: 0 !important;',
-  '  border-radius: 8px 8px 0 0 !important;',
-  '  position: relative !important;',
-  '  overflow: hidden !important;',
-  '  flex-shrink: 0 !important;',
-  '}',
-  '.cian-img {',
-  '  width: 100% !important;',
-  '  height: 100% !important;',
-  '  object-fit: cover !important;',
-  '}',
-  '',
-  '/* БЛОК ИНФОРМАЦИИ: Ровно 30.7% высоты для плотного текста без пустоты */',
-  '.cian-info {',
-  '  width: 100% !important;',
-  '  height: 30.7% !important;',
-  '  margin: 0 auto !important;',
-  '  padding: 12px 14px 12px 14px !important;',
-  '  display: flex !important;',
-  '  flex-direction: column !important;',
-  '  justify-content: space-between !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '',
-  '/* КНОПКА ИЗБРАННОГО: 40px * 40px */',
-  '.card-fav-btn {',
-  '  position: absolute !important;',
-  '  top: 12px !important;',
-  '  right: 12px !important;',
-  '  width: 40px !important;',
-  '  height: 40px !important;',
-  '  border-radius: 50% !important;',
-  '  background: rgba(15, 23, 42, 0.4) !important;',
-  '  backdrop-filter: blur(6px) !important;',
-  '  border: none !important;',
-  '  color: #ffffff !important;',
-  '  display: flex !important;',
-  '  align-items: center !important;',
-  '  justify-content: center !important;',
-  '  cursor: pointer !important;',
-  '  z-index: 10 !important;',
-  '  transition: all 0.2s ease !important;',
-  '}',
-  '.card-fav-btn.liked {',
-  '  color: #ff3b30 !important;',
-  '  background: #ffffff !important;',
-  '  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;',
-  '}',
-  '',
-  '/* Статус-плашка */',
-  '.card-status-badge {',
-  '  position: absolute !important;',
-  '  top: 12px !important;',
-  '  left: 12px !important;',
-  '  background-color: var(--primary) !important;',
-  '  color: #ffffff !important;',
-  '  padding: 4px 10px !important;',
-  '  border-radius: 6px !important;',
-  '  font-size: 11px !important;',
-  '  font-weight: 800 !important;',
-  '  text-transform: uppercase !important;',
-  '  z-index: 10 !important;',
-  '  box-shadow: 0 2px 8px rgba(0, 164, 166, 0.3) !important;',
-  '}',
-  '',
-  '/* ЦЕНА ЦИАН: Теперь на чистом шрифте Mulish, вес 700 без точек */',
-  '.cian-price {',
-  '  width: 100% !important;',
-  '  font-size: 22px !important;',
-  '  font-weight: 700 !important;',
-  '  font-family: var(--font-main) !important;',
-  '  color: #11162e !important;',
-  '  white-space: nowrap !important;',
-  '  overflow: hidden !important;',
-  '  text-overflow: ellipsis !important;',
-  '  letter-spacing: -0.5px !important;',
-  '  line-height: 1.1 !important;',
-  '}',
-  '',
-  '/* Характеристики: Размер строго 15px, плотность 500 (нормальная) */',
-  '.cian-specs {',
-  '  font-size: 15px !important;',
-  '  font-weight: 500 !important;',
-  '  color: #3F536C !important;',
-  '  font-family: var(--font-main) !important;',
-  '  margin-top: 1px !important;',
-  '  white-space: nowrap !important;',
-  '  overflow: hidden !important;',
-  '  text-overflow: ellipsis !important;',
-  '}',
-  '',
-  '/* Локация и POI: Размер строго 15px, плотность 500 (нормальная) */',
-  '.cian-location {',
-  '  font-size: 15px !important;',
-  '  font-weight: 500 !important;',
-  '  font-family: var(--font-main) !important;',
-  '  display: inline-flex !important;',
-  '  align-items: center !important;',
-  '  width: 100% !important;',
-  '  box-sizing: border-box !important;',
-  '}',
-  '',
-  '/* Полностью убираем адрес/заголовок проекта с нижней строчки */',
-  '.cian-address {',
-  '  display: none !important;',
-  '}',
-  '',
-  '/* Навигационные стрелочки */',
-  '.slider-arrow {',
-  '  position: absolute !important;',
-  '  top: 50% !important;',
-  '  transform: translateY(-50%) !important;',
-  '  background: rgba(15, 23, 42, 0.4) !important;',
-  '  color: #fff !important;',
-  '  border: none !important;',
-  '  width: 24px !important;',
-  '  height: 24px !important;',
-  '  border-radius: 50% !important;',
-  '  cursor: pointer !important;',
-  '  display: flex !important;',
-  '  align-items: center !important;',
-  '  justify-content: center !important;',
-  '  font-size: 10px !important;',
-  '  z-index: 5 !important;',
-  '  opacity: 0;',
-  '  transition: opacity 0.2s !important;',
-  '}',
-  '.cian-img-container:hover .slider-arrow { opacity: 1; }',
-  '.arrow-left { left: 8px !important; }',
-  '.arrow-right { right: 8px !important; }',
-  '',
-  '/* Пагинация */',
-  '.pagination-container {',
-  '  display: flex;',
-  '  justify-content: center;',
-  '  align-items: center;',
-  '  gap: 8px;',
-  '  margin-top: 40px;',
-  '}',
-  '.pagination-btn {',
-  '  min-width: 40px;',
-  '  height: 40px;',
-  '  padding: 0 12px;',
-  '  border-radius: 8px;',
-  '  border: 1px solid var(--border-soft);',
-  '  background-color: #fff;',
-  '  color: var(--text-main);',
-  '  font-size: 14px;',
-  '  font-weight: 700;',
-  '  cursor: pointer;',
-  '  display: flex;',
-  '  align-items: center;',
-  '  justify-content: center;',
-  '  transition: all 0.2s ease;',
-  '}',
-  '.pagination-btn:hover { border-color: var(--primary); color: var(--primary); }',
-  '.pagination-btn.active { background-color: var(--primary); border-color: var(--primary); color: #fff; }',
-  '.pagination-btn.disabled { opacity: 0.5; cursor: not-allowed; }',
-  '',
-  '/* Drawer */',
-  '.cabinet-drawer {',
-  '  position: fixed !important;',
-  '  top: 0 !important;',
-  '  right: -420px !important;',
-  '  width: 400px !important;',
-  '  height: 100vh !important;',
-  '  background: #ffffff !important;',
-  '  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15) !important;',
-  '  z-index: 10000005 !important;',
-  '  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;',
-  '  display: flex !important;',
-  '  flex-direction: column !important;',
-  '}',
-  '.cabinet-drawer.open { right: 0 !important; }',
-  '.drawer-header { padding: 24px !important; border-bottom: 1px solid var(--border-soft) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }',
-  '.drawer-title { font-size: 20px !important; font-weight: 900 !important; }',
-  '.drawer-close { background: none !important; border: none !important; font-size: 28px !important; color: var(--text-muted) !important; cursor: pointer !important; }',
-  '.drawer-content { flex: 1 !important; overflow-y: auto !important; padding: 24px !important; }',
-  '',
-  '/* АДАПТИВНОСТЬ (Mobile Friendly) */',
-  '@media (max-width: 1024px) {',
-  '  .hero-search-container { padding: 100px 16px 40px 16px !important; }',
-  '  .search-panel-card { border-radius: 16px !important; padding: 16px !important; }',
-  '  .search-inputs-row-wrapper { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
-  '  .search-inputs-row { flex-direction: column !important; width: 100% !important; gap: 12px !important; }',
-  '  .search-input-field { width: 100% !important; border: 1.5px solid var(--border-soft) !important; border-radius: 10px !important; }',
-  '  .search-submit-btn { width: 100% !important; border-radius: 12px !important; margin: 0 !important; }',
-  '}',
-  '@media (max-width: 500px) {',
-  '  .grid-layout {',
-  '    grid-template-columns: 1fr !important;',
-  '    padding: 0 16px !important;',
-  '  }',
-  '  .cian-card {',
-  '    width: 100% !important;',
-  '    aspect-ratio: auto !important;',
-  '    height: auto !important;',
-  '  }',
-  '  .cian-img-container {',
-  '    width: 100% !important;',
-  '    height: 220px !important;',
-  '    margin: 0 !important;',
-  '    border-radius: 8px 8px 0 0 !important;',
-  '  }',
-  '  .cian-info {',
-  '    width: calc(100% - 24px) !important;',
-  '    height: auto !important;',
-  '    padding: 12px 0 !important;',
-  '    gap: 8px !important;',
-  '  }',
-  '}'
-].join('\n');
+export default function Home({ initialProperties }) {
+  const router = useRouter();
 
-export default function Home({ 
-  properties = [], 
-  totalCount = 0, 
-  currentPage = 1, 
-  totalPages = 1,
-  cities = [],
-  districts = [],
-  roomsList = [],
-  statuses = [],
-  initialError 
-}) {
-  const router = useRouter()
-
-  const [favorites, setFavorites] = useState([])
-  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false)
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+  // Основной массив всех объявлений из базы данных
+  const [masterProperties, setMasterProperties] = useState(initialProperties || []);
   
-  const [selectedCity, setSelectedCity] = useState(router.query.city || '')
-  const [selectedDistrict, setSelectedDistrict] = useState(router.query.district || '')
-  const [selectedRooms, setSelectedRooms] = useState(router.query.rooms || '')
-  const [activeStatusFilter, setActiveStatusFilter] = useState(router.query.status || '')
+  // Состояния отображения интерфейса
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [layout, setLayout] = useState('grid'); // 'grid' или 'list'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
 
-  const [openDropdown, setOpenDropdown] = useState(null)
-  const [lightboxProperty, setLightboxProperty] = useState(null)
-  const [lightboxImageIdx, setLightboxImageIdx] = useState(0)
+  // Единое состояние для всех активных фильтров на странице
+  const [filters, setFilters] = useState({
+    selectedLocations: [],      // Районы (из верхнего поиска)
+    selectedRooms: [],          // Комнаты (из верхнего поиска)
+    selectedStatuses: [],       // Статус проекта (из верхнего поиска)
+    areaRange: [0, 500],        // Диапазон площади m² (из бокового фильтра)
+    katRange: [0, 40],          // Диапазон этажей (из бокового фильтра)
+    priceRange: [0, 50000000],  // Диапазон цен (из бокового фильтра)
+    activeFeatureFilters: [],   // Теги удобств
+    activePaymentFilters: [],   // Теги способов оплаты
+  });
 
-  const searchContainerRef = useRef(null)
+  // ==========================================================================
+  // 1. ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE
+  // ==========================================================================
 
   useEffect(() => {
-    setSelectedCity(router.query.city || '')
-    setSelectedDistrict(router.query.district || '')
-    setSelectedRooms(router.query.rooms || '')
-    setActiveStatusFilter(router.query.status || '')
-  }, [router.query])
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setOpenDropdown(null)
+    async function loadClientData() {
+      // Подстраховка: если сервер не вернул данные, запрашиваем их на клиенте
+      if (masterProperties.length === 0) {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*, property_images(*)');
+        if (data) {
+          setMasterProperties(data);
+        } else if (error) {
+          console.error("Supabase veri yükleme hatası:", error);
+        }
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    loadClientData();
+  }, []);
 
+  // Считываем параметры из URL (например, ?status=Lansman или ?scrollto=id) при загрузке страницы
   useEffect(() => {
-    const stored = localStorage.getItem('lansmanbul_favorites')
-    if (stored) {
-      try { setFavorites(JSON.parse(stored)) } catch (err) { console.error(err) }
+    if (!router.isReady) return;
+
+    const { status, scrollto } = router.query;
+
+    if (status) {
+      setFilters((prev) => ({
+        ...prev,
+        selectedStatuses: [status],
+      }));
     }
-  }, [])
 
-  const toggleLike = (e, id) => {
-    if (e) e.stopPropagation()
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-      localStorage.setItem('lansmanbul_favorites', JSON.stringify(next))
-      return next
-    })
-  }
+    if (scrollto) {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-id="${scrollto}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.style.boxShadow = '0 0 25px rgba(0, 164, 166, 0.45)';
+          setTimeout(() => {
+            element.style.boxShadow = '';
+          }, 2500);
+        }
+      }, 800);
+    }
+  }, [router.isReady, router.query]);
 
-  const handleSearch = () => {
-    setOpenDropdown(null)
-    router.push({
-      pathname: '/',
-      query: {
-        ...router.query,
-        city: selectedCity,
-        district: selectedDistrict,
-        rooms: selectedRooms,
-        status: activeStatusFilter,
-        page: 1
+  // Проверка куки при первой загрузке
+  useEffect(() => {
+    const consent = localStorage.getItem('cookie_consent');
+    if (!consent) {
+      setTimeout(() => setShowCookieBanner(true), 1500);
+    }
+  }, []);
+
+  // Инициализация анимации появления блоков (3D scroll effect)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+          } else {
+            entry.target.classList.remove('revealed');
+          }
+        });
+      },
+      { root: null, threshold: 0.15 }
+    );
+
+    const targets = document.querySelectorAll('.scroll-3d-target');
+    targets.forEach((el) => observer.observe(el));
+
+    return () => targets.forEach((el) => observer.unobserve(el));
+  }, [masterProperties]);
+
+  // ==========================================================================
+  // 2. АВТОМАТИЧЕСКИЙ СБОР ПАРАМЕТРОВ ДЛЯ ПОИСКА (БЕЗ ХАРДКОДА)
+  // ==========================================================================
+
+  const uniqueLocations = useMemo(() => {
+    const locs = masterProperties.map((p) => p['İlçe/Semt'] || p.address_district).filter(Boolean);
+    return [...new Set(locs)].sort();
+  }, [masterProperties]);
+
+  const uniqueRooms = useMemo(() => {
+    const rooms = masterProperties.map((p) => p['card odalar'] || p.rooms_text).filter(Boolean);
+    return [...new Set(rooms)].sort();
+  }, [masterProperties]);
+
+  const uniqueStatuses = useMemo(() => {
+    const statuses = masterProperties.map((p) => p.konutcesit).filter(Boolean);
+    // Возвращаем в привычном порядке сортировки
+    const customOrder = ["Lansman", "Devam ediyor", "Tamamlandı"];
+    return customOrder.filter((status) => statuses.includes(status));
+  }, [masterProperties]);
+
+  // ==========================================================================
+  // 3. ФИЛЬТРАЦИЯ ОБЪЕКТОВ НА КЛИЕНТЕ В РЕАЛЬНОМ ВРЕМЕНИ
+  // ==========================================================================
+
+  const filteredProperties = useMemo(() => {
+    return masterProperties.filter((property) => {
+      // А. Фильтр по Районам
+      if (
+        filters.selectedLocations.length > 0 &&
+        !filters.selectedLocations.includes(property['İlçe/Semt'])
+      ) {
+        return false;
       }
-    }, undefined, { shallow: false })
-  }
 
-  const handlePageChange = (pageNum) => {
-    if (pageNum < 1 || pageNum > totalPages) return
-    router.push({
-      pathname: '/',
-      query: {
-        ...router.query,
-        page: pageNum
+      // Б. Фильтр по Комнатам
+      if (
+        filters.selectedRooms.length > 0 &&
+        !filters.selectedRooms.includes(property['card odalar'])
+      ) {
+        return false;
       }
-    }, undefined, { shallow: false })
-  }
 
-  const handleResetFilters = () => {
-    setSelectedCity('')
-    setSelectedDistrict('')
-    setSelectedRooms('')
-    setActiveStatusFilter('')
-    router.push('/', undefined, { shallow: false })
-  }
+      // В. Фильтр по Статусу проекта
+      if (
+        filters.selectedStatuses.length > 0 &&
+        !filters.selectedStatuses.includes(property.konutcesit)
+      ) {
+        return false;
+      }
 
-  const openLightbox = (property, index = 0) => {
-    setLightboxProperty(property)
-    setLightboxImageIdx(index)
-  }
+      // Г. Фильтр по площади (m²)
+      const area = parseInt(property['card-area']) || 0;
+      if (area < filters.areaRange[0] || area > filters.areaRange[1]) {
+        return false;
+      }
 
-  const nextLightboxImage = () => {
-    if (!lightboxProperty) return
-    const imgs = lightboxProperty.property_images || []
-    setLightboxImageIdx((prev) => (prev + 1) % (imgs.length || 1))
-  }
+      // Д. Фильтр по Этажности
+      const katRaw = property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi || 0;
+      const kat = parseInt(String(katRaw).replace(/\D/g, '')) || 0;
+      if (kat < filters.katRange[0] || kat > filters.katRange[1]) {
+        return false;
+      }
 
-  const prevLightboxImage = () => {
-    if (!lightboxProperty) return
-    const imgs = lightboxProperty.property_images || []
-    setLightboxImageIdx((prev) => (prev + imgs.length - 1) % (imgs.length || 1))
-  }
+      // Е. Фильтр по цене
+      const priceRaw = String(property.Fiyat || "").replace(/\./g, '');
+      const price = parseInt(priceRaw.replace(/\D/g, '')) || 0;
+      if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
+        return false;
+      }
 
-  const favoriteProperties = properties.filter((p) => favorites.includes(p.id))
+      // Ж. Фильтр по Удобствам (Пересечение: объект должен содержать ВСЕ выбранные удобства)
+      if (filters.activeFeatureFilters.length > 0) {
+        const propFeatures = property.Özellikler
+          ? String(property.Özellikler).toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's')
+          : '';
+        const allMatched = filters.activeFeatureFilters.every((feat) => {
+          const normFeat = feat.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
+          return propFeatures.includes(normFeat);
+        });
+        if (!allMatched) return false;
+      }
+
+      // З. Фильтр по способам оплаты (Объединение: подходит хотя бы один выбранный способ)
+      if (filters.activePaymentFilters.length > 0) {
+        const matchesAny = filters.activePaymentFilters.some((pay) => {
+          const normPay = pay.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
+          const krediDurumu = String(property.Kredi_Durumu || "").trim();
+          const vadeSecenegi = String(property.Vade_Secenegi || "").trim();
+          const ilkPesinat = String(property.Ilk_Pesinat || "").trim();
+
+          if (normPay.includes("kredi")) return krediDurumu !== "";
+          if (normPay.includes("taksit")) return vadeSecenegi !== "" || ilkPesinat !== "";
+          if (normPay.includes("pesin")) return vadeSecenegi === "" && ilkPesinat === "";
+          return false;
+        });
+        if (!matchesAny) return false;
+      }
+
+      return true;
+    });
+  }, [masterProperties, filters]);
+
+  // Сбрасываем пагинацию на 1 страницу при каждом изменении фильтров
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // ==========================================================================
+  // 4. ПАГИНАЦИЯ И СЕТКА
+  // ==========================================================================
+
+  const itemsPerPage = isSidebarHidden ? 12 : 8;
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+
+  const paginatedProperties = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredProperties.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredProperties, currentPage, itemsPerPage]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      selectedLocations: [],
+      selectedRooms: [],
+      selectedStatuses: [],
+      areaRange: [0, 500],
+      katRange: [0, 40],
+      priceRange: [0, 50000000],
+      activeFeatureFilters: [],
+      activePaymentFilters: [],
+    });
+    router.push('/', undefined, { shallow: true });
+  };
+
+  const handleCookieAccept = () => {
+    localStorage.setItem('cookie_consent', 'accepted');
+    setShowCookieBanner(false);
+  };
+
+  const handleCookieReject = () => {
+    localStorage.setItem('cookie_consent', 'rejected');
+    setShowCookieBanner(false);
+  };
 
   return (
     <>
-      <Head>
-        <title>Lansmanbul - Konut Projeleri Platformu</title>
-        <meta name="description" content="En yeni konut projelerini doğrudan geliştiriciden bulun." />
-        <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </Head>
+      {/* ГЛОБАЛЬНАЯ ШАПКА */}
+      <Header />
 
-      <Header 
-        favoritesCount={favorites.length}
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
-        onOpenPostModal={() => setIsPostModalOpen(true)}
+      {/* 1. БЛОК ВЕРХНЕГО ПОИСКА */}
+      <HeroSearch 
+        filters={filters}
+        setFilters={setFilters}
+        uniqueLocations={uniqueLocations}
+        uniqueRooms={uniqueRooms}
+        uniqueStatuses={uniqueStatuses}
+        onSearch={() => {
+          // Скроллим плавно к каталогу при нажатии "Ara"
+          const target = document.getElementById('custom-catalog-search');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
       />
 
-      <main className="tilda-catalog-wrapper" style={{ marginTop: '90px', minHeight: '80vh', backgroundColor: '#f8fafc', paddingBottom: '80px' }}>
+      {/* 2. ОСНОВНОЙ КОНТЕНТ: КАТАЛОГ И ФИЛЬТРЫ */}
+      <section id="custom-catalog-search">
         
-        <div className="hero-search-container">
-          <div className="search-width-limiter">
-            <h1 className="hero-search-title">Komisyonsuz, doğrudan müteahhitten konut keşfedin!</h1>
-            
-            <div className="search-panel-card" ref={searchContainerRef}>
-              
-              <div className="search-tabs-header">
-                <div 
-                  className={`city-tab-item ${selectedCity === '' ? 'active' : ''}`}
-                  onClick={() => { setSelectedCity(''); setSelectedDistrict(''); }}
-                >
-                  <span>Tüm Türkiye</span>
-                </div>
-                {cities.filter(Boolean).map(c => (
-                  <div 
-                    key={c}
-                    className={`city-tab-item ${selectedCity.toLowerCase() === c.toLowerCase() ? 'active' : ''}`}
-                    onClick={() => { setSelectedCity(c); setSelectedDistrict(''); }}
-                  >
-                    <span>{c}</span>
-                  </div>
-                ))}
-              </div>
+        {/* БОКОВОЙ ФИЛЬТР (С КАРТОЙ И СЛАЙДЕРАМИ) */}
+        <SidebarFilters 
+          filteredProperties={filteredProperties}
+          totalCount={filteredProperties.length}
+          filters={filters}
+          setFilters={setFilters}
+          onClearFilters={handleClearFilters}
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        />
 
-              <div className="search-inputs-row-wrapper">
-                <div className="search-inputs-row">
-                  
-                  <div 
-                    className={`search-input-field flex-wide ${selectedDistrict ? 'has-value' : ''}`}
-                    onClick={() => setOpenDropdown(openDropdown === 'district' ? null : 'district')} 
-                  >
-                    <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
-                    <div className="input-double-label">
-                      <span className="sub-label">Konum</span>
-                      <span className="main-label">{selectedDistrict || 'İlçe / Semt seçiniz'}</span>
-                    </div>
-                    
-                    {openDropdown === 'district' && (
-                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
-                        <div className="dropdown-item" onClick={() => { setSelectedDistrict(''); setOpenDropdown(null); }}>Tüm Bölgeler</div>
-                        {districts.map((d) => (
-                          <div key={d} className="dropdown-item" onClick={() => { setSelectedDistrict(d); setOpenDropdown(null); }}>{d}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+        {/* Кнопка открытия бокового меню на мобильных устройствах */}
+        <button 
+          className="mobile-filter-floating-btn show-btn" 
+          onClick={() => setIsMobileSidebarOpen(true)}
+        >
+          <svg style={{ width: 16, height: 16, fill: 'currentColor' }} viewBox="0 0 24 24">
+            <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+          </svg>
+          <span>Filtreleme</span>
+        </button>
 
-                  <div 
-                    className={`search-input-field flex-standard ${selectedRooms ? 'has-value' : ''}`}
-                    onClick={() => setOpenDropdown(openDropdown === 'rooms' ? null : 'rooms')} 
-                  >
-                    <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" fill="currentColor"/></svg>
-                    <div className="input-double-label">
-                      <span className="sub-label">Oda sayısı</span>
-                      <span className="main-label">{selectedRooms || 'Seçiniz'}</span>
-                    </div>
-
-                    {openDropdown === 'rooms' && (
-                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
-                        <div className="dropdown-item" onClick={() => { setSelectedRooms(''); setOpenDropdown(null); }}>Tüm Odalar</div>
-                        {roomsList.map((r) => (
-                          <div key={r} className="dropdown-item" onClick={() => { setSelectedRooms(r); setOpenDropdown(null); }}>{r}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div 
-                    className={`search-input-field flex-standard ${activeStatusFilter ? 'has-value' : ''}`}
-                    onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')} 
-                  >
-                    <svg className="input-icon-svg icon-stroke" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" /></svg>
-                    <div className="input-double-label">
-                      <span className="sub-label">Proje durumu</span>
-                      <span className="main-label">{activeStatusFilter || 'Seçiniz'}</span>
-                    </div>
-
-                    {openDropdown === 'status' && (
-                      <div className="custom-dropdown" onClick={(e) => e.stopPropagation()}>
-                        <div className="dropdown-item" onClick={() => { setActiveStatusFilter(''); setOpenDropdown(null); }}>Tüm Durumlar</div>
-                        {statuses.map((s) => (
-                          <div key={s} className="dropdown-item" onClick={() => { setActiveStatusFilter(s); setOpenDropdown(null); }}>{s}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
-                <button className="search-submit-btn" onClick={handleSearch}>Ara</button>
-              </div>
-
-              <div className="panel-bottom-gradient"></div>
-            </div>
-
-          </div>
-        </div>
-
-        <div style={{ width: '100%', maxWidth: '1440px', margin: '40px auto 0 auto', padding: '0 20px', boxSizing: 'border-box' }}>
-          {initialError && (
-            <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
-              Hata: {initialError}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', padding: '0' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)', margin: '0' }}>
-              {activeStatusFilter ? `${activeStatusFilter} Projeleri` : 'Tüm Projeler'} ({totalCount})
-            </h2>
-            {(selectedCity || selectedDistrict || selectedRooms || activeStatusFilter) && (
+        {/* СПИСОК КАРТОЧЕК ОБЪЕКТОВ */}
+        <div id="catalog-content-wrapper">
+          
+          {/* Панель управления сеткой (Grid/List) и кнопкой скрытия фильтров */}
+          <div className="catalog-control-bar">
+            <div className="layout-toggle">
               <button 
-                onClick={handleResetFilters}
-                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '800', cursor: 'pointer' }}
+                className={`toggle-btn ${layout === 'grid' ? 'active' : ''}`}
+                onClick={() => setLayout('grid')}
+                title="Izgara Görünümü"
               >
+                <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>
+              </button>
+              <button 
+                className={`toggle-btn ${layout === 'list' ? 'active' : ''}`}
+                onClick={() => setLayout('list')}
+                title="Liste Görünümü"
+              >
+                <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Сетка/список карточек */}
+          {paginatedProperties.length > 0 ? (
+            <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
+              {paginatedProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+              <h3>Aradığınız kriterlere uygun proje bulunamadı.</h3>
+              <p>Lütfen filtreleri sıfırlayarak tekrar deneyin.</p>
+              <button className="btn btn-primary" onClick={handleClearFilters} style={{ marginTop: 15 }}>
                 Filtreleri Temizle
               </button>
-            )}
-          </div>
-
-          {properties.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '18px', fontWeight: '700' }}>Aradığınız критериям uygun ilan bulunamadı.</p>
             </div>
-          ) : (
-            <>
-              <div className="grid-layout">
-                {properties.map((item) => (
-                  <PropertyCard 
-                    key={item.id}
-                    property={item}
-                    isLiked={favorites.includes(item.id)}
-                    onToggleLike={toggleLike}
-                    onOpenLightbox={openLightbox}
-                  />
-                ))}
+          )}
+
+          {/* ПАГИНАЦИЯ */}
+          {totalPages > 1 && (
+            <div className="pagination-container">
+              <button 
+                className="pagination-item" 
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{ opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                ❮
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button 
+                  key={page}
+                  className={`pagination-item ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentPage(page);
+                    document.getElementById('custom-catalog-search').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button 
+                className="pagination-item" 
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{ opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+              >
+                ❯
+              </button>
+            </div>
+          )}
+
+          {/* 3. СЕКЦИЯ "О НАС" (HAKKIMIZDA) */}
+          <div id="about-us-container">
+            <section className="v1-section">
+              <div className="v1-intro">
+                <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
+                <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
+                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
               </div>
 
-              {totalPages > 1 && (
-                <div className="pagination-container">
-                  <button 
-                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    ❮ Geri
-                  </button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-
-                  <button 
-                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    İleri ❯
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </main>
-
-      <div className={`cabinet-drawer ${isFavoritesOpen ? 'open' : ''}`}>
-        <div className="drawer-header">
-          <span className="drawer-title" style={{ color: 'var(--text-main)' }}>Favorilerim ({favorites.length})</span>
-          <button className="drawer-close" onClick={() => setIsFavoritesOpen(false)}>&times;</button>
-        </div>
-        <div className="drawer-content">
-          {favoriteProperties.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Favori ilanınız bulunmuyor.</div>
-          ) : (
-            <div className="fav-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {favoriteProperties.map((item) => {
-                const titleVal = item.title || item["testproje"] || '';
-                const priceVal = item.price || item["Fiyat"] || '';
-                const imgs = item.property_images || [];
-                const imgVal = imgs[0]?.image_url || '';
-                return (
-                  <div key={item.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }} onClick={() => { setIsFavoritesOpen(false); openLightbox(item); }}>
-                    {imgVal ? (
-                      <img src={imgVal} style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
-                    ) : (
-                      <div style={{ width: '80px', height: '60px', borderRadius: '8px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}>Yok</div>
-                    )}
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>{titleVal}</h4>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--primary)', fontWeight: '900' }}>{priceVal}</p>
-                    </div>
+              <div className="v1-grid v-grid">
+                <div className="v1-card scroll-3d-target">
+                  <div className="v1-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+                  <h3 className="v1-card-title">%0 Emlakçı Komisyonu</h3>
+                  <p className="v1-card-desc">Sıfır aracı, sıfır komisyon. Satın alım bütçenizin tek bir kuruşu bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
+                </div>
 
+                <div className="v1-card scroll-3d-target">
+                  <div className="v1-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
+                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                </div>
+
+                <div className="v1-card scroll-3d-target">
+                  <div className="v1-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
+                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış ve güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                </div>
+              </div>
+
+              <div className="v1-footer-panel">
+                <div className="v1-footer-text">
+                  <h4>Doğrudan rehberliğe mi ihtiyacınız var?</h4>
+                  <p>Hangi projenin bütçenize en uygun olduğuna karar veremediyseniz, doğrudan bizimle iletişime geçebilirsiniz.</p>
+                </div>
+                <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="kb-btn kb-btn-wa">
+                  <svg className="kb-icon" viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: 'currentColor', marginRight: 8 }}><path d="M20.065 17.149c-.683-.344-4.04-1.995-4.666-2.224-.627-.229-1.083-.343-1.538.343-.456.687-1.768 2.224-2.166 2.68-.399.458-.799.515-1.482.172-3.197-1.6-4.57-2.224-6.398-5.362-.484-.834.484-.775 1.385-2.58.15-.3.075-.558-.037-.787-.114-.228-1.083-2.61-1.482-3.575-.388-.934-.781-.808-1.083-.823-.28-.014-.599-.016-.913-.016-.314 0-.827.118-1.254.582-.428.466-1.63 1.593-1.63 3.882 0 2.288 1.66 4.498 1.888 4.802.228.304 3.268 4.992 7.915 7.001 3.856 1.666 4.636 1.334 5.488 1.254.852-.08 2.743-1.122 3.125-2.203.383-1.082.383-2.01.269-2.204-.114-.19-.428-.305-1.111-.649z"/></svg>
+                  Bize WhatsApp'tan Ulaşın
+                </a>
+              </div>
+            </section>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. КУКИ-БАННЕР */}
+      {showCookieBanner && (
+        <div className="cookie-consent-banner show" id="cookie-banner">
+          <div className="cookie-consent-container">
+            <p className="cookie-consent-text">
+              Size daha iyi bir deneyim sunabilmek için web sitemizde çerezler kullanıyoruz. Sitemizi kullanmaya devam ederek çerez kullanımını kabul etmiş sayılırsınız. Detaylı bilgi için <a href="https://increase-fine-snappea.tilda.ws/gizlilik-politikasi" target="_blank" rel="noopener noreferrer">Gizlilik Politikamızı</a> inceleyebilirsiniz.
+            </p>
+            <div className="cookie-consent-buttons">
+              <button className="cookie-btn cookie-btn-reject" onClick={handleCookieReject}>Reddet</button>
+              <button className="cookie-btn cookie-btn-accept" onClick={handleCookieAccept}>Kabul Et</button>
+            </div>
+            <span className="cookie-consent-close" onClick={() => setShowCookieBanner(false)}>&times;</span>
+          </div>
+        </div>
+      )}
+
+      {/* ГЛОБАЛЬНЫЙ ФУТЕР */}
       <Footer />
-      <style dangerouslySetInnerHTML={{ __html: cssStyles }} />
     </>
-  )
+  );
 }
 
-export async function getServerSideProps(context) {
+// Превосходный гибридный метод: серверная сборка с поддержкой SEO
+export async function getServerSideProps() {
   try {
-    const { query } = context
-    const currentPage = parseInt(query.page || '1', 10)
-    const limit = 30
-    const from = (currentPage - 1) * limit
-    const to = currentPage * limit - 1
-
-    const { data: metaData } = await supabase
+    const { data: properties, error } = await supabase
       .from('properties')
-      .select('city, district, "İlçe/Semt", rooms, "card odalar", status, konutcesit')
+      .select('*, property_images(*)');
 
-    const cities = Array.from(new Set(metaData?.map(x => x.city).filter(Boolean))).sort()
-    const districts = Array.from(new Set(metaData?.map(x => x.district || x["İlçe/Semt"]).filter(Boolean))).sort()
-    const roomsList = Array.from(new Set(metaData?.map(x => x.rooms || x["card odalar"]).filter(Boolean))).sort()
-    const statuses = Array.from(new Set(metaData?.map(x => x.status || x["konutcesit"]).filter(Boolean))).sort()
-
-    let dbQuery = supabase
-      .from('properties')
-      .select('*, property_images(image_url)', { count: 'exact' })
-
-    if (query.city) {
-      dbQuery = dbQuery.ilike('city', `%${query.city}%`)
-    }
-    if (query.district) {
-      dbQuery = dbQuery.or(`district.ilike.%${query.district}%,"İlçe/Semt".ilike.%${query.district}%`)
-    }
-    if (query.rooms) {
-      dbQuery = dbQuery.or(`rooms.eq.${query.rooms},"card odalar".eq.${query.rooms}`)
-    }
-    if (query.status) {
-      dbQuery = dbQuery.or(`status.ilike.%${query.status}%,konutcesit.ilike.%${query.status}%`)
-    }
-
-    dbQuery = dbQuery.order('id', { ascending: false }).range(from, to)
-
-    const { data: properties, count, error } = await dbQuery
-
-    if (error) throw error
-
-    const totalPages = count ? Math.ceil(count / limit) : 1
+    if (error) throw error;
 
     return {
       props: {
-        properties: properties || [],
-        totalCount: count || 0,
-        currentPage,
-        totalPages,
-        cities,
-        districts,
-        roomsList,
-        statuses,
-        initialError: null,
+        initialProperties: properties || [],
       },
-    }
+    };
   } catch (err) {
-    console.error('❌ Supabase Veri Cekme Hatasi:', err)
+    console.error("Server-side properties fetch error:", err);
     return {
       props: {
-        properties: [],
-        totalCount: 0,
-        currentPage: 1,
-        totalPages: 1,
-        cities: [],
-        districts: [],
-        roomsList: [],
-        statuses: [],
-        initialError: err.message || 'Supabase connection failed',
+        initialProperties: [],
       },
-    }
+    };
   }
 }
