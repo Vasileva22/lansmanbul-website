@@ -1,3 +1,5 @@
+@import "nouislider/dist/nouislider.css";
+
 /* ==========================================================================
    БАЗОВЫЕ СТРУКТУРНЫЕ СТИЛИ СЛАЙДЕРА (ВМЕСТО ПРОБЛЕМНОГО ИМПОРТА)
    ========================================================================== */
@@ -116,7 +118,8 @@ body, html, .modern-header, .modern-header * {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    box-sizing: border-box !}
+    box-sizing: border-box !important;
+}
 .modern-logo { display: flex !important; align-items: center !important; text-decoration: none !important; gap: 10px !important; cursor: pointer !important; }
 .logo-icon-box {
     width: 40px !important; height: 40px !important; background-color: rgba(0, 164, 166, 0.08) !important; border-radius: 10px !important;
@@ -658,9 +661,6 @@ body, html, .modern-header, .modern-header * {
     font-weight: 700 !important;
     user-select: none !important;
     transition: background .2s ease, left 0.3s ease !important;
-}
-#sidebar-toggle-btn.shifted {
-    left: 0 !important;
 }
 #sidebar-toggle-btn:hover {
     background: #00898B !important;
@@ -1496,7 +1496,7 @@ body, html, .modern-header, .modern-header * {
 }
 .v1-card:hover {
     transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0,164,166,.08);
+    box-shadow: 0 20px 40px rgba(0, 164, 166, 0.08);
     border-color: #00A4A6;
 }
 .v1-icon-box {
