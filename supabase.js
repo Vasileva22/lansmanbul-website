@@ -8,17 +8,16 @@ const isValidUrl = (url) => {
   return url.startsWith('http://') || url.startsWith('https://');
 };
 
+// Безопасный статичный клиент-заглушка для этапа сборки на Vercel
 const createMockClient = () => {
-  const dummyPromise = Promise.resolve({ data: [], error: null });
-  const handler = {
-    get(target, prop) {
-      if (prop === 'then') {
-        return (onFulfilled) => dummyPromise.then(onFulfilled);
-      }
-      return () => new Proxy({}, handler);
-    }
+  return {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null }),
+      insert: () => Promise.resolve({ data: [], error: null }),
+      update: () => Promise.resolve({ data: [], error: null }),
+      delete: () => Promise.resolve({ data: [], error: null }),
+    })
   };
-  return new Proxy({}, handler);
 };
 
 export const supabase = (isValidUrl(supabaseUrl) && supabaseAnonKey)
