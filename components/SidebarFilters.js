@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import noUiSlider from 'nouislider';
 
 export default function SidebarFilters({
   filteredProperties,
@@ -33,7 +32,7 @@ export default function SidebarFilters({
     setMaxPriceInput(filters.priceRange[1]);
   }, [filters.priceRange]);
 
-  // Яндекс.Карты
+  // Яндекс.Карты (выполняется строго на клиенте)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -54,9 +53,7 @@ export default function SidebarFilters({
     if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
       const script = document.createElement('script');
       script.id = 'yandex-maps-script';
-      
       script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
-      
       script.type = 'text/javascript';
       script.onload = initMapInstance;
       document.head.appendChild(script);
@@ -124,49 +121,60 @@ export default function SidebarFilters({
     drawMapPlacemarks();
   }, [filteredProperties]);
 
-  // noUiSlider
+  // ИСПРАВЛЕНО: Безопасный динамический импорт noUiSlider строго на клиенте (Пункт 5)
   useEffect(() => {
-    if (areaSliderRef.current && !areaSliderInst.current) {
-      areaSliderInst.current = noUiSlider.create(areaSliderRef.current, {
-        start: [filters.areaRange[0], filters.areaRange[1]],
-        connect: true,
-        range: { min: 0, max: 500 },
-        step: 1,
-      });
+    if (typeof window === 'undefined') return;
 
-      areaSliderInst.current.on('update', (values) => {
-        const range = values.map(Math.round);
-        setFilters((prev) => ({ ...prev, areaRange: range }));
-      });
-    }
+    import('nouislider').then((noUiSliderModule) => {
+      const noUiSlider = noUiSliderModule.default || noUiSliderModule;
 
-    if (katSliderRef.current && !katSliderInst.current) {
-      katSliderInst.current = noUiSlider.create(katSliderRef.current, {
-        start: [filters.katRange[0], filters.katRange[1]],
-        connect: true,
-        range: { min: 0, max: 40 },
-        step: 1,
-      });
+      // Инициализация слайдера площади
+      if (areaSliderRef.current && !areaSliderInst.current) {
+        areaSliderInst.current = noUiSlider.create(areaSliderRef.current, {
+          start: [filters.areaRange[0], filters.areaRange[1]],
+          connect: true,
+          range: { min: 0, max: 500 },
+          step: 1,
+        });
 
-      katSliderInst.current.on('update', (values) => {
-        const range = values.map(Math.round);
-        setFilters((prev) => ({ ...prev, katRange: range }));
-      });
-    }
+        areaSliderInst.current.on('update', (values) => {
+          const range = values.map(Math.round);
+          setFilters((prev) => ({ ...prev, areaRange: range }));
+        });
+      }
 
-    if (priceSliderRef.current && !priceSliderInst.current) {
-      priceSliderInst.current = noUiSlider.create(priceSliderRef.current, {
-        start: [filters.priceRange[0], filters.priceRange[1]],
-        connect: true,
-        range: { min: 0, max: 50000000 },
-        step: 1000,
-      });
+      // Инициализация слайдера этажей
+      if (katSliderRef.current && !katSliderInst.current) {
+        katSliderInst.current = noUiSlider.create(katSliderRef.current, {
+          start: [filters.katRange[0], filters.katRange[1]],
+          connect: true,
+          range: { min: 0, max: 40 },
+          step: 1,
+        });
 
-      priceSliderInst.current.on('update', (values) => {
-        const range = values.map(Math.round);
-        setFilters((prev) => ({ ...prev, priceRange: range }));
-      });
-    }
+        katSliderInst.current.on('update', (values) => {
+          const range = values.map(Math.round);
+          setFilters((prev) => ({ ...prev, katRange: range }));
+        });
+      }
+
+      // Инициализация слайдера цен
+      if (priceSliderRef.current && !priceSliderInst.current) {
+        priceSliderInst.current = noUiSlider.create(priceSliderRef.current, {
+          start: [filters.priceRange[0], filters.priceRange[1]],
+          connect: true,
+          range: { min: 0, max: 50000000 },
+          step: 1000,
+        });
+
+        priceSliderInst.current.on('update', (values) => {
+          const range = values.map(Math.round);
+          setFilters((prev) => ({ ...prev, priceRange: range }));
+        });
+      }
+    }).catch(err => {
+      console.error("nouislider yukleme hatasi:", err);
+    });
 
     return () => {
       if (areaSliderInst.current) { areaSliderInst.current.destroy(); areaSliderInst.current = null; }
