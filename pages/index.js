@@ -1,3 +1,4 @@
+```javascript
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../supabase';
@@ -7,39 +8,41 @@ import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
 import SidebarFilters from '../components/SidebarFilters';
 import PropertyCard from '../components/PropertyCard';
+import Lightbox from '../components/Lightbox'; // Подключили лайтбокс
 
 export default function Home({ initialProperties }) {
   const router = useRouter();
 
-  // Основной массив всех объявлений из базы данных
   const [masterProperties, setMasterProperties] = useState(initialProperties || []);
   
-  // Состояния отображения интерфейса
+  // ПУНКТ 5: СТАЛ УПРАВЛЯЕМЫМ НА ДЕСКТОПЕ
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [layout, setLayout] = useState('grid'); // 'grid' или 'list'
+  const [layout, setLayout] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
-  // Единое состояние для всех активных фильтров на странице
-  const [filters, setFilters] = useState({
-    selectedLocations: [],      // Районы (из верхнего поиска)
-    selectedRooms: [],          // Комнаты (из верхнего поиска)
-    selectedStatuses: [],       // Статус проекта (из верхнего поиска)
-    areaRange: [0, 500],        // Диапазон площади m² (из бокового фильтра)
-    katRange: [0, 40],          // Диапазон этажей (из бокового фильтра)
-    priceRange: [0, 50000000],  // Диапазон цен (из бокового фильтра)
-    activeFeatureFilters: [],   // Теги удобств
-    activePaymentFilters: [],   // Теги способов оплаты
+  // СОСТОЯНИЯ ЛАЙТБОКСА (Пункт 7)
+  const [lightboxState, setLightboxState] = useState({
+    isOpen: false,
+    photos: [],
+    activeIndex: 0,
   });
 
-  // ==========================================================================
-  // 1. ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE
-  // ==========================================================================
+  const [filters, setFilters] = useState({
+    selectedLocations: [],
+    selectedRooms: [],
+    selectedStatuses: [],
+    areaRange: [0, 500],
+    katRange: [0, 40],
+    priceRange: [0, 50000000],
+    activeFeatureFilters: [],
+    activePaymentFilters: [],
+  });
 
+  // Загрузка данных
   useEffect(() => {
     async function loadClientData() {
-      // Подстраховка: если сервер не вернул данные, запрашиваем их на клиенте
       if (masterProperties.length === 0) {
         const { data, error } = await supabase
           .from('properties')
@@ -54,7 +57,7 @@ export default function Home({ initialProperties }) {
     loadClientData();
   }, []);
 
-  // Считываем параметры из URL (например, ?status=Lansman или ?scrollto=id) при загрузке страницы
+  // ПУНКТ 1: ДИНАМИЧЕСКИЙ СИНХРОНИЗАТОР ШАПКИ И URL
   useEffect(() => {
     if (!router.isReady) return;
 
@@ -64,6 +67,11 @@ export default function Home({ initialProperties }) {
       setFilters((prev) => ({
         ...prev,
         selectedStatuses: [status],
+      }));
+    } else {
+      setFilters((prev) => ({
+        ...prev,
+        selectedStatuses: [],
       }));
     }
 
@@ -79,9 +87,8 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.query.status, router.query.scrollto]);
 
-  // Проверка куки при первой загрузке
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
     if (!consent) {
@@ -89,7 +96,7 @@ export default function Home({ initialProperties }) {
     }
   }, []);
 
-  // Инициализация анимации появления блоков (3D scroll effect)
+  // 3D скролл анимация
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -110,10 +117,6 @@ export default function Home({ initialProperties }) {
     return () => targets.forEach((el) => observer.unobserve(el));
   }, [masterProperties]);
 
-  // ==========================================================================
-  // 2. АВТОМАТИЧЕСКИЙ СБОР ПАРАМЕТРОВ ДЛЯ ПОИСКА (БЕЗ ХАРДКОДА)
-  // ==========================================================================
-
   const uniqueLocations = useMemo(() => {
     const locs = masterProperties.map((p) => p['İlçe/Semt'] || p.address_district).filter(Boolean);
     return [...new Set(locs)].sort();
@@ -126,18 +129,13 @@ export default function Home({ initialProperties }) {
 
   const uniqueStatuses = useMemo(() => {
     const statuses = masterProperties.map((p) => p.konutcesit).filter(Boolean);
-    // Возвращаем в привычном порядке сортировки
     const customOrder = ["Lansman", "Devam ediyor", "Tamamlandı"];
     return customOrder.filter((status) => statuses.includes(status));
   }, [masterProperties]);
 
-  // ==========================================================================
-  // 3. ФИЛЬТРАЦИЯ ОБЪЕКТОВ НА КЛИЕНТЕ В РЕАЛЬНОМ ВРЕМЕНИ
-  // ==========================================================================
-
+  // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
-      // А. Фильтр по Районам
       if (
         filters.selectedLocations.length > 0 &&
         !filters.selectedLocations.includes(property['İlçe/Semt'])
@@ -145,7 +143,6 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      // Б. Фильтр по Комнатам
       if (
         filters.selectedRooms.length > 0 &&
         !filters.selectedRooms.includes(property['card odalar'])
@@ -153,7 +150,6 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      // В. Фильтр по Статусу проекта
       if (
         filters.selectedStatuses.length > 0 &&
         !filters.selectedStatuses.includes(property.konutcesit)
@@ -161,27 +157,23 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      // Г. Фильтр по площади (m²)
       const area = parseInt(property['card-area']) || 0;
       if (area < filters.areaRange[0] || area > filters.areaRange[1]) {
         return false;
       }
 
-      // Д. Фильтр по Этажности
       const katRaw = property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi || 0;
       const kat = parseInt(String(katRaw).replace(/\D/g, '')) || 0;
       if (kat < filters.katRange[0] || kat > filters.katRange[1]) {
         return false;
       }
 
-      // Е. Фильтр по цене
       const priceRaw = String(property.Fiyat || "").replace(/\./g, '');
       const price = parseInt(priceRaw.replace(/\D/g, '')) || 0;
       if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
         return false;
       }
 
-      // Ж. Фильтр по Удобствам (Пересечение: объект должен содержать ВСЕ выбранные удобства)
       if (filters.activeFeatureFilters.length > 0) {
         const propFeatures = property.Özellikler
           ? String(property.Özellikler).toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's')
@@ -193,7 +185,6 @@ export default function Home({ initialProperties }) {
         if (!allMatched) return false;
       }
 
-      // З. Фильтр по способам оплаты (Объединение: подходит хотя бы один выбранный способ)
       if (filters.activePaymentFilters.length > 0) {
         const matchesAny = filters.activePaymentFilters.some((pay) => {
           const normPay = pay.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
@@ -213,14 +204,9 @@ export default function Home({ initialProperties }) {
     });
   }, [masterProperties, filters]);
 
-  // Сбрасываем пагинацию на 1 страницу при каждом изменении фильтров
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
-
-  // ==========================================================================
-  // 4. ПАГИНАЦИЯ И СЕТКА
-  // ==========================================================================
 
   const itemsPerPage = isSidebarHidden ? 12 : 8;
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
@@ -254,12 +240,19 @@ export default function Home({ initialProperties }) {
     setShowCookieBanner(false);
   };
 
+  // Метод открытия лайтбокса при клике на фото карточки
+  const handleOpenLightbox = (photos, index) => {
+    setLightboxState({
+      isOpen: true,
+      photos: photos,
+      activeIndex: index,
+    });
+  };
+
   return (
     <>
-      {/* ГЛОБАЛЬНАЯ ШАПКА */}
       <Header />
 
-      {/* 1. БЛОК ВЕРХНЕГО ПОИСКА */}
       <HeroSearch 
         filters={filters}
         setFilters={setFilters}
@@ -267,16 +260,12 @@ export default function Home({ initialProperties }) {
         uniqueRooms={uniqueRooms}
         uniqueStatuses={uniqueStatuses}
         onSearch={() => {
-          // Скроллим плавно к каталогу при нажатии "Ara"
           const target = document.getElementById('custom-catalog-search');
           if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
       />
 
-      {/* 2. ОСНОВНОЙ КОНТЕНТ: КАТАЛОГ И ФИЛЬТРЫ */}
       <section id="custom-catalog-search">
-        
-        {/* БОКОВОЙ ФИЛЬТР (С КАРТОЙ И СЛАЙДЕРАМИ) */}
         <SidebarFilters 
           filteredProperties={filteredProperties}
           totalCount={filteredProperties.length}
@@ -285,9 +274,10 @@ export default function Home({ initialProperties }) {
           onClearFilters={handleClearFilters}
           isMobileSidebarOpen={isMobileSidebarOpen}
           setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+          isSidebarHidden={isSidebarHidden} // Передали статус скрытия
         />
 
-        {/* Кнопка открытия бокового меню на мобильных устройствах */}
+        {/* КНОПКА ФИЛЬТРА НА МОБИЛЬНЫХ */}
         <button 
           className="mobile-filter-floating-btn show-btn" 
           onClick={() => setIsMobileSidebarOpen(true)}
@@ -298,10 +288,18 @@ export default function Home({ initialProperties }) {
           <span>Filtreleme</span>
         </button>
 
-        {/* СПИСОК КАРТОЧЕК ОБЪЕКТОВ */}
-        <div id="catalog-content-wrapper">
+        {/* КНОПКА-СТРЕЛКА ДЛЯ СЖАТИЯ САЙДБАРА НА ДЕСКТОПЕ (ПУНКТ 5) */}
+        <div 
+          id="sidebar-toggle-btn"
+          onClick={() => setIsSidebarHidden(!isSidebarHidden)}
+          style={{ left: isSidebarHidden ? '0px' : '310px', transition: 'left 0.3s ease' }}
+        >
+          {isSidebarHidden ? '❯' : '❮'}
+        </div>
+
+        {/* СПИСОК КАРТОЧЕК ОБЪЕКТОВ С СОВМЕСТИМОСТЬЮ РАЗДВИЖЕНИЯ */}
+        <div id="catalog-content-wrapper" className={isSidebarHidden ? 'full-width' : ''}>
           
-          {/* Панель управления сеткой (Grid/List) и кнопкой скрытия фильтров */}
           <div className="catalog-control-bar">
             <div className="layout-toggle">
               <button 
@@ -321,17 +319,20 @@ export default function Home({ initialProperties }) {
             </div>
           </div>
 
-          {/* Сетка/список карточек */}
           {paginatedProperties.length > 0 ? (
             <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
               {paginatedProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <PropertyCard 
+                  key={property.id} 
+                  property={property} 
+                  onImageClick={handleOpenLightbox} // Передали метод
+                />
               ))}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
               <h3>Aradığınız kriterlere uygun proje bulunamadı.</h3>
-              <p>Lütfen filtreleri sıfırlayarak tekrar deneyin.</p>
+              <p>Lütfen filtreleri sıфırlayarak tekrar deneyin.</p>
               <button className="btn btn-primary" onClick={handleClearFilters} style={{ marginTop: 15 }}>
                 Filtreleri Temizle
               </button>
@@ -374,7 +375,7 @@ export default function Home({ initialProperties }) {
             </div>
           )}
 
-          {/* 3. СЕКЦИЯ "О НАС" (HAKKIMIZDA) */}
+          {/* О НАШЕЙ КОМПАНИИ */}
           <div id="about-us-container">
             <section className="v1-section">
               <div className="v1-intro">
@@ -389,7 +390,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
                   </div>
                   <h3 className="v1-card-title">%0 Emlakçı Komisyonu</h3>
-                  <p className="v1-card-desc">Sıfır aracı, sıfır komisyon. Satın alım bütçenizin tek bir kuruşu bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
+                  <p className="v1-card-desc">Sıfır aracı, sıфır komisyon. Satın alım bütçenizin tek bir kuruşu bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -425,7 +426,6 @@ export default function Home({ initialProperties }) {
         </div>
       </section>
 
-      {/* 4. КУКИ-БАННЕР */}
       {showCookieBanner && (
         <div className="cookie-consent-banner show" id="cookie-banner">
           <div className="cookie-consent-container">
@@ -441,13 +441,28 @@ export default function Home({ initialProperties }) {
         </div>
       )}
 
-      {/* ГЛОБАЛЬНЫЙ ФУТЕР */}
+      {/* ПРЕДСТАВЛЕНИЕ ЛАЙТБОКСА ПО КЛИКУ НА ФОТО */}
+      {lightboxState.isOpen && (
+        <Lightbox 
+          photos={lightboxState.photos}
+          activeIndex={lightboxState.activeIndex}
+          onClose={() => setLightboxState(prev => ({ ...prev, isOpen: false }))}
+          onPrev={() => setLightboxState(prev => ({
+            ...prev,
+            activeIndex: (prev.activeIndex - 1 + prev.photos.length) % prev.photos.length
+          }))}
+          onRight={() => setLightboxState(prev => ({
+            ...prev,
+            activeIndex: (prev.activeIndex + 1) % prev.photos.length
+          }))}
+        />
+      )}
+
       <Footer />
     </>
   );
 }
 
-// Превосходный гибридный метод: серверная сборка с поддержкой SEO
 export async function getServerSideProps() {
   try {
     const { data: properties, error } = await supabase
@@ -470,3 +485,4 @@ export async function getServerSideProps() {
     };
   }
 }
+```
