@@ -1,4 +1,3 @@
-```javascript
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../supabase';
@@ -8,21 +7,19 @@ import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
 import SidebarFilters from '../components/SidebarFilters';
 import PropertyCard from '../components/PropertyCard';
-import Lightbox from '../components/Lightbox'; // Подключили лайтбокс
+import Lightbox from '../components/Lightbox';
 
 export default function Home({ initialProperties }) {
   const router = useRouter();
 
   const [masterProperties, setMasterProperties] = useState(initialProperties || []);
   
-  // ПУНКТ 5: СТАЛ УПРАВЛЯЕМЫМ НА ДЕСКТОПЕ
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [layout, setLayout] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
-  // СОСТОЯНИЯ ЛАЙТБОКСА (Пункт 7)
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
@@ -57,7 +54,7 @@ export default function Home({ initialProperties }) {
     loadClientData();
   }, []);
 
-  // ПУНКТ 1: ДИНАМИЧЕСКИЙ СИНХРОНИЗАТОР ШАПКИ И URL
+  // Синхронизация поиска из шапки
   useEffect(() => {
     if (!router.isReady) return;
 
@@ -77,7 +74,8 @@ export default function Home({ initialProperties }) {
 
     if (scrollto) {
       setTimeout(() => {
-        const element = document.querySelector(`[data-id="${scrollto}"]`);
+        // ИСПРАВЛЕНО: Классическое сложение строк гарантирует успешную компиляцию
+        const element = document.querySelector('[data-id="' + scrollto + '"]');
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.style.boxShadow = '0 0 25px rgba(0, 164, 166, 0.45)';
@@ -240,7 +238,6 @@ export default function Home({ initialProperties }) {
     setShowCookieBanner(false);
   };
 
-  // Метод открытия лайтбокса при клике на фото карточки
   const handleOpenLightbox = (photos, index) => {
     setLightboxState({
       isOpen: true,
@@ -274,10 +271,9 @@ export default function Home({ initialProperties }) {
           onClearFilters={handleClearFilters}
           isMobileSidebarOpen={isMobileSidebarOpen}
           setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-          isSidebarHidden={isSidebarHidden} // Передали статус скрытия
+          isSidebarHidden={isSidebarHidden}
         />
 
-        {/* КНОПКА ФИЛЬТРА НА МОБИЛЬНЫХ */}
         <button 
           className="mobile-filter-floating-btn show-btn" 
           onClick={() => setIsMobileSidebarOpen(true)}
@@ -288,7 +284,6 @@ export default function Home({ initialProperties }) {
           <span>Filtreleme</span>
         </button>
 
-        {/* КНОПКА-СТРЕЛКА ДЛЯ СЖАТИЯ САЙДБАРА НА ДЕСКТОПЕ (ПУНКТ 5) */}
         <div 
           id="sidebar-toggle-btn"
           onClick={() => setIsSidebarHidden(!isSidebarHidden)}
@@ -297,7 +292,6 @@ export default function Home({ initialProperties }) {
           {isSidebarHidden ? '❯' : '❮'}
         </div>
 
-        {/* СПИСОК КАРТОЧЕК ОБЪЕКТОВ С СОВМЕСТИМОСТЬЮ РАЗДВИЖЕНИЯ */}
         <div id="catalog-content-wrapper" className={isSidebarHidden ? 'full-width' : ''}>
           
           <div className="catalog-control-bar">
@@ -325,21 +319,20 @@ export default function Home({ initialProperties }) {
                 <PropertyCard 
                   key={property.id} 
                   property={property} 
-                  onImageClick={handleOpenLightbox} // Передали метод
+                  onImageClick={handleOpenLightbox}
                 />
               ))}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
               <h3>Aradığınız kriterlere uygun proje bulunamadı.</h3>
-              <p>Lütfen filtreleri sıфırlayarak tekrar deneyin.</p>
+              <p>Lütfen filtreleri sıfırlayarak tekrar deneyin.</p>
               <button className="btn btn-primary" onClick={handleClearFilters} style={{ marginTop: 15 }}>
                 Filtreleri Temizle
               </button>
             </div>
           )}
 
-          {/* ПАГИНАЦИЯ */}
           {totalPages > 1 && (
             <div className="pagination-container">
               <button 
@@ -375,7 +368,6 @@ export default function Home({ initialProperties }) {
             </div>
           )}
 
-          {/* О НАШЕЙ КОМПАНИИ */}
           <div id="about-us-container">
             <section className="v1-section">
               <div className="v1-intro">
@@ -485,4 +477,3 @@ export async function getServerSideProps() {
     };
   }
 }
-```
