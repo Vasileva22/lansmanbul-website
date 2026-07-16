@@ -1,317 +1,220 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState } from 'react';
+import Link from 'next/link';
 
-// Распределение цветов по веткам метро Турции (M1-M11)
-function getMetroColor(stationName) {
-  if (!stationName) return '#E11D48'; 
-  const name = stationName.toLowerCase().trim();
-  
-  if (name.includes('m1')) return '#E11D48'; 
-  if (name.includes('m2') || name.includes('taksim') || name.includes('levent') || name.includes('şişli')) return '#10B981'; 
-  if (name.includes('m3')) return '#0EA5E9'; 
-  if (name.includes('m4') || name.includes('kadıköy') || name.includes('kartal')) return '#EC4899'; 
-  if (name.includes('m5') || name.includes('üsküdar') || name.includes('altunizade')) return '#8B5CF6'; 
-  if (name.includes('m7') || name.includes('mecidiyeköy')) return '#06B6D4'; 
-  if (name.includes('m8')) return '#6366F1'; 
-  if (name.includes('m11')) return '#D946EF'; 
-  
-  return '#E11D48'; 
-}
+export default function PropertyCard({ property }) {
+  // 1. Безопасно получаем и фильтруем изображения проекта из связанной таблицы property_images
+  const photos = property.property_images
+    ? property.property_images.map(img => img.image_url).filter(Boolean)
+    : [];
 
-// Умный выбор POI с поддержкой обратной совместимости
-function getBestPoiBadge(property) {
-  let poiPayload = property?.poi_data;
-  if (!poiPayload) return null;
+  // 2. Состояние для локального слайдера изображений в этой конкретной карточке
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  if (typeof poiPayload === 'string') {
-    try {
-      poiPayload = JSON.parse(poiPayload);
-    } catch (e) {
-      console.error("Ошибка чтения poi_data:", e);
-      return null;
+  // Перелистывание слайдов
+  const nextSlide = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (photos.length > 1) {
+      setCurrentSlide((prev) => (prev + 1) % photos.length);
     }
-  }
+  };
 
-  // Сценарий 1: Используем готовый featured_poi с бэкенда
-  if (poiPayload.featured_poi && poiPayload.featured_poi.name) {
-    return {
-      name: poiPayload.featured_poi.name,
-      time: poiPayload.featured_poi.travel_time_minutes,
-      mode: poiPayload.featured_poi.travel_mode,
-      type: poiPayload.featured_poi.type
-    };
-  }
-
-  // Сценарий 2 (Обратная совместимость): Если бэкенд еще не запускался для этого ID
-  const pois = poiPayload.pois || {};
-  if (Array.isArray(pois) || Object.keys(pois).length === 0) return null;
-
-  const city = (property?.city || 'istanbul').toLowerCase().trim();
-  const isResortCity = ['antalya', 'mugla', 'bodrum', 'fethiye', 'alanya', 'kas', 'kemer'].includes(city);
-
-  // Фильтруем старые pois от школ, кафе и парков прямо в браузере
-  const allowedPois = Object.entries(pois).filter(([type, poi]) => {
-    if (!poi || poi.raw_score <= 0) return false;
-    const transportTypes = ['metro', 'metrobus', 'marmaray', 'tram', 'ferry', 'bus', 'dolmus'];
-    
-    if (isResortCity) {
-      return type.toLowerCase() === 'beach' || transportTypes.includes(type.toLowerCase());
-    } else {
-      return transportTypes.includes(type.toLowerCase());
+  const prevSlide = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (photos.length > 1) {
+      setCurrentSlide((prev) => (prev - 1 + photos.length) % photos.length);
     }
-  });
+  };
 
-  if (allowedPois.length === 0) return null;
-
-  try {
-    const best = allowedPois.reduce((prev, curr) => 
-      prev[1].weighted_score > curr[1].weighted_score ? prev : curr
-    );
-
-    return {
-      name: best[1].name,
-      time: best[1].travel_time_minutes,
-      mode: best[1].travel_mode,
-      type: best[0]
-    };
-  } catch (e) {
-    console.error("Ошибка в getBestPoiBadge (fallback):", e);
-  }
-
-  return null;
-}
-
-export default function PropertyCard({ property, isLiked, onToggleLike, onOpenLightbox }) {
-  const [currentIdx, setCurrentImageIndex] = useState(0)
-  const autoplayTimer = useRef(null)
-
-  const pId = property?.id || '';
-  const pRooms = property?.rooms || property?.["card odalar"] || '';
-  const pArea = property?.area || property?.["card-area"] || '';
-  const pFloor = property?.kat_sayisi || property?.["Kat Sayısı"] || '';
-  const pPrice = property?.price || property?.["Fiyat"] || '';
-  const pStatus = property?.status || property?.["konutcesit"] || '';
-  const pAddress = property?.address || property?.adress || '';
-
-  const poiBadge = getBestPoiBadge(property);
-
-  const imagesList = property?.property_images || [];
-  const photoUrls = imagesList.map(img => img.image_url).filter(Boolean);
-  const hasPhotos = photoUrls.length > 0;
-  const photos = hasPhotos ? photoUrls : [''];
-
-  const handleMouseEnter = () => {
-    if (photos.length <= 1 || !hasPhotos) return
-    autoplayTimer.current = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % photos.length)
-    }, 2000)
-  }
-
-  const handleMouseLeave = () => {
-    if (autoplayTimer.current) {
-      clearInterval(autoplayTimer.current)
-      autoplayTimer.current = null
-    }
-  }
-
-  useEffect(() => {
-    return () => {
-      if (autoplayTimer.current) clearInterval(autoplayTimer.current)
-    }
-  }, [])
-
-  const handleNextPhoto = (e) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev + 1) % photos.length)
-  }
-
-  const handlePrevPhoto = (e) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev + photos.length - 1) % photos.length)
-  }
-
-  const formatPriceVal = (val) => {
+  // 3. Форматирование цены (например, "12.500.000 TL'den" на турецком)
+  const formatPrice = (val) => {
     if (!val) return "";
     let numOnly = String(val).replace(/[^0-9]/g, "");
-    if (numOnly === "" || numOnly === "0") return val;
-    return Number(numOnly).toLocaleString('tr-TR').replace(/\./g, '\u00A0') + " TL";
-  }
+    return numOnly === "" || numOnly === "0"
+      ? val
+      : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
+  };
 
-  const renderProximityIcon = (type) => {
-    const iconStyle = { width: '15px', height: '15px', flexShrink: 0 };
+  // 4. Безопасно парсим строку с удобствами (Özellikler) из Supabase
+  const parseFeatures = (featuresString) => {
+    if (!featuresString) return [];
+    if (Array.isArray(featuresString)) return featuresString;
+    return featuresString
+      .split(/[\/,]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
+
+  const olanaklarList = parseFeatures(property.Özellikler);
+
+  // 5. Карта иконок удобств (SVGS) для карточки
+  const iconMap = {
+    havuz: (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" />
+      </svg>
+    ),
+    fitness: (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" />
+      </svg>
+    ),
+    otopark: (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" />
+      </svg>
+    ),
+    güvenlik: (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+      </svg>
+    ),
+    'çocuk parkı': (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" />
+      </svg>
+    ),
+    'site içerisinde': (
+      <svg className="card-svg-icon" viewBox="0 0 24 24">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2V7h2v2zm-5 0H8V7h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2z" />
+      </svg>
+    ),
+  };
+
+  // Метод для получения SVG-иконки для конкретного удобства по совпадению ключевого слова
+  const getOlanakIcon = (item) => {
+    const norm = item.toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ş/g, 's')
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ö/g, 'o')
+      .replace(/ü/g, 'u')
+      .trim();
     
-    switch (type?.toLowerCase()) {
-      case 'beach':
-        return (
-          <svg style={{ ...iconStyle, color: '#06B6D4' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M2 12c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
-            <path d="M2 16c3 0 3-3 6-3s3 3 6 3 3-3 6-3 3 3 6 3" />
-          </svg>
-        )
-      case 'ferry':
-        return (
-          <svg style={{ ...iconStyle, color: '#0EA5E9' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M2 17h20M2 13h20M5 13V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5" />
-            <path d="M12 2v4" />
-          </svg>
-        )
-      case 'bus':
-      case 'dolmus':
-        return (
-          <svg style={{ ...iconStyle, color: '#4F46E5' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="4" y="2" width="16" height="20" rx="2" />
-            <circle cx="8" cy="18" r="1.5" />
-            <circle cx="16" cy="18" r="1.5" />
-            <path d="M6 8h12M6 13h12" />
-          </svg>
-        )
-      case 'tram':
-      case 'marmaray':
-        return (
-          <svg style={{ ...iconStyle, color: '#0284C7' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="4" y="3" width="16" height="15" rx="2" />
-            <path d="M4 11h16M12 3v15M8 21l-2 3M16 21l2 3" />
-          </svg>
-        )
-      case 'infrastructure':
-      default:
-        return (
-          <svg style={{ ...iconStyle, color: '#64748B' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        )
+    // Проверяем частичное совпадение (например "havuz" или "açık havuz")
+    for (let key in iconMap) {
+      if (norm.includes(key)) return iconMap[key];
     }
-  }
+    return null;
+  };
+
+  // 6. Формирование ссылки в WhatsApp
+  const waRaw = property.WhatsApp;
+  const finalWaLink = (waRaw && String(waRaw).startsWith('http'))
+    ? waRaw
+    : `https://wa.me/${waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536"}`;
+
+  // Ссылки на детальную страницу объекта (согласно Next.js dynamic routing)
+  const detailLink = `/properties/${property.id}`;
 
   return (
-    <div 
-      className="cian-card"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <button 
-        className={"card-fav-btn" + (isLiked ? " liked" : "")}
-        onClick={(e) => onToggleLike && onToggleLike(e, pId)}
-      >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-      </button>
-
-      {pStatus && (
-        <span className="card-status-badge">
-          {pStatus}
-        </span>
-      )}
-
-      <div 
-        className="cian-img-container" 
-        onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}
-      >
-        {hasPhotos ? (
-          <img src={photos[currentIdx]} className="cian-img" alt="" />
+    <div className="custom-card" data-id={property.id}>
+      
+      {/* 1. БЛОК СЛАЙДЕРА ИЗОБРАЖЕНИЙ С БЕЙДЖЕМ */}
+      <div className="img-container">
+        {photos.length > 0 ? (
+          <div className="slider-track" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+            {photos.map((url, idx) => (
+              <div 
+                key={idx} 
+                className="slider-item" 
+                style={{ backgroundImage: `url('${url}')` }}
+              ></div>
+            ))}
+          </div>
         ) : (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span style={{ fontSize: '11px', fontWeight: '700' }}>Görsel Yok</span>
+          <div className="slider-track">
+            <div 
+              className="slider-item" 
+              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')` }}
+            ></div>
           </div>
         )}
-        
-        {hasPhotos && photos.length > 1 && (
+
+        {/* Бейдж Лансман/Другой статус */}
+        {property.konutcesit && (
+          <span className={`badge ${property.konutcesit.toLowerCase() === "lansman" ? "status-lansman" : "status-other"}`}>
+            {property.konutcesit}
+          </span>
+        )}
+
+        {/* Стрелки навигации слайдера (рендерим только если картинок больше одной) */}
+        {photos.length > 1 && (
           <>
-            <button className="slider-arrow arrow-left" onClick={handlePrevPhoto}>❮</button>
-            <button className="slider-arrow arrow-right" onClick={handleNextPhoto}>❯</button>
+            <button className="slider-arrow arrow-left" onClick={prevSlide}>❮</button>
+            <button className="slider-arrow arrow-right" onClick={nextSlide}>❯</button>
           </>
         )}
       </div>
 
-      <div className="cian-info" onClick={() => onOpenLightbox && onOpenLightbox(property, currentIdx)}>
-        <div className="cian-price" title={formatPriceVal(pPrice)}>
-          {formatPriceVal(pPrice)}
+      {/* 2. СОДЕРЖИМОЕ КАРТОЧКИ */}
+      <div className="card-content">
+        <div className="title-price-row">
+          <h3 className="card-title">{property.testproje || ''}</h3>
+          <div className="card-price">{formatPrice(property.Fiyat)}</div>
         </div>
 
-        <div className="cian-specs">
-          {[
-            pRooms ? `${pRooms}` : null,
-            pArea ? `${pArea} m²` : null,
-            pFloor ? `${pFloor} Kat` : null
-          ].filter(Boolean).join(' · ')}
+        <p className="card-description">
+          {property.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimle iletişime geçin."}
+        </p>
+
+        {/* Технические особенности: Локация, Комнаты, Площадь */}
+        <div className="features-row">
+          <div className="feat-badge">
+            <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+            {property['İlçe/Semt'] || ''}
+          </div>
+          <div className="feat-badge">
+            <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
+              <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" />
+            </svg>
+            {property['card odalar'] || ''}
+          </div>
+          {property['card-area'] && (
+            <div className="feat-badge">
+              <svg className="card-svg-icon" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
+                <path d="M10.5 9h3v1.5h-3V9zm0 3h3v1.5h-3V12zm0 3h3v1.5h-3V15zM19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+              </svg>
+              <span>{property['card-area']}</span>
+              <span className="area-unit-grid" style={{ marginLeft: 2 }}>m²</span>
+              <span className="area-unit-list" style={{ marginLeft: 2 }}>Metrekare</span>
+            </div>
+          )}
         </div>
-        
-        <div className="cian-location">
-          {poiBadge ? (
-            <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
-              {poiBadge.type === 'metro' || poiBadge.type === 'metrobus' ? (
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '3px',
-                  backgroundColor: getMetroColor(poiBadge.name),
-                  color: '#FFFFFF',
-                  fontWeight: '900',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  fontFamily: 'var(--font-main)',
-                  flexShrink: 0
-                }}>
-                  {poiBadge.type === 'metrobus' ? 'MB' : 'M'}
+
+        {/* Удобства объекта */}
+        {olanaklarList.length > 0 && (
+          <div className="olanaklar-row">
+            {olanaklarList.map((item, idx) => {
+              const icon = getOlanakIcon(item);
+              return (
+                <span key={idx} className="olanak-tag">
+                  {icon}
+                  {item}
                 </span>
-              ) : (
-                renderProximityIcon(poiBadge.type)
-              )}
-              
-              <span style={{
-                color: '#1E293B',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                flexShrink: 1
-              }} title={poiBadge.name}>
-                {poiBadge.name}
-              </span>
+              );
+            })}
+          </div>
+        )}
 
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '2px',
-                color: '#64748B',
-                fontSize: '15px',
-                fontWeight: '500',
-                flexShrink: 0
-              }}>
-                {poiBadge.mode === 'walking' ? (
-                  <svg style={{ width: '14px', height: '14px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                    <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C15.6 11.7 18 13 18 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7" />
-                  </svg>
-                ) : (
-                  <svg style={{ width: '14px', height: '14px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.14-.4.52-.68.96-.68h9.54c.44 0 .82.28.96.68L19 11H5z" />
-                  </svg>
-                )}
-                <span>{poiBadge.time}</span>
-              </span>
-            </div>
-          ) : pAddress ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-              {renderProximityIcon('default')}
-              <span style={{
-                color: '#64748B',
-                fontWeight: '500',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                fontSize: '15px'
-              }} title={pAddress}>
-                {pAddress}
-              </span>
-            </div>
-          ) : null}
+        {/* Действия: Детали и WhatsApp */}
+        <div className="actions">
+          <Link href={detailLink} className="btn btn-outline detay-btn">
+            Detaylar
+          </Link>
+          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary wa-btn">
+            <svg className="wa-icon-svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: 'currentColor', marginRight: 5 }}>
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.488 1.977 14.02 1.953 12.01 1.953c-5.439 0-9.865 4.371-9.87 9.8-.002 1.714.453 3.39 1.317 4.883l-.994 3.634 3.791-.983z" />
+            </svg>
+            WhatsApp
+          </a>
         </div>
       </div>
+
     </div>
-  )
+  );
 }
