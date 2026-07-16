@@ -1,12 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic'; // Импортировали dynamic
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
-import SidebarFilters from '../components/SidebarFilters';
 import PropertyCard from '../components/PropertyCard';
 import Lightbox from '../components/Lightbox';
+
+// ИСПРАВЛЕНО: Безопасный динамический импорт боковой панели без SSR (Пункт 5)
+const SidebarFilters = dynamic(() => import('../components/SidebarFilters'), {
+  ssr: false,
+});
 
 export default function Home({ initialProperties }) {
   const router = useRouter();
@@ -36,7 +41,7 @@ export default function Home({ initialProperties }) {
     activePaymentFilters: [],
   });
 
-  // Безопасный клиентский fetch на случай, если сервер вернул пустой массив
+  // Безопасный клиентский fetch
   useEffect(() => {
     async function loadClientData() {
       if (masterProperties.length === 0) {
@@ -309,14 +314,14 @@ export default function Home({ initialProperties }) {
           <div className="catalog-control-bar">
             <div className="layout-toggle">
               <button 
-                className={`toggle-btn ${layout === 'grid' ? 'active' : ''}`}
+                className={'toggle-btn ' + (layout === 'grid' ? 'active' : '')}
                 onClick={() => setLayout('grid')}
                 title="Izgara Görünümü"
               >
                 <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>
               </button>
               <button 
-                className={`toggle-btn ${layout === 'list' ? 'active' : ''}`}
+                className={'toggle-btn ' + (layout === 'list' ? 'active' : '')}
                 onClick={() => setLayout('list')}
                 title="Liste Görünümü"
               >
@@ -359,7 +364,7 @@ export default function Home({ initialProperties }) {
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button 
                   key={page}
-                  className={`pagination-item ${currentPage === page ? 'active' : ''}`}
+                  className={'pagination-item ' + (currentPage === page ? 'active' : '')}
                   onClick={() => {
                     setCurrentPage(page);
                     document.getElementById('custom-catalog-search').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -385,7 +390,7 @@ export default function Home({ initialProperties }) {
               <div className="v1-intro">
                 <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
                 <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
-                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenле ulaşmanızı sağlıyoruz.</p>
+                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
               </div>
 
               <div className="v1-grid v-grid">
@@ -394,7 +399,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
                   </div>
                   <h3 className="v1-card-title">%0 Emlakçı Komisyonu</h3>
-                  <p className="v1-card-desc">Sıfır aracı, sıфır komisyon. Satın alım bütçenizin tek bir kuruşu bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
+                  <p className="v1-card-desc">Sıfır aracı, sıфır komisyon. Satın alım bütçenizin tek bir курушу bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -402,7 +407,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   </div>
                   <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elден öğrenirsiniz.</p>
+                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -467,7 +472,6 @@ export default function Home({ initialProperties }) {
   );
 }
 
-// ИСПРАВЛЕНО: Безопасный fetch-запрос к базе данных напрямую без использования SDK
 export async function getServerSideProps() {
   const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
   const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
