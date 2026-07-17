@@ -41,17 +41,17 @@ export default function Header({ setFilters }) {
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
     
-    const targetUrl = "/?status=" + encodeURIComponent(status);
+    // 1. Мгновенно обновляем состояние фильтров в React (как в поисковике)
+    if (setFilters) {
+      setFilters((prev) => ({
+        ...prev,
+        selectedStatuses: [status],
+      }));
+    }
 
-    try {
-      // 1. Пробуем сделать быстрый поверхностный (shallow) переход
-      router.push(targetUrl, undefined, { shallow: true })
-        .then((success) => {
-          if (!success) {
-            // 2. Если Next.js отклонил shallow-переход, делаем обычный полноценный переход
-            router.push(targetUrl);
-          }
-        })
+    // 2. И просто тихо обновляем URL в фоне для сохранения ссылки
+    router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
+  };
         .catch(() => {
           // Резервный случай на случай асинхронного сбоя
           router.push(targetUrl);
