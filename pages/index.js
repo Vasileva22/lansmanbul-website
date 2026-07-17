@@ -113,20 +113,24 @@ export default function Home({ initialProperties }) {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { status, scrollto } = router.query;
+    const { status } = router.query;
+    console.log("=== Клик из меню! URL изменился на:", router.asPath);
+    console.log("=== Найден статус в URL:", status);
 
     if (status) {
-      setFilters((prev) => ({
-        ...prev,
-        selectedStatuses: [status],
-      }));
+      setFilters((prev) => {
+        console.log("=== Записываем статус в фильтры:", status);
+        return {
+          ...prev,
+          selectedStatuses: [status],
+        };
+      });
     } else {
       setFilters((prev) => ({
         ...prev,
         selectedStatuses: [],
       }));
     }
-
     if (scrollto) {
       setTimeout(() => {
         const element = document.querySelector('[data-id="' + scrollto + '"]');
@@ -139,7 +143,7 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.asPath]);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
