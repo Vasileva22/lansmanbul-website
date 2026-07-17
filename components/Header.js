@@ -37,7 +37,7 @@ export default function Header() {
   }, []);
 
   // Вспомогательная функция для фильтрации / перехода по статусу
- const handleStatusRedirect = (status) => {
+  const handleStatusRedirect = (status) => {
     // ВРЕМЕННЫЙ ТЕСТ: проверяем, нажимается ли кнопка физически
     alert("Кликнули в шапке на статус: " + status);
 
@@ -50,40 +50,33 @@ export default function Header() {
       query: { status: status },
     }, undefined, { shallow: true });
   };
-    
-    // Перенаправляем на главную с параметром статуса с shallow: true
-    router.push({
-      pathname: '/',
-      query: { status: status },
-    }, undefined, { shallow: true });
-  };
 
   return (
     <>
       <header className="modern-header">
-        <div class="header-container">
+        <div className="header-container">
           
           {/* ЛОГОТИП */}
-          <Link href="/" class="modern-logo">
-            <div class="logo-icon-box">
-              <svg class="logo-icon-svg" viewBox="0 0 24 24">
+          <Link href="/" className="modern-logo">
+            <div className="logo-icon-box">
+              <svg className="logo-icon-svg" viewBox="0 0 24 24">
                 <path d="M19 2H9c-1.1 0-2 .9-2 2v3H3c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM5 20H3V9h2v11zm4 0H7v-3h2v3zm0-5H7v-3h2v3zm0-5H7V7h2v3zm10 10H11V4h8v16zm-2-12h-4v2h4V8zm0 4h-4v2h4v-2zm0 4h-4v2h4v-2z" />
               </svg>
             </div>
-            <span class="logo-text">
-              LANSMAN<span class="logo-text-accent">BUL</span>
+            <span className="logo-text">
+              LANSMAN<span className="logo-text-accent">BUL</span>
             </span>
           </Link>
 
           {/* ДЕСКТОПНАЯ НАВИГАЦИЯ */}
-          <nav class="modern-nav">
+          <nav className="modern-nav">
             <div 
               ref={desktopDropdownRef}
               className={`nav-item new-ssapkaprojelerimiz ${isDesktopProjectsOpen ? 'open' : ''}`}
               onClick={() => setIsDesktopProjectsOpen(!isDesktopProjectsOpen)}
             >
-              <span class="txt-span">Projelerimiz</span>
-              <svg class="nav-chevron-svg" viewBox="0 0 24 24">
+              <span className="txt-span">Projelerimiz</span>
+              <svg className="nav-chevron-svg" viewBox="0 0 24 24">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
 
@@ -102,26 +95,26 @@ export default function Header() {
                 </div>
               )}
             </div>
-            <Link href="/#about-us-container" class="nav-item new-sapkahakkmzda">
+            <Link href="/#about-us-container" className="nav-item new-sapkahakkmzda">
               Hakkımızda
             </Link>
           </nav>
 
           {/* КОНТАКТЫ И КНОПКА МЕНЮ */}
-          <div class="header-contact">
-            <a href="tel:+905459418536" class="contact-phone">
-              <svg class="phone-icon-svg" viewBox="0 0 24 24">
+          <div className="header-contact">
+            <a href="tel:+905459418536" className="contact-phone">
+              <svg className="phone-icon-svg" viewBox="0 0 24 24">
                 <path d="M6.62 10.79a15.15 15.15 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
               </svg>
               <span>+90 545 941 85 36</span>
             </a>
-            <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" class="contact-whatsapp">
-              <svg class="wa-icon-svg" viewBox="0 0 24 24">
+            <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="contact-whatsapp">
+              <svg className="wa-icon-svg" viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.488 1.977 14.02 1.953 12.01 1.953c-5.439 0-9.865 4.371-9.87 9.8-.002 1.714.453 3.39 1.317 4.883l-.994 3.634 3.791-.983z" />
               </svg>
             </a>
             <button className="mobile-burger-btn" onClick={() => setIsMobileMenuOpen(true)}>
-              <svg class="burger-icon-svg" viewBox="0 0 24 24">
+              <svg className="burger-icon-svg" viewBox="0 0 24 24">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -142,7 +135,7 @@ export default function Header() {
         <span className="mobile-nav-close" onClick={() => setIsMobileMenuOpen(false)}>
           &times;
         </span>
-        <div class="mobile-nav-links">
+        <div className="mobile-nav-links">
           <div>
             <div 
               className="mobile-nav-item mobile-projects-trigger cursor-pointer"
@@ -204,4 +197,4 @@ export default function Header() {
       `}</style>
     </>
   );
-}}
+}
