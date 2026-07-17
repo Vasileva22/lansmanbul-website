@@ -139,7 +139,7 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.query.status, router.query.scrollto]);
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
