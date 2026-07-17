@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-export default function Header() {
+export default function Header({ setFilters }) {
   const router = useRouter();
   
   // Состояния для управления выпадающими списками и меню
