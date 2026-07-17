@@ -44,11 +44,8 @@ export default function Header() {
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
     
-    // Перенаправляем на главную с параметром статуса с shallow: true
-    router.push({
-      pathname: '/',
-      query: { status: status },
-    }, undefined, { shallow: true });
+    // Безопасный переход по прямой строке URL (работает безотказно)
+    router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
   };
 
   return (
