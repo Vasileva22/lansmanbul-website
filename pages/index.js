@@ -138,7 +138,7 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.asPath]);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
