@@ -325,9 +325,9 @@ export default function Home({ initialProperties }) {
     });
   };
 
-  return (
+ return (
     <>
-      <Header />
+      <Header setFilters={setFilters} />
 
       <HeroSearch 
         filters={filters}
