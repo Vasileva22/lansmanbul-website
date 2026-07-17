@@ -52,15 +52,6 @@ export default function Header({ setFilters }) {
     // 2. И просто тихо обновляем URL в фоне для сохранения ссылки
     router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
   };
-        .catch(() => {
-          // Резервный случай на случай асинхронного сбоя
-          router.push(targetUrl);
-        });
-    } catch (err) {
-      // Резервный случай на случай синхронного сбоя
-      router.push(targetUrl);
-    }
-  };
 
   return (
     <>
