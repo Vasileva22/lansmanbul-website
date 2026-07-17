@@ -118,6 +118,9 @@ export default function Home({ initialProperties }) {
     const status = params.get('status');
     const scrollto = params.get('scrollto');
 
+    // ВРЕМЕННЫЙ ТЕСТ: проверяем, видит ли страница изменение URL
+    alert("Страница поймала изменение URL! Нашла статус: " + status);
+
     if (status) {
       setFilters((prev) => ({
         ...prev,
