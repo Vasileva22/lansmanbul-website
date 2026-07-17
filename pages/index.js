@@ -109,17 +109,11 @@ export default function Home({ initialProperties }) {
     loadClientData();
   }, []);
 
-  // Синхронизация поиска из шапки
-  useEffect(() => {
-    if (!router.isReady) return;
-
-    // Читаем параметры напрямую из браузера, исключая любые задержки Next.js
+  // Единая функция синхронизации параметров фильтра из URL
+  const syncFiltersFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
     const scrollto = params.get('scrollto');
-
-    // ВРЕМЕННЫЙ ТЕСТ: проверяем, видит ли страница изменение URL
-    alert("Страница поймала изменение URL! Нашла статус: " + status);
 
     if (status) {
       setFilters((prev) => ({
@@ -145,7 +139,23 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.asPath]);
+  };
+
+  // 1. Запускаем синхронизацию при первом монтировании страницы (когда роутер готов)
+  useEffect(() => {
+    if (router.isReady) {
+      syncFiltersFromUrl();
+    }
+  }, [router.isReady]);
+
+  // 2. Слушаем события изменения роутера, чтобы синхронизировать фильтры БЕЗ ручной перезагрузки
+  useEffect(() => {
+    router.events.on('routeChangeComplete', syncFiltersFromUrl);
+    return () => {
+      router.events.off('routeChangeComplete', syncFiltersFromUrl);
+    };
+  }, [router]);
+
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
     if (!consent) {
@@ -211,7 +221,7 @@ export default function Home({ initialProperties }) {
         const isMatched = filters.selectedStatuses.some((status) => {
           const cleanStatus = String(status).trim().toLowerCase();
           return propStatus === cleanStatus;
-            });
+        });
         if (!isMatched) return false;
       }
 
@@ -433,7 +443,7 @@ export default function Home({ initialProperties }) {
               <div className="v1-intro">
                 <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
                 <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
-                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenле ulaşmanızı sağlıyoruz.</p>
+                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
               </div>
 
               <div className="v1-grid v-grid">
@@ -458,14 +468,14 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                   </div>
                   <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда только проверенные компании и надежные застройщики.</p>
                 </div>
               </div>
 
               <div className="v1-footer-panel">
                 <div className="v1-footer-text">
                   <h4>Doğrudan rehberliğe mi ihtiyacınız var?</h4>
-                  <p>Hangi projenin bütçenize en uygun olduğuna karar veremediyseniz, doğrudan bizimle iletişime geçebilirsiniz.</p>
+                  <p>Hangi projenin bütçenize en uygun olduğuna karar veremediyseniz, doğrudan bizimle iletiшme geçebilirsiniz.</p>
                 </div>
                 <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="kb-btn kb-btn-wa">
                   <svg className="kb-icon" viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: 'currentColor', marginRight: 8 }}><path d="M20.065 17.149c-.683-.344-4.04-1.995-4.666-2.224-.627-.229-1.083-.343-1.538.343-.456.687-1.768 2.224-2.166 2.68-.399.458-.799.515-1.482.172-3.197-1.6-4.57-2.224-6.398-5.362-.484-.834.484-.775 1.385-2.58.15-.3.075-.558-.037-.787-.114-.228-1.083-2.61-1.482-3.575-.388-.934-.781-.808-1.083-.823-.28-.014-.599-.016-.913-.016-.314 0-.827.118-1.254.582-.428.466-1.63 1.593-1.63 3.882 0 2.288 1.66 4.498 1.888 4.802.228.304 3.268 4.992 7.915 7.001 3.856 1.666 4.636 1.334 5.488 1.254.852-.08 2.743-1.122 3.125-2.203.383-1.082.383-2.01.269-2.204-.114-.19-.428-.305-1.111-.649z"/></svg>
