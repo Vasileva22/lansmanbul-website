@@ -38,11 +38,26 @@ export default function Header() {
 
   // Вспомогательная функция для фильтрации / перехода по статусу
   const handleStatusRedirect = (status) => {
-    // ВРЕМЕННЫЙ ТЕСТ: проверяем, нажимается ли кнопка физически
     alert("Кликнули в шапке на статус: " + status);
 
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
+    
+    try {
+      // Безопасный переход с отслеживанием скрытых ошибок Next.js
+      router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true })
+        .then((success) => {
+          if (!success) {
+            alert("Предупреждение: Next.js сообщил, что переход завершился неудачно.");
+          }
+        })
+        .catch((err) => {
+          alert("Асинхронная ошибка роутера: " + err);
+        });
+    } catch (err) {
+      alert("Синхронная ошибка выполнения перехода: " + err.message);
+    }
+  };
     
     // Безопасный переход по прямой строке URL (работает безотказно)
     router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
