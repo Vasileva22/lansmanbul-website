@@ -6,7 +6,7 @@ export default function Footer() {
 
   // Функция для безопасного перенаправления на главную с фильтрацией по статусу
   const handleStatusRedirect = (status) => {
-   router.push({
+    router.push({
       pathname: '/',
       query: { status: status },
     }, undefined, { shallow: true });
