@@ -202,11 +202,13 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      if (
-        filters.selectedStatuses.length > 0 &&
-        !filters.selectedStatuses.includes(property.konutcesit)
-      ) {
-        return false;
+     if (filters.selectedStatuses.length > 0) {
+        const propStatus = property.konutcesit ? String(property.konutcesit).trim().toLowerCase() : "";
+        const isMatched = filters.selectedStatuses.some((status) => {
+          const cleanStatus = String(status).trim().toLowerCase();
+          return propStatus === cleanStatus;
+        });
+        if (!isMatched) return false;
       }
 
       const area = parseInt(property['card-area']) || 0;
