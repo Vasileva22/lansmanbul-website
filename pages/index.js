@@ -110,8 +110,17 @@ export default function Home({ initialProperties }) {
   }, []);
 
   // Единая функция синхронизации параметров фильтра из URL
-  const syncFiltersFromUrl = () => {
-    const params = new URLSearchParams(window.location.search);
+  const syncFiltersFromUrl = (url) => {
+    let searchString = '';
+    if (typeof url === 'string') {
+      // Если событие вызвано роутером, берем новый URL прямо из аргумента события
+      searchString = url.includes('?') ? url.split('?')[1] : '';
+    } else {
+      // Иначе берем текущую строку браузера (при первой загрузке страницы)
+      searchString = typeof window !== 'undefined' ? window.location.search : '';
+    }
+
+    const params = new URLSearchParams(searchString);
     const status = params.get('status');
     const scrollto = params.get('scrollto');
 
