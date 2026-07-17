@@ -37,11 +37,12 @@ export default function Header() {
   }, []);
 
   // Вспомогательная функция для фильтрации / перехода по статусу
-  const handleStatusRedirect = (status) => {
+ const handleStatusRedirect = (status) => {
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
     
-   router.push({
+    // Перенаправляем на главную с параметром статуса с shallow: true
+    router.push({
       pathname: '/',
       query: { status: status },
     }, undefined, { shallow: true });
