@@ -113,18 +113,13 @@ export default function Home({ initialProperties }) {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { status } = router.query;
-    console.log("=== Клик из меню! URL изменился на:", router.asPath);
-    console.log("=== Найден статус в URL:", status);
+    const { status, scrollto } = router.query;
 
     if (status) {
-      setFilters((prev) => {
-        console.log("=== Записываем статус в фильтры:", status);
-        return {
-          ...prev,
-          selectedStatuses: [status],
-        };
-      });
+      setFilters((prev) => ({
+        ...prev,
+        selectedStatuses: [status],
+      }));
     } else {
       setFilters((prev) => ({
         ...prev,
@@ -143,7 +138,7 @@ export default function Home({ initialProperties }) {
         }
       }, 800);
     }
-  }, [router.isReady, router.asPath]);
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
