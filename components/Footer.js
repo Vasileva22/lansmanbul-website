@@ -1,15 +1,21 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-export default function Footer() {
+export default function Footer({ setFilters }) {
   const router = useRouter();
 
   // Функция для безопасного перенаправления на главную с фильтрацией по статусу
   const handleStatusRedirect = (status) => {
-    router.push({
-      pathname: '/',
-      query: { status: status },
-    }, undefined, { shallow: true });
+    // 1. Мгновенно обновляем состояние фильтров в React (как в поисковике)
+    if (setFilters) {
+      setFilters((prev) => ({
+        ...prev,
+        selectedStatuses: [status],
+      }));
+    }
+
+    // 2. И просто тихо обновляем URL в фоне для сохранения ссылки
+    router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
   };
 
   return (
