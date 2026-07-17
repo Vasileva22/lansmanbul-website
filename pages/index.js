@@ -113,7 +113,10 @@ export default function Home({ initialProperties }) {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { status, scrollto } = router.query;
+    // Читаем параметры напрямую из браузера, исключая любые задержки Next.js
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const scrollto = params.get('scrollto');
 
     if (status) {
       setFilters((prev) => ({
@@ -140,7 +143,6 @@ export default function Home({ initialProperties }) {
       }, 800);
     }
   }, [router.isReady, router.asPath]);
-
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
     if (!consent) {
