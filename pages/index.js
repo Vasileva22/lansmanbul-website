@@ -109,11 +109,14 @@ export default function Home({ initialProperties }) {
     loadClientData();
   }, []);
 
-  // Синхронизация поиска из шапки
+ // Синхронизация поиска из шапки
   useEffect(() => {
     if (!router.isReady) return;
 
     const { status, scrollto } = router.query;
+
+    // ВРЕМЕННЫЙ ТЕСТ: покажет всплывающее окно при каждом клике или изменении URL
+    alert("Клик зафиксирован! Статус в URL: " + status);
 
     if (status) {
       setFilters((prev) => ({
