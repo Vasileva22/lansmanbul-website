@@ -58,10 +58,6 @@ export default function Header() {
       alert("Синхронная ошибка выполнения перехода: " + err.message);
     }
   };
-    
-    // Безопасный переход по прямой строке URL (работает безотказно)
-    router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true });
-  };
 
   return (
     <>
