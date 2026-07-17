@@ -41,11 +41,10 @@ export default function Header() {
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
     
-    // Перенаправляем на главную с параметром статуса
-    router.push({
+   router.push({
       pathname: '/',
       query: { status: status },
-    });
+    }, undefined, { shallow: true });
   };
 
   return (
