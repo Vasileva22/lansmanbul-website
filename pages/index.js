@@ -12,7 +12,7 @@ const SidebarFilters = dynamic(() => import('../components/SidebarFilters'), {
   ssr: false,
 });
 
-// ПУНКТ 7: Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
+// Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
 function Lightbox({ photos, activeIndex, onClose, onPrev, onRight }) {
   useEffect(() => {
     function handleKeyDown(e) {
@@ -109,14 +109,11 @@ export default function Home({ initialProperties }) {
     loadClientData();
   }, []);
 
- // Синхронизация поиска из шапки
+  // Синхронизация поиска из шапки
   useEffect(() => {
     if (!router.isReady) return;
 
     const { status, scrollto } = router.query;
-
-    // ВРЕМЕННЫЙ ТЕСТ: покажет всплывающее окно при каждом клике или изменении URL
-    alert("Клик зафиксирован! Статус в URL: " + status);
 
     if (status) {
       setFilters((prev) => ({
@@ -129,6 +126,7 @@ export default function Home({ initialProperties }) {
         selectedStatuses: [],
       }));
     }
+
     if (scrollto) {
       setTimeout(() => {
         const element = document.querySelector('[data-id="' + scrollto + '"]');
@@ -181,8 +179,7 @@ export default function Home({ initialProperties }) {
     return [...new Set(rooms)].sort();
   }, [masterProperties]);
 
- const uniqueStatuses = useMemo(() => {
-    // Возвращаем всегда три наших базовых статуса, чтобы не зависеть от загрузки базы данных
+  const uniqueStatuses = useMemo(() => {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
 
@@ -203,12 +200,13 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-     if (filters.selectedStatuses.length > 0) {
+      // НАДЕЖНОЕ СРАВНЕНИЕ СТАТУСОВ (Пункт 1)
+      if (filters.selectedStatuses.length > 0) {
         const propStatus = property.konutcesit ? String(property.konutcesit).trim().toLowerCase() : "";
         const isMatched = filters.selectedStatuses.some((status) => {
           const cleanStatus = String(status).trim().toLowerCase();
           return propStatus === cleanStatus;
-        });
+            });
         if (!isMatched) return false;
       }
 
@@ -430,7 +428,7 @@ export default function Home({ initialProperties }) {
               <div className="v1-intro">
                 <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
                 <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
-                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
+                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenле ulaşmanızı sağlıyoruz.</p>
               </div>
 
               <div className="v1-grid v-grid">
@@ -439,7 +437,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
                   </div>
                   <h3 className="v1-card-title">%0 Emlakçı Komisyonu</h3>
-                  <p className="v1-card-desc">Sıfır aracı, sıфır komisyon. Satın alım bütçenizin tek bir курушу bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
+                  <p className="v1-card-desc">Sıfır aracı, sıфыр коммиссион. Satın alım bütçenizin tek bir курушу bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -447,7 +445,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   </div>
                   <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik и mali detayları birinci елден öğrenirsiniz.</p>
+                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkла doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik и mali detayları birinci елден öğrenirsiniz.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
@@ -455,7 +453,7 @@ export default function Home({ initialProperties }) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                   </div>
                   <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
+                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzда sadece rüştünü ispatlamış, geçmişte başarılı projeler tamamlamış и güçlü referanslara sahip olan güvenilir inşaat firmalarının projelerine yer veriyoruz.</p>
                 </div>
               </div>
 
