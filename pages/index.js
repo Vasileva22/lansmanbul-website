@@ -179,11 +179,10 @@ export default function Home({ initialProperties }) {
     return [...new Set(rooms)].sort();
   }, [masterProperties]);
 
-  const uniqueStatuses = useMemo(() => {
-    const statuses = masterProperties.map((p) => p.konutcesit).filter(Boolean);
-    const customOrder = ["Lansman", "Devam ediyor", "Tamamlandı"];
-    return customOrder.filter((status) => statuses.includes(status));
-  }, [masterProperties]);
+ const uniqueStatuses = useMemo(() => {
+    // Возвращаем всегда три наших базовых статуса, чтобы не зависеть от загрузки базы данных
+    return ["Lansman", "Devam ediyor", "Tamamlandı"];
+  }, []);
 
   // Логика фильтрации
   const filteredProperties = useMemo(() => {
