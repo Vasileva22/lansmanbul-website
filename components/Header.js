@@ -38,24 +38,27 @@ export default function Header() {
 
   // Вспомогательная функция для фильтрации / перехода по статусу
   const handleStatusRedirect = (status) => {
-    alert("Кликнули в шапке на статус: " + status);
-
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
     
+    const targetUrl = "/?status=" + encodeURIComponent(status);
+
     try {
-      // Безопасный переход с отслеживанием скрытых ошибок Next.js
-      router.push("/?status=" + encodeURIComponent(status), undefined, { shallow: true })
+      // 1. Пробуем сделать быстрый поверхностный (shallow) переход
+      router.push(targetUrl, undefined, { shallow: true })
         .then((success) => {
           if (!success) {
-            alert("Предупреждение: Next.js сообщил, что переход завершился неудачно.");
+            // 2. Если Next.js отклонил shallow-переход, делаем обычный полноценный переход
+            router.push(targetUrl);
           }
         })
-        .catch((err) => {
-          alert("Асинхронная ошибка роутера: " + err);
+        .catch(() => {
+          // Резервный случай на случай асинхронного сбоя
+          router.push(targetUrl);
         });
     } catch (err) {
-      alert("Синхронная ошибка выполнения перехода: " + err.message);
+      // Резервный случай на случай синхронного сбоя
+      router.push(targetUrl);
     }
   };
 
