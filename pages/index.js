@@ -529,7 +529,7 @@ export default function Home({ initialProperties }) {
         />
       )}
 
-      <Footer />
+      <Footer setFilters={setFilters} />
     </>
   );
 }
