@@ -38,8 +38,18 @@ export default function Header() {
 
   // Вспомогательная функция для фильтрации / перехода по статусу
  const handleStatusRedirect = (status) => {
+    // ВРЕМЕННЫЙ ТЕСТ: проверяем, нажимается ли кнопка физически
+    alert("Кликнули в шапке на статус: " + status);
+
     setIsMobileMenuOpen(false);
     setIsDesktopProjectsOpen(false);
+    
+    // Перенаправляем на главную с параметром статуса с shallow: true
+    router.push({
+      pathname: '/',
+      query: { status: status },
+    }, undefined, { shallow: true });
+  };
     
     // Перенаправляем на главную с параметром статуса с shallow: true
     router.push({
