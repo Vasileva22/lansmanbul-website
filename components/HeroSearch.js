@@ -120,8 +120,8 @@ export default function HeroSearch({
                   <div className="dropdown-items-scroll">
                     {/* АКТИВНЫЙ ГОРОД (ANKARA) С ПОЛНОЙ И КРАСИВОЙ ИКОНКОЙ */}
                     <div className="dropdown-item selected">
-                      <div className="dropdown-item-left">
-                                  <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                     <div className="dropdown-item-left">
+                                  <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                                 </div>
                       <div className="dropdown-item-content">
                         <span className="dropdown-item-title">Ankara</span>
