@@ -90,10 +90,12 @@ export default function HeroSearch({
 
         <div className="search-panel-card" ref={dropdownRef}>
           
-          <div className="search-tabs-header" style={{ position: 'relative' }}>
+          <div className="search-tabs-header">
+            {/* Кнопка выбора города (Ankara) с относительным позиционированием */}
             <div 
               className={'city-tab-item ' + (activeDropdown === 'city' ? 'active' : '')}
               onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'city' ? null : 'city'); }}
+              style={{ position: 'relative' }}
             >
               <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'currentColor' }}>
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -102,6 +104,61 @@ export default function HeroSearch({
               <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: 'none', stroke: 'currentColor', strokeWidth: 3, marginLeft: 4 }}>
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
+
+              {/* Выпадающий список городов, вложенный прямо внутрь кнопки */}
+              {activeDropdown === 'city' && (
+                <div 
+                  className="custom-dropdown" 
+                  style={{ position: 'absolute', top: '100%', left: 0, width: '260px', display: 'flex', flexDirection: 'column', marginTop: '12px' }} 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="dropdown-mobile-header">
+                    <span className="dropdown-mobile-title">Şehir Seçiniz</span>
+                    <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
+                  </div>
+                  
+                  <div className="dropdown-items-scroll">
+                    {/* АКТИВНЫЙ ГОРОД (ANKARA) С ПОЛНОЙ И КРАСИВОЙ ИКОНКОЙ */}
+                    <div className="dropdown-item selected">
+                      <div className="dropdown-item-left">
+                        <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor', color: 'var(--primary)' }}>
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                      </div>
+                      <div className="dropdown-item-content">
+                        <span className="dropdown-item-title">Ankara</span>
+                        <span className="dropdown-item-subtitle">Aktif Projeler</span>
+                      </div>
+                    </div>
+
+                    {/* ДРУГИЕ ГОРОДА С ПОЛНЫМИ И КРАСИВЫМИ ИКОНКАМИ */}
+                    {['İstanbul', 'İzmir'].map((city) => (
+                      <div 
+                        key={city} 
+                        className="dropdown-item city-yakinda" 
+                        style={{ opacity: 0.75 }} 
+                        onClick={() => alert(city + ' projelerimiz çok yakında sizlerle!')}
+                      >
+                        <div className="dropdown-item-left">
+                          <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor', color: '#bdc5d0' }}>
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                          </svg>
+                        </div>
+                        <div className="dropdown-item-content">
+                          <span className="dropdown-item-title">
+                            {city} <span className="tab-badge" style={{ backgroundColor: '#FF9800', color: '#fff', marginLeft: '6px' }}>Yakında</span>
+                          </span>
+                          <span className="dropdown-item-subtitle">Çok yakında hizmetinizde</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="dropdown-mobile-footer">
+                    <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Kapat</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="city-tab-item disabled">
@@ -112,40 +169,6 @@ export default function HeroSearch({
               <span>İzmir</span>
               <span className="tab-badge">Yakında</span>
             </div>
-
-            {activeDropdown === 'city' && (
-              <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
-                <div className="dropdown-mobile-header">
-                  <span className="dropdown-mobile-title">Şehir Seçiniz</span>
-                  <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
-                </div>
-                <div className="dropdown-items-scroll">
-                  <div className="dropdown-item selected">
-                    <div className="dropdown-item-left">
-                      <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-                    </div>
-                    <div className="dropdown-item-content">
-                      <span className="dropdown-item-title">Ankara</span>
-                      <span className="dropdown-item-subtitle">Aktif Projeler</span>
-                    </div>
-                  </div>
-                  {['İstanbul', 'İzmir'].map((city) => (
-                    <div key={city} className="dropdown-item city-yakinda" style={{ opacity: 0.75 }} onClick={() => alert(city + ' projelerimiz çok yakında sizlerle!')}>
-                      <div className="dropdown-item-left">
-                        <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-                      </div>
-                      <div className="dropdown-item-content">
-                        <span className="dropdown-item-title">{city} <span className="tab-badge" style={{ backgroundColor: '#FF9800', color: '#fff' }}>Yakında</span></span>
-                        <span className="dropdown-item-subtitle">Çok yakında hizmetinizde</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="dropdown-mobile-footer">
-                  <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Kapat</button>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="search-inputs-row-wrapper">
