@@ -120,9 +120,11 @@ export default function HeroSearch({
                   <div className="dropdown-items-scroll">
                     {/* АКТИВНЫЙ ГОРОД (ANKARA) С ПОЛНОЙ И КРАСИВОЙ ИКОНКОЙ */}
                     <div className="dropdown-item selected">
-                     <div className="dropdown-item-left">
-                                  <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor' }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                </div>
+                      <div className="dropdown-item-left">
+                        <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor', color: 'var(--primary)' }}>
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                      </div>
                       <div className="dropdown-item-content">
                         <span className="dropdown-item-title">Ankara</span>
                         <span className="dropdown-item-subtitle">Aktif Projeler</span>
@@ -212,7 +214,9 @@ export default function HeroSearch({
                             onClick={() => handleLocationToggle(loc)}
                           >
                             <div className="dropdown-item-left">
-                              <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                              <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}>
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
                             </div>
                             <div className="dropdown-item-content">
                               <span className="dropdown-item-title">{loc}</span>
@@ -243,7 +247,7 @@ export default function HeroSearch({
                 </div>
 
                 {activeDropdown === 'room' && (
-                  <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
+                  <div className="custom-dropdown" style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '280px', marginTop: '6px' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
                       <span className="dropdown-mobile-title">Oda Sayısı</span>
                       <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
@@ -287,7 +291,7 @@ export default function HeroSearch({
                 </div>
 
                 {activeDropdown === 'status' && (
-                  <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
+                  <div className="custom-dropdown" style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '280px', marginTop: '6px' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
                       <span className="dropdown-mobile-title">Proje Durumu</span>
                       <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
