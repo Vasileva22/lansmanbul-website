@@ -189,7 +189,7 @@ export default function HeroSearch({
                 </div>
 
                 {activeDropdown === 'location' && (
-                  <div className="custom-dropdown active-mobile-modal" style={{ display: 'flex' }} onClick={(e) => e.stopPropagation()}>
+                  <div className="custom-dropdown" style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '340px', marginTop: '6px' }} onClick={(e) => e.stopPropagation()}>
                     <div className="dropdown-mobile-header">
                       <span className="dropdown-mobile-title">Konum Seçiniz</span>
                       <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
