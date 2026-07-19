@@ -25,7 +25,8 @@ export default function Footer({ setFilters }) {
           
           {/* КОЛОНКА 1: ЛОГОТИП И ОПИСАНИЕ */}
           <div className="v3-col">
-            <Link href="/" className="v3-logo">
+            {/* Заменили <Link> на стандартный <a> для прямой работы со стилями */}
+            <a href="/" className="v3-logo">
               <div className="v3-logo-icon">
                 <svg className="v3-logo-svg" viewBox="0 0 24 24" width="18" height="18">
                   <path d="M19 2H9c-1.1 0-2 .9-2 2v3H3c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM5 20H3V9h2v11zm4 0H7v-3h2v3zm0-5H7v-3h2v3zm0-5H7V7h2v3zm10 10H11V4h8v16zm-2-12h-4v2h4V8zm0 4h-4v2h4v-2zm0 4h-4v2h4v-2z"/>
@@ -34,7 +35,7 @@ export default function Footer({ setFilters }) {
               <span className="v3-logo-text">
                 LANSMAN<span className="v3-logo-accent">BUL</span>
               </span>
-            </Link>
+            </a>
             <p className="v3-description">
               En yeni konut projelerini doğrudan geliştiriciden, komisyonsuz ve şeffaf fiyatlarla sunan dijital vitrindir.
             </p>
@@ -123,7 +124,7 @@ export default function Footer({ setFilters }) {
         </div>
       </div>
 
-      {/* ВСТРОЕННЫЕ СТИЛИ ПОДВАЛА (100% ГАРАНТИЯ КОРРЕКТНОГО ОТОБРАЖЕНИЯ) */}
+      {/* ВСТРОЕННЫЕ СТИЛИ ПОДВАЛА */}
       <style jsx>{`
         .v3-footer {
           background-color: #f8fafc !important;
@@ -157,13 +158,13 @@ export default function Footer({ setFilters }) {
           display: inline-flex !important;
           align-items: center !important;
           text-decoration: none !important;
-          border-bottom: none !important; /* Убираем контурное подчеркивание */
-          box-shadow: none !important; /* Убираем тень-подчеркивание */
-          background-image: none !important; /* Убираем фоновое подчеркивание */
+          border-bottom: none !important;
+          box-shadow: none !important;
+          background-image: none !important;
           gap: 8px !important;
           margin-bottom: 18px !important;
         }
-        .v3-logo :global(*), .v3-logo:hover, .v3-logo:focus {
+        .v3-logo:hover, .v3-logo:focus, .v3-logo :global(*) {
           text-decoration: none !important;
           border-bottom: none !important;
           box-shadow: none !important;
