@@ -121,7 +121,7 @@ export default function SidebarFilters({
     drawMapPlacemarks();
   }, [filteredProperties]);
 
-  // ИСПРАВЛЕНО: Безопасный динамический импорт noUiSlider строго на клиенте (Пункт 5)
+  // Клиентский импорт noUiSlider и привязка к событию 'slide'
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -137,7 +137,7 @@ export default function SidebarFilters({
           step: 1,
         });
 
-        areaSliderInst.current.on('update', (values) => {
+        areaSliderInst.current.on('slide', (values) => {
           const range = values.map(Math.round);
           setFilters((prev) => ({ ...prev, areaRange: range }));
         });
@@ -152,7 +152,7 @@ export default function SidebarFilters({
           step: 1,
         });
 
-        katSliderInst.current.on('update', (values) => {
+        katSliderInst.current.on('slide', (values) => {
           const range = values.map(Math.round);
           setFilters((prev) => ({ ...prev, katRange: range }));
         });
@@ -167,7 +167,7 @@ export default function SidebarFilters({
           step: 1000,
         });
 
-        priceSliderInst.current.on('update', (values) => {
+        priceSliderInst.current.on('slide', (values) => {
           const range = values.map(Math.round);
           setFilters((prev) => ({ ...prev, priceRange: range }));
         });
@@ -183,10 +183,26 @@ export default function SidebarFilters({
     };
   }, []);
 
+  // Синхронизация ползунков слайдеров с предохранителем от бесконечного цикла
   useEffect(() => {
-    if (areaSliderInst.current) areaSliderInst.current.set(filters.areaRange);
-    if (katSliderInst.current) katSliderInst.current.set(filters.katRange);
-    if (priceSliderInst.current) priceSliderInst.current.set(filters.priceRange);
+    if (areaSliderInst.current) {
+      const current = areaSliderInst.current.get().map(Math.round);
+      if (current[0] !== filters.areaRange[0] || current[1] !== filters.areaRange[1]) {
+        areaSliderInst.current.set(filters.areaRange);
+      }
+    }
+    if (katSliderInst.current) {
+      const current = katSliderInst.current.get().map(Math.round);
+      if (current[0] !== filters.katRange[0] || current[1] !== filters.katRange[1]) {
+        katSliderInst.current.set(filters.katRange);
+      }
+    }
+    if (priceSliderInst.current) {
+      const current = priceSliderInst.current.get().map(Math.round);
+      if (current[0] !== filters.priceRange[0] || current[1] !== filters.priceRange[1]) {
+        priceSliderInst.current.set(filters.priceRange);
+      }
+    }
   }, [filters.areaRange, filters.katRange, filters.priceRange]);
 
   const handleTagToggle = (tag) => {
@@ -350,65 +366,65 @@ export default function SidebarFilters({
                 { label: 'Sauna', value: 'Sauna', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
                 { label: 'Hamam', value: 'Hamam', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
                 { label: 'Oyun Parkı', value: 'Oyun Parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> }
-              ].map((tag) => (
-                <div 
-                  key={tag.value} 
-                  className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(tag.value) ? 'active' : '')}
-                  onClick={() => handleTagToggle(tag.value)}
-                >
-                  {tag.svg}
-                  <label style={{ cursor: 'pointer', margin: 0 }}>{tag.label}</label>
+                  ].map((tag) => (
+                    <div 
+                      key={tag.value} 
+                      className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(tag.value) ? 'active' : '')}
+                      onClick={() => handleTagToggle(tag.value)}
+                    >
+                      {tag.svg}
+                      <label style={{ cursor: 'pointer', margin: 0 }}>{tag.label}</label>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <span 
-              className="luxe-more-filters-link" 
-              onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-            >
-              {isTagsExpanded ? 'Daha az göster' : 'Daha fazla göster'}
-            </span>
-          </div>
-
-          <div className="luxe-divider"></div>
-
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Ödeme durumu</span>
-            <div className="luxe-checkboxes">
-              {[
-                { label: 'Krediye uygun', value: 'Krediye uygun' },
-                { label: 'Taksit imkanı', value: 'Taksit imkanı' },
-                { label: 'Peşin', value: 'Peşin' }
-              ].map((pay) => (
-                <div 
-                  key={pay.value} 
-                  className={'luxe-checkbox-item ' + (filters.activePaymentFilters.includes(pay.value) ? 'checked' : '')}
-                  onClick={() => handlePaymentToggle(pay.value)}
+                <span 
+                  className="luxe-more-filters-link" 
+                  onClick={() => setIsTagsExpanded(!isTagsExpanded)}
                 >
-                  <div className="luxe-radio-dot"></div>
-                  <label style={{ cursor: 'pointer', margin: 0 }}>{pay.label}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                  {isTagsExpanded ? 'Daha az göster' : 'Daha fazla göster'}
+                </span>
+              </div>
 
-        <div className="luxe-sidebar-mobile-footer" style={{ display: 'none' }}>
-          <button 
-            className="showList c-button c-button--primary" 
-            onClick={() => setIsMobileSidebarOpen(false)}
-            style={{ border: 'none', cursor: 'pointer' }}
-          >
-            <span>{totalCount}</span> Sonucu Göster
-          </button>
-          <button 
-            className="c-button c-button--transparent clearFilter clear-filters-btn" 
-            onClick={() => { onClearFilters(); setIsMobileSidebarOpen(false); }}
-            style={{ border: '1px solid #CBD5E1', cursor: 'pointer', background: 'none' }}
-          >
-            Temizle
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
+              <div className="luxe-divider"></div>
+
+              <div className="luxe-group">
+                <span className="luxe-group-label c-filter__title fs-14 fw-600">Ödeme durumu</span>
+                <div className="luxe-checkboxes">
+                  {[
+                    { label: 'Krediye uygun', value: 'Krediye uygun' },
+                    { label: 'Taksit imkanı', value: 'Taksit imkanı' },
+                    { label: 'Peşin', value: 'Peşin' }
+                  ].map((pay) => (
+                    <div 
+                      key={pay.value} 
+                      className={'luxe-checkbox-item ' + (filters.activePaymentFilters.includes(pay.value) ? 'checked' : '')}
+                      onClick={() => handlePaymentToggle(pay.value)}
+                    >
+                      <div className="luxe-radio-dot"></div>
+                      <label style={{ cursor: 'pointer', margin: 0 }}>{pay.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="luxe-sidebar-mobile-footer" style={{ display: 'none' }}>
+              <button 
+                className="showList c-button c-button--primary" 
+                onClick={() => setIsMobileSidebarOpen(false)}
+                style={{ border: 'none', cursor: 'pointer' }}
+              >
+                <span>{totalCount}</span> Sonucu Göster
+              </button>
+              <button 
+                className="c-button c-button--transparent clearFilter clear-filters-btn" 
+                onClick={() => { onClearFilters(); setIsMobileSidebarOpen(false); }}
+                style={{ border: '1px solid #CBD5E1', cursor: 'pointer', background: 'none' }}
+              >
+                Temizle
+              </button>
+            </div>
+          </aside>
+        </>
+      );
+    }
