@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Функция для безопасной очистки переменных окружения от кавычек и пробелов
 const cleanEnvVar = (val) => {
   if (!val) return '';
   return String(val).replace(/^["']|["']$/g, '').trim();
@@ -15,11 +14,10 @@ const getClient = () => {
     return url.startsWith('http://') || url.startsWith('https://');
   };
 
-  // Эластичная заглушка с поддержкой цепочки методов для предотвращения падений сервера (500)
   const createMockClient = () => {
     const mockQuery = {
       eq: () => mockQuery,
-      single: () => Promise.resolve({ data: null, error: new Error('Supabase is in mock mode due to invalid env configuration.') }),
+      single: () => Promise.resolve({ data: null, error: new Error('Mock client') }),
       select: () => mockQuery,
       then: (resolve) => resolve({ data: [], error: null }),
     };
@@ -34,4 +32,16 @@ const getClient = () => {
     };
   };
 
-  // Если URL и ключ п
+  if (isValidUrl(supabaseUrl) && supabaseAnonKey) {
+    try {
+      return createClient(supabaseUrl, supabaseAnonKey);
+    } catch (e) {
+      console.error("Supabase init error:", e);
+      return createMockClient();
+    }
+  }
+
+  return createMockClient();
+};
+
+export const supabase = getClient();
