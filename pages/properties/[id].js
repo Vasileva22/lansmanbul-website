@@ -209,7 +209,7 @@ export default function PropertyDetail({ property, error }) {
                   {property.testproje || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
-                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
@@ -380,7 +380,7 @@ export default function PropertyDetail({ property, error }) {
                     </p>
 
                     <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
-                      <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
+                     <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                       </svg>
                       Müsait Katları WhatsApp'tan Sor
@@ -445,7 +445,7 @@ export default function PropertyDetail({ property, error }) {
 
                 <div className="space-y-2">
                   <a id="whatsapp-btn" href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
-                    <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24">
+                   <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24" style={{ width: '24px', height: '24px' }}>
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                     </svg>
                     <span className="flex flex-col text-center leading-tight tracking-wider uppercase font-black">
