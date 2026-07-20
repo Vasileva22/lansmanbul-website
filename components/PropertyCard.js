@@ -2,9 +2,38 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 export default function PropertyCard({ property, onImageClick }) {
-  const photos = property.property_images
-  ? property.property_images.flatMap(img => parseJsonbPhotos(img.image_url))
-  : [];
+  // Перенесли функцию внутрь компонента — теперь она гарантированно определена
+  const parseJsonbPhotos = (value) => {
+    if (!value) return [];
+    
+    if (Array.isArray(value)) {
+      return value.filter(val => typeof val === 'string' && val.trim() !== '' && val !== 'EMPTY');
+    }
+    
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed.filter(val => typeof val === 'string' && val.trim() !== '' && val !== 'EMPTY');
+          }
+        } catch (e) {
+          console.error("JSON parsing error inside PropertyCard:", e);
+        }
+      }
+      
+      return trimmed.split(/[\s,]+/).filter(val => val !== '' && val !== 'EMPTY');
+    }
+    
+    return [];
+  };
+
+  // Безопасно парсим изображения
+  const photos = property?.property_images
+    ? property.property_images.flatMap(img => parseJsonbPhotos(img?.image_url))
+    : [];
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -41,7 +70,7 @@ export default function PropertyCard({ property, onImageClick }) {
       .filter(Boolean);
   };
 
-  const olanaklarList = parseFeatures(property.Özellikler);
+  const olanaklarList = parseFeatures(property?.Özellikler);
 
   const iconMap = {
     havuz: (
@@ -92,20 +121,17 @@ export default function PropertyCard({ property, onImageClick }) {
     return null;
   };
 
-  const waRaw = property.WhatsApp;
-  
-  // ИСПРАВЛЕНО НА СЛОЖЕНИЕ СТРОК (Прямая компиляция)
+  const waRaw = property?.WhatsApp;
   const finalWaLink = (waRaw && String(waRaw).startsWith('http'))
     ? waRaw
     : 'https://wa.me/' + (waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536");
 
-  const detailLink = '/properties/' + property.id;
-
-  const cleanStatus = property.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
+  const detailLink = '/properties/' + property?.id;
+  const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
   const isLansman = cleanStatus === "lansman";
 
   return (
-    <div className="custom-card" data-id={property.id}>
+    <div className="custom-card" data-id={property?.id}>
       <div 
         className="img-container" 
         onClick={() => onImageClick && onImageClick(photos, currentSlide)}
@@ -129,7 +155,7 @@ export default function PropertyCard({ property, onImageClick }) {
           </div>
         )}
 
-        {property.konutcesit && (
+        {property?.konutcesit && (
           <span className={'badge ' + (isLansman ? 'status-lansman' : 'status-other')}>
             {property.konutcesit}
           </span>
@@ -145,12 +171,12 @@ export default function PropertyCard({ property, onImageClick }) {
 
       <div className="card-content">
         <div className="title-price-row">
-          <h3 className="card-title">{property.testproje || ''}</h3>
-          <div className="card-price">{formatPrice(property.Fiyat)}</div>
+          <h3 className="card-title">{property?.testproje || ''}</h3>
+          <div className="card-price">{formatPrice(property?.Fiyat)}</div>
         </div>
 
         <p className="card-description">
-          {property.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimle iletişime geçin."}
+          {property?.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimle iletişime geçin."}
         </p>
 
         <div className="features-row">
@@ -158,15 +184,15 @@ export default function PropertyCard({ property, onImageClick }) {
             <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
-            {property['İlçe/Semt'] || ''}
+            {property?.['İlçe/Semt'] || ''}
           </div>
           <div className="feat-badge">
             <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
               <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" />
             </svg>
-            {property['card odalar'] || ''}
+            {property?.['card odalar'] || ''}
           </div>
-          {property['card-area'] && (
+          {property?.['card-area'] && (
             <div className="feat-badge">
               <svg className="card-svg-icon" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
                 <path d="M10.5 9h3v1.5h-3V9zm0 3h3v1.5h-3V12zm0 3h3v1.5h-3V15zM19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
