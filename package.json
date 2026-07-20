@@ -13,5 +13,10 @@
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
     "nouislider": "latest"
+  },
+  "devDependencies": {
+    "tailwindcss": "latest",
+    "postcss": "latest",
+    "autoprefixer": "latest"
   }
 }
