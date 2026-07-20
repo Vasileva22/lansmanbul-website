@@ -1,3 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ваши остальные стили, которые уже есть в globals.css, остаются ниже без изменений */
 @import "nouislider/dist/nouislider.css";
 
 /* ==========================================================================
