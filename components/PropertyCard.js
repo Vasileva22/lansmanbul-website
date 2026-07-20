@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 export default function PropertyCard({ property, onImageClick }) {
   const photos = property.property_images
-    ? property.property_images.map(img => img.image_url).filter(Boolean)
-    : [];
+  ? property.property_images.flatMap(img => parseJsonbPhotos(img.image_url))
+  : [];
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
