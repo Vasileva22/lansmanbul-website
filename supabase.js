@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Функция для безопасной очистки переменных окружения от кавычек и пробелов
+const cleanEnvVar = (val) => {
+  if (!val) return '';
+  return String(val).replace(/^["']|["']$/g, '').trim();
+};
+
+const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);
+const supabaseAnonKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 const getClient = () => {
   const isValidUrl = (url) => {
@@ -9,10 +15,18 @@ const getClient = () => {
     return url.startsWith('http://') || url.startsWith('https://');
   };
 
+  // Эластичная заглушка с поддержкой цепочки методов для предотвращения падений сервера (500)
   const createMockClient = () => {
+    const mockQuery = {
+      eq: () => mockQuery,
+      single: () => Promise.resolve({ data: null, error: new Error('Supabase is in mock mode due to invalid env configuration.') }),
+      select: () => mockQuery,
+      then: (resolve) => resolve({ data: [], error: null }),
+    };
+
     return {
       from: () => ({
-        select: () => Promise.resolve({ data: [], error: null }),
+        select: () => mockQuery,
         insert: () => Promise.resolve({ data: [], error: null }),
         update: () => Promise.resolve({ data: [], error: null }),
         delete: () => Promise.resolve({ data: [], error: null }),
@@ -20,15 +34,4 @@ const getClient = () => {
     };
   };
 
-  // Если URL и ключ присутствуют в Vercel — создаем реальный клиент, иначе возвращаем заглушку
-  if (isValidUrl(supabaseUrl) && supabaseAnonKey) {
-    try {
-      return createClient(supabaseUrl, supabaseAnonKey);
-    } catch (e) {
-      return createMockClient();
-    }
-  }
-  return createMockClient();
-};
-
-export const supabase = getClient();
+  // Если URL и ключ п
