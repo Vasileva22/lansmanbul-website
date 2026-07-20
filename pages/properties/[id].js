@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Script from 'next/script'; // Импортируем компонент для безопасного подключения скриптов в Next.js
+import Script from 'next/script';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase'; // Используйте правильный импорт (напр. '../../supabase')
+import { supabase } from '../../supabase'; // Настройте путь, если ваш supabase.js лежит в другом месте
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
@@ -182,7 +182,6 @@ export default function PropertyDetail({ property, error }) {
         {galleryPhotos.length > 0 && <meta property="og:image" content={galleryPhotos[0]} />}
       </Head>
 
-      {/* ПОДКЛЮЧАЕМ TAILWIND PLAY CDN ДЛЯ ДИНАМИЧЕСКОГО РЕНДЕРИНГА КАК НА ТИЛЬДЕ */}
       <Script 
         src="https://cdn.tailwindcss.com" 
         strategy="beforeInteractive" 
@@ -190,8 +189,9 @@ export default function PropertyDetail({ property, error }) {
 
       <Header setFilters={() => {}} />
 
-      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12 font-sans">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12">
+        {/* Контейнер выровнен по ширине с вашим Header и Footer (max-w-[1200px]) */}
+        <div className="max-w-[1200px] mx-auto px-5">
           
           {/* ШАПКА КАРТОЧКИ */}
           <header className="mb-6">
@@ -225,8 +225,8 @@ export default function PropertyDetail({ property, error }) {
             </div>
           </header>
 
-          {/* СЕТКА ГАЛЕРЕИ (AIRBNB STYLE) */}
-          <section className="mb-8 overflow-hidden rounded-2xl shadow-sm h-[250px] md:h-[500px]">
+          {/* СЕТКА ГАЛЕРЕИ (AIRBNB GALLERY) */}
+          <section className="mb-8 overflow-hidden rounded-2xl shadow-sm airbnb-gallery-wrapper">
             {galleryPhotos.length === 1 && (
               <div className="gallery-layout-1">
                 <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
@@ -259,7 +259,7 @@ export default function PropertyDetail({ property, error }) {
             )}
 
             {galleryPhotos.length >= 5 && (
-              <div className="gallery-layout-5 animate-pulse-none">
+              <div className="gallery-layout-5">
                 <div className="gallery-item gallery-item-main" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
                 <div className="gallery-item gallery-item-top-mid" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
                 <div className="gallery-item gallery-item-top-right" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
@@ -285,7 +285,7 @@ export default function PropertyDetail({ property, error }) {
               {/* Описание */}
               {property.Açıklama && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2 className="title-section">Proje Hakkında</h2>
+                  <h2>Proje Hakkında</h2>
                   <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words">
                     {property.Açıklama}
                   </div>
@@ -304,7 +304,7 @@ export default function PropertyDetail({ property, error }) {
               {/* Местоположение и Расстояния */}
               {(parsedDistances.length > 0 || property.latitude || property.Harita_Link) && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2 className="title-section">Konum ve Mesafeler</h2>
+                  <h2>Konum ve Mesafeler</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     {/* Карта */}
@@ -343,7 +343,7 @@ export default function PropertyDetail({ property, error }) {
               {/* Чертеж планировки */}
               {planPhoto && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2 className="title-section font-bold">Kat ve Daire Planları</h2>
+                  <h2>Kat ve Daire Planları</h2>
                   <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
                   <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
                     
@@ -376,10 +376,10 @@ export default function PropertyDetail({ property, error }) {
                     </div>
                     
                     <p className="text-center text-xs text-gray-400 mt-4 max-w-md leading-relaxed border-t border-gray-200/60 pt-3">
-                      Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
+                      Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğрэнеbilirsiniz.
                     </p>
 
-                    <a href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 bg-[#00A4A6] text-white rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#00898B] transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
+                    <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
                       <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                       </svg>
@@ -392,7 +392,7 @@ export default function PropertyDetail({ property, error }) {
               {/* Дневник Стройки */}
               {constructionPhotos.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2 className="title-section">Şantiye Günlüğü</h2>
+                  <h2>Şantiye Günlüğü</h2>
                   <div className="grid grid-cols-2 gap-3">
                     {constructionPhotos.map((url, index) => (
                       <div 
@@ -417,8 +417,8 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
 
-                {/* Баланс */}
-                <div className="space-y-3 py-4 border-t border-b border-gray-200">
+                {/* Финансовый блок */}
+                <div id="block-finance" className="space-y-3">
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">İlk Peşinat</span>
                     <span className="text-gray-900 font-bold text-right shrink-0 whitespace-nowrap">
@@ -444,7 +444,7 @@ export default function PropertyDetail({ property, error }) {
                 </div>
 
                 <div className="space-y-2">
-                  <a href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 bg-[#00A4A6] text-white rounded-xl flex items-center justify-center gap-3 shadow-sm hover:bg-[#00898B] transition duration-200">
+                  <a id="whatsapp-btn" href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
                     <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                     </svg>
@@ -516,8 +516,15 @@ export default function PropertyDetail({ property, error }) {
 
       <Footer setFilters={() => {}} />
 
+      {/* ИЗОЛИРОВАННЫЙ БЛОК ЛОКАЛЬНЫХ СТИЛЕЙ СТРАНИЦЫ */}
       <style jsx global>{`
-        .title-section {
+        /* Изоляция шрифта Mulish */
+        .projeland-card-container {
+          font-family: 'Mulish', sans-serif !important;
+        }
+
+        /* Защита и оформление заголовков блоков */
+        .projeland-card-container h2 {
           border-bottom: 1px solid #E5E7EB !important;
           padding-bottom: 8px !important;
           margin-bottom: 16px !important;
@@ -526,7 +533,8 @@ export default function PropertyDetail({ property, error }) {
           color: #111827 !important;
         }
 
-        .back-button {
+        /* Кнопка возврата в каталог */
+        #back-button {
           color: #64748B !important;
           font-weight: 700 !important;
           font-size: 0.875rem !important;
@@ -536,8 +544,15 @@ export default function PropertyDetail({ property, error }) {
           gap: 0.25rem !important;
           transition: color 0.2s ease !important;
         }
-        .back-button:hover {
+        #back-button:hover {
           color: #111827 !important;
+        }
+
+        /* Жесткий каркас галереи */
+        .airbnb-gallery-wrapper {
+          width: 100% !important;
+          height: 500px !important;
+          box-sizing: border-box !important;
         }
 
         .gallery-item {
@@ -581,6 +596,7 @@ export default function PropertyDetail({ property, error }) {
         .gallery-layout-5 .gallery-item-top-right { border-radius: 0 16px 0 0 !important; }
         .gallery-layout-5 .gallery-item-bottom-right { border-radius: 0 0 16px 0 !important; position: relative; }
 
+        /* Оверлей "+" на последнем фото */
         .gallery-overlay {
           position: absolute;
           top: 0;
@@ -621,6 +637,47 @@ export default function PropertyDetail({ property, error }) {
           display: inline-block !important;
         }
 
+        /* Принудительные линии финансового блока в сайдбаре */
+        #block-finance {
+          border-top: 1px solid #E5E7EB !important;
+          border-bottom: 1px solid #E5E7EB !important;
+          padding-top: 16px !important;
+          padding-bottom: 16px !important;
+        }
+
+        /* Кнопки обратной связи (WhatsApp и планы) */
+        #whatsapp-btn {
+          background-color: #00A4A6 !important;
+          border: 2px solid #00A4A6 !important;
+          color: #ffffff !important;
+          transition: all 0.25s ease !important;
+        }
+        #whatsapp-btn:hover {
+          background-color: #00898B !important;
+          border-color: #00898B !important;
+          color: #ffffff !important;
+        }
+        #whatsapp-btn svg {
+          fill: #ffffff !important;
+        }
+
+        #whatsapp-plan-btn {
+          background-color: #00A4A6 !important;
+          border: 2px solid #00A4A6 !important;
+          color: #ffffff !important;
+          transition: all 0.25s ease !important;
+        }
+        #whatsapp-plan-btn:hover {
+          background-color: #00898B !important;
+          border-color: #00898B !important;
+          color: #ffffff !important;
+        }
+        #whatsapp-plan-btn span, #whatsapp-plan-btn svg {
+          color: #ffffff !important;
+          fill: #ffffff !important;
+        }
+
+        /* Лайтбокс */
         .active-lightbox {
           display: flex !important;
           position: fixed;
@@ -635,7 +692,12 @@ export default function PropertyDetail({ property, error }) {
           user-select: none;
         }
 
+        /* Мобильная адаптивность для кнопки "Tüm Fotoğraflar" */
         @media (max-width: 768px) {
+          .airbnb-gallery-wrapper {
+            position: relative !important;
+            height: 250px !important;
+          }
           .gallery-layout-2, .gallery-layout-3, .gallery-layout-4, .gallery-layout-5 {
             display: block !important;
           }
