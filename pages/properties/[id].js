@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Script from 'next/script';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase'; // Настройте путь, если ваш supabase.js лежит в другом месте
+import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
@@ -182,15 +181,9 @@ export default function PropertyDetail({ property, error }) {
         {galleryPhotos.length > 0 && <meta property="og:image" content={galleryPhotos[0]} />}
       </Head>
 
-      <Script 
-        src="https://cdn.tailwindcss.com" 
-        strategy="beforeInteractive" 
-      />
-
       <Header setFilters={() => {}} />
 
       <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12">
-        {/* Контейнер выровнен по ширине с вашим Header и Footer (max-w-[1200px]) */}
         <div className="max-w-[1200px] mx-auto px-5">
           
           {/* ШАПКА КАРТОЧКИ */}
@@ -376,7 +369,7 @@ export default function PropertyDetail({ property, error }) {
                     </div>
                     
                     <p className="text-center text-xs text-gray-400 mt-4 max-w-md leading-relaxed border-t border-gray-200/60 pt-3">
-                      Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğрэнеbilirsiniz.
+                      Güncel boş dairelerin listesini, katlarını og fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
                     </p>
 
                     <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
