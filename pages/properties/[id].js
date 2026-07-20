@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../../services/supabase'; // Корректный импорт вашего Supabase-клиента
+import { supabase } from '../../supabase';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
