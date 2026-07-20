@@ -115,15 +115,8 @@ export default function PropertyDetail({ property, error }) {
   // --- ВЫЧИСЛЕНИЯ ПЕРЕМЕННЫХ ---
   const images = property.property_images || [];
   
-  // 1. Основная галерея проекта
-  const galleryPhotos = images
-    .filter(img => {
-      const parsedImg = parseJsonbPhotos(img?.image_url);
-      const parsedPlan = parseJsonbPhotos(img?.planfoto);
-      const parsedConst = parseJsonbPhotos(img?.Construction);
-      return parsedImg.length > 0 && parsedPlan.length === 0 && parsedConst.length === 0;
-    })
-    .flatMap(img => parseJsonbPhotos(img?.image_url));
+ // 1. Основная галерея проекта
+  const galleryPhotos = images.flatMap(img => parseJsonbPhotos(img?.image_url));
 
   // 2. Чертеж планировки
   const planPhotosList = images.flatMap(img => parseJsonbPhotos(img?.planfoto));
