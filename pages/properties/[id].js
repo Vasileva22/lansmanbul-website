@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import Script from 'next/script'; // Импортируем компонент для безопасного подключения скриптов в Next.js
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase';
+import { supabase } from '../../supabase'; // Используйте правильный импорт (напр. '../../supabase')
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 export default function PropertyDetail({ property, error }) {
   const router = useRouter();
 
-  // Извлекаем и типизируем фотографии по вашей структуре в Supabase
   const images = property?.property_images || [];
   
   // 1. Основная галерея проекта
@@ -25,7 +25,6 @@ export default function PropertyDetail({ property, error }) {
     .filter(img => img.Construction)
     .map(img => img.Construction);
 
-  // Состояния для Лайтбокса
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
@@ -35,7 +34,6 @@ export default function PropertyDetail({ property, error }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
-  // Инициализация Yandex Карты на стороне клиента
   useEffect(() => {
     if (typeof window === 'undefined' || !property) return;
     const lat = parseFloat(property.latitude);
@@ -100,7 +98,6 @@ export default function PropertyDetail({ property, error }) {
     );
   }
 
-  // Форматирование цены
   const formatPrice = (val) => {
     if (!val) return 'Fiyat Belirtilmemiş';
     let numOnly = String(val).replace(/[^0-9]/g, '');
@@ -109,7 +106,6 @@ export default function PropertyDetail({ property, error }) {
       : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
   };
 
-  // Эмодзи для ручного списка инфраструктуры
   const getEmoji = (label) => {
     const lower = label.toLowerCase();
     if (lower.includes('metro') || lower.includes('tramvay') || lower.includes('istasyon')) return '🚇';
@@ -144,7 +140,6 @@ export default function PropertyDetail({ property, error }) {
 
   const featuresList = parseFeatures(property.Özellikler);
 
-  // Парсинг ручной инфраструктуры (Конфиг "Konum Mesafeler")
   const distancesRaw = property['Konum Mesafeler'] || property['Konum_Mesafeler'] || '';
   const parsedDistances = distancesRaw
     ? distancesRaw.split(',').map(item => {
@@ -156,7 +151,6 @@ export default function PropertyDetail({ property, error }) {
       }).filter(Boolean)
     : [];
 
-  // Ссылки на WhatsApp (без реферальных приписок)
   const waNum = property.WhatsApp ? String(property.WhatsApp).replace(/\D/g, '') : '905459418536';
   const formattedRoomType = property['card odalar'] || 'daire';
   
@@ -166,7 +160,6 @@ export default function PropertyDetail({ property, error }) {
   const waBtnLink = `https://wa.me/${waNum}?text=${encodeURIComponent(mainWaMsg)}`;
   const waPlanBtnLink = `https://wa.me/${waNum}?text=${encodeURIComponent(planWaMsg)}`;
 
-  // Открытие лайтбокса
   const openLightbox = (photoArray, index) => {
     setLightboxState({
       isOpen: true,
@@ -175,10 +168,9 @@ export default function PropertyDetail({ property, error }) {
     });
   };
 
-  // SEO Описание
   const seoDesc = property.Açıklama 
     ? property.Açıklama.substring(0, 160) 
-    : `${property.testproje || 'Lansman'} projesi detayları, fiyatları ve doğrudan müteahhit iletişim bilgileri.`;
+    : `${property.testproje || 'Lansman'} projesi detayları, fiyatları.`;
 
   return (
     <>
@@ -189,6 +181,12 @@ export default function PropertyDetail({ property, error }) {
         <meta property="og:description" content={seoDesc} />
         {galleryPhotos.length > 0 && <meta property="og:image" content={galleryPhotos[0]} />}
       </Head>
+
+      {/* ПОДКЛЮЧАЕМ TAILWIND PLAY CDN ДЛЯ ДИНАМИЧЕСКОГО РЕНДЕРИНГА КАК НА ТИЛЬДЕ */}
+      <Script 
+        src="https://cdn.tailwindcss.com" 
+        strategy="beforeInteractive" 
+      />
 
       <Header setFilters={() => {}} />
 
@@ -221,7 +219,6 @@ export default function PropertyDetail({ property, error }) {
                 </p>
               </div>
 
-              {/* Кнопка плавного возврата на главную с параметром скролла */}
               <Link href={`/?scrollto=${property.id}`} className="back-button" id="back-button">
                 ◀ Kataloğa Dön
               </Link>
@@ -262,7 +259,7 @@ export default function PropertyDetail({ property, error }) {
             )}
 
             {galleryPhotos.length >= 5 && (
-              <div className="gallery-layout-5">
+              <div className="gallery-layout-5 animate-pulse-none">
                 <div className="gallery-item gallery-item-main" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
                 <div className="gallery-item gallery-item-top-mid" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
                 <div className="gallery-item gallery-item-top-right" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
@@ -282,7 +279,7 @@ export default function PropertyDetail({ property, error }) {
           {/* КОЛОНКИ КОНТЕНТА */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            {/* ЛЕВАЯ КОЛОНКА (ОПИСАНИЕ И ДЕТАЛИ) */}
+            {/* ЛЕВАЯ КОЛОНКА */}
             <div className="lg:col-span-2 space-y-8">
               
               {/* Описание */}
@@ -321,7 +318,7 @@ export default function PropertyDetail({ property, error }) {
                       )}
                     </div>
 
-                    {/* Расстояния ручного ввода */}
+                    {/* Расстояния */}
                     {parsedDistances.length > 0 ? (
                       <div className="space-y-3 justify-center flex flex-col">
                         {parsedDistances.map((item, idx) => (
@@ -410,7 +407,7 @@ export default function PropertyDetail({ property, error }) {
               )}
             </div>
 
-            {/* ПРАВАЯ СТИКИ-КОЛОНКА (САЙДБАР С ЦЕНОЙ) */}
+            {/* ПРАВАЯ СТИКИ-КОЛОНКА */}
             <div className="lg:col-span-1 lg:sticky lg:top-28 z-20">
               <div className="bg-white p-6 rounded-3xl border-2 border-[#00A4A6] shadow-lg space-y-6">
                 <div>
@@ -420,7 +417,7 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
 
-                {/* Баланс и кредиты */}
+                {/* Баланс */}
                 <div className="space-y-3 py-4 border-t border-b border-gray-200">
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">İlk Peşinat</span>
@@ -446,7 +443,6 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
 
-                {/* Главная кнопка WhatsApp */}
                 <div className="space-y-2">
                   <a href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 bg-[#00A4A6] text-white rounded-xl flex items-center justify-center gap-3 shadow-sm hover:bg-[#00898B] transition duration-200">
                     <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24">
@@ -468,7 +464,7 @@ export default function PropertyDetail({ property, error }) {
         </div>
       </div>
 
-      {/* ЛАЙТБОКС СЛАЙДЕР ДЛЯ ГАЛЕРЕИ */}
+      {/* ЛАЙТБОКС */}
       {lightboxState.isOpen && (
         <div id="custom-lightbox" className="active-lightbox" onClick={() => setLightboxState(prev => ({ ...prev, isOpen: false }))}>
           <button 
@@ -520,7 +516,6 @@ export default function PropertyDetail({ property, error }) {
 
       <Footer setFilters={() => {}} />
 
-      {/* СТИЛИ ИЗ ТИЛЬДЫ, ИЗОЛИРОВАННЫЕ В STYLE JSX */}
       <style jsx global>{`
         .title-section {
           border-bottom: 1px solid #E5E7EB !important;
@@ -685,7 +680,6 @@ export default function PropertyDetail({ property, error }) {
   );
 }
 
-// Данные запрашиваются на сервере (SSR)
 export async function getServerSideProps(context) {
   const { id } = context.params;
 
