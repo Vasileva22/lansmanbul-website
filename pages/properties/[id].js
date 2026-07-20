@@ -1,78 +1,115 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase';
+import { supabase } from '../../services/supabase'; // Корректный импорт вашего Supabase-клиента
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
-export default function PropertyDetails({ property, error }) {
+export default function PropertyDetail({ property, error }) {
   const router = useRouter();
+
+  // Извлекаем и типизируем фотографии по вашей структуре в Supabase
+  const images = property?.property_images || [];
   
+  // 1. Основная галерея проекта
+  const galleryPhotos = images
+    .filter(img => img.image_url && !img.planfoto && !img.Construction && img.image_url !== 'EMPTY')
+    .map(img => img.image_url);
+
+  // 2. Чертеж планировки
+  const planPhoto = images.find(img => img.planfoto)?.planfoto || null;
+
+  // 3. Фотографии стройки
+  const constructionPhotos = images
+    .filter(img => img.Construction)
+    .map(img => img.Construction);
+
   // Состояния для Лайтбокса
-  const [lightbox, setLightbox] = useState({
+  const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
     activeIndex: 0,
   });
 
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+
+  // Инициализация Yandex Карты на стороне клиента
+  useEffect(() => {
+    if (typeof window === 'undefined' || !property) return;
+    const lat = parseFloat(property.latitude);
+    const lng = parseFloat(property.longitude);
+
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const initMap = () => {
+      if (window.ymaps && !mapInstance.current && mapRef.current) {
+        window.ymaps.ready(() => {
+          mapInstance.current = new window.ymaps.Map(mapRef.current, {
+            center: [lat, lng],
+            zoom: 14,
+            controls: ['zoomControl'],
+          });
+
+          const placemark = new window.ymaps.Placemark([lat, lng], {
+            hintContent: property.testproje || 'Konut Projesi',
+            balloonContent: property.testproje || 'Proje Konumu',
+          }, {
+            preset: 'islands#dotIcon',
+            iconColor: '#00A4A6',
+          });
+
+          mapInstance.current.geoObjects.add(placemark);
+        });
+      }
+    };
+
+    if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
+      const script = document.createElement('script');
+      script.id = 'yandex-maps-script';
+      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51'}&lang=tr_TR`;
+      script.type = 'text/javascript';
+      script.onload = initMap;
+      document.head.appendChild(script);
+    } else {
+      initMap();
+    }
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.destroy();
+        mapInstance.current = null;
+      }
+    };
+  }, [property]);
+
   if (error || !property) {
     return (
       <>
-        <Header />
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-          <h2 className="text-2xl font-black text-gray-800">Proje Bulunamadı</h2>
-          <p className="text-gray-500 mt-2 text-center">Aradığınız ilan mevcut olmayabilir veya silinmiş olabilir.</p>
-          <button onClick={() => router.push('/')} className="mt-6 px-6 py-3 bg-[#00A4A6] text-white font-bold rounded-xl shadow-md hover:bg-[#00898B] transition">
-            Kataloğa Dön
-          </button>
+        <Header setFilters={() => {}} />
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Proje Bulunamadı</h2>
+          <p className="text-slate-500 mb-6">Aradığınız ilan yayından kaldırılmış veya silinmiş olabilir.</p>
+          <Link href="/" className="px-6 py-3 bg-[#00A4A6] text-white rounded-xl font-bold hover:bg-[#00898B] transition">
+            Anasayfaya Dön
+          </Link>
         </div>
-        <Footer />
+        <Footer setFilters={() => {}} />
       </>
     );
   }
 
-  // Распределение медиафайлов из связанных строк таблицы property_images
-  const propertyImages = property.property_images || [];
-  const photoUrls = propertyImages.map(img => img.image_url).filter(Boolean);
-  const constructionUrls = propertyImages.map(img => img.Construction).filter(Boolean);
-  const planUrls = propertyImages.map(img => img.planfoto).filter(Boolean);
-  const planPhotoUrl = planUrls[0] || null;
-
-  // Парсинг характеристик (Özellikler)
-  let features = [];
-  if (property.Özellikler) {
-    if (Array.isArray(property.Özellikler)) {
-      features = property.Özellikler;
-    } else {
-      try {
-        features = JSON.parse(property.Özellikler);
-      } catch {
-        features = String(property.Özellikler).split(',').map(f => f.trim()).filter(Boolean);
-      }
-    }
-  }
-
-  // Парсинг расстояний (Konum Mesafeler)
-  const distancesRaw = property["Konum Mesafeler"] || property.distances_text || "";
-  const distancesList = distancesRaw ? distancesRaw.split(',').map(item => {
-    const parts = item.split(':');
-    if (parts.length === 2) {
-      return { label: parts[0].trim(), value: parts[1].trim() };
-    }
-    return null;
-  }).filter(Boolean) : [];
-
-  // Конфигурация кнопки "Назад"
-  const backUrl = `/?scrollto=${property.id}`;
-
-  // Форматирование цен
+  // Форматирование цены
   const formatPrice = (val) => {
-    if (!val) return "Fiyat Belirtilmemiş";
-    let numOnly = String(val).replace(/[^0-9]/g, "");
-    return (numOnly === "" || numOnly === "0") ? val : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
+    if (!val) return 'Fiyat Belirtilmemiş';
+    let numOnly = String(val).replace(/[^0-9]/g, '');
+    return numOnly === '' || numOnly === '0'
+      ? val
+      : Number(numOnly).toLocaleString('tr-TR') + " TL'den";
   };
 
-  // Иконки и эмодзи для расстояний
+  // Эмодзи для ручного списка инфраструктуры
   const getEmoji = (label) => {
     const lower = label.toLowerCase();
     if (lower.includes('metro') || lower.includes('tramvay') || lower.includes('istasyon')) return '🚇';
@@ -84,7 +121,6 @@ export default function PropertyDetails({ property, error }) {
     return '📍';
   };
 
-  // Иконки для характеристик
   const getFeatureIcon = (feat) => {
     const lower = feat.toLowerCase().trim();
     if (lower.includes('havuz')) return '🏊‍♂️ ';
@@ -100,221 +136,166 @@ export default function PropertyDetails({ property, error }) {
     return '✨ ';
   };
 
-  // Открытие Лайтбокса
-  const openLightbox = (photosList, index = 0) => {
-    if (!photosList || photosList.length === 0) return;
-    setLightbox({
+  const parseFeatures = (featuresVal) => {
+    if (!featuresVal) return [];
+    if (Array.isArray(featuresVal)) return featuresVal;
+    return String(featuresVal).split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+  };
+
+  const featuresList = parseFeatures(property.Özellikler);
+
+  // Парсинг ручной инфраструктуры (Конфиг "Konum Mesafeler")
+  const distancesRaw = property['Konum Mesafeler'] || property['Konum_Mesafeler'] || '';
+  const parsedDistances = distancesRaw
+    ? distancesRaw.split(',').map(item => {
+        const parts = item.split(':');
+        if (parts.length === 2) {
+          return { label: parts[0].trim(), value: parts[1].trim() };
+        }
+        return null;
+      }).filter(Boolean)
+    : [];
+
+  // Ссылки на WhatsApp (без реферальных приписок)
+  const waNum = property.WhatsApp ? String(property.WhatsApp).replace(/\D/g, '') : '905459418536';
+  const formattedRoomType = property['card odalar'] || 'daire';
+  
+  const mainWaMsg = `Merhaba, lansmanbul.com portalında yer alan ${property.testproje || ''} projenizdeki ${formattedRoomType} daire tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?`;
+  const planWaMsg = `Merhaba, lansmanbul.com portalında yer alan ${property.testproje || ''} projenizin ${formattedRoomType} planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?`;
+
+  const waBtnLink = `https://wa.me/${waNum}?text=${encodeURIComponent(mainWaMsg)}`;
+  const waPlanBtnLink = `https://wa.me/${waNum}?text=${encodeURIComponent(planWaMsg)}`;
+
+  // Открытие лайтбокса
+  const openLightbox = (photoArray, index) => {
+    setLightboxState({
       isOpen: true,
-      photos: photosList,
+      photos: photoArray,
       activeIndex: index,
     });
   };
 
-  // Навигация внутри Лайтбокса
-  const handleNext = (e) => {
-    if (e) e.stopPropagation();
-    setLightbox(prev => ({
-      ...prev,
-      activeIndex: (prev.activeIndex + 1) % prev.photos.length,
-    }));
-  };
-
-  const handlePrev = (e) => {
-    if (e) e.stopPropagation();
-    setLightbox(prev => ({
-      ...prev,
-      activeIndex: (prev.activeIndex - 1 + prev.photos.length) % prev.photos.length,
-    }));
-  };
-
-  // Слушатель клавиш для Лайтбокса
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!lightbox.isOpen) return;
-      if (e.key === 'Escape') setLightbox(prev => ({ ...prev, isOpen: false }));
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'ArrowLeft') handlePrev();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightbox.isOpen, lightbox.photos]);
-
-  // Формирование WhatsApp шаблонов
-  const projectTitle = property.testproje || property.title || "";
-  const roomType = property["card odalar"] || property.rooms_text || "daire";
-  const rawWa = property.WhatsApp || "905459418536";
-  const waNum = String(rawWa).replace(/\D/g, '');
-
-  const mainMsg = `Merhaba, KonutBudur portalında yer alan ${projectTitle} projenizdeki ${roomType} daire tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?`;
-  const floorMsg = `Merhaba, KonutBudur portalında yer alan ${projectTitle} projenizin ${roomType} planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?`;
-
-  const waMainUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(mainMsg)}`;
-  const waFloorUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(floorMsg)}`;
-
-  // Логика отображения статусов
-  const statusValue = property.konutcesit || "";
-  const badgeColor = statusValue.toLowerCase() === 'lansman' ? '#FF9800' : '#00A4A6';
-
-  // Логика отображения этажности
-  const katSayisiRaw = property["Kat Sayısı"] || property.Kat_Sayisi || property.katsayisi || "";
-  const katSayisi = String(katSayisiRaw).trim();
-  const showKatBadge = katSayisi && katSayisi !== "-";
-
-  // Логика дат Шантийе (Construction)
-  const constructionDate = property["Santiye Tarihi"] || property.Santiye_Tarihi || property.guncelleme || "";
-  let formattedConstructionTitle = "Şantiye Günlüğü";
-  if (constructionDate) {
-    const dateParts = String(constructionDate).split('.');
-    if (dateParts.length === 3) {
-      const month = dateParts[1];
-      const year = dateParts[2];
-      const monthNames = {
-        "01": "Ocak", "02": "Şubat", "03": "Mart", "04": "Nisan", 
-        "05": "Mayıs", "06": "Haziran", "07": "Temmuz", "08": "Ağustos", 
-        "09": "Eylül", "10": "Ekim", "11": "Kasım", "12": "Aralık"
-      };
-      if (monthNames[month]) {
-        formattedConstructionTitle = `Şantiye Günlüğü (${monthNames[month]} ${year})`;
-      }
-    }
-  }
-
-  // Определение макета сетки галереи (Airbnb)
-  const renderGallery = () => {
-    if (photoUrls.length === 0) {
-      return (
-        <div className="w-full h-80 bg-gray-100 flex items-center justify-center text-gray-400 rounded-2xl">
-          Fotoğraf Bulunamadı
-        </div>
-      );
-    }
-
-    if (photoUrls.length === 1) {
-      return (
-        <div className="gallery-layout-1">
-          <div className="gallery-item" onClick={() => openLightbox(photoUrls, 0)} style={{ backgroundImage: `url('${photoUrls[0]}')` }}></div>
-        </div>
-      );
-    }
-
-    if (photoUrls.length === 2) {
-      return (
-        <div className="gallery-layout-2">
-          {photoUrls.map((url, i) => (
-            <div key={i} className="gallery-item" onClick={() => openLightbox(photoUrls, i)} style={{ backgroundImage: `url('${url}')` }}></div>
-          ))}
-        </div>
-      );
-    }
-
-    if (photoUrls.length === 3) {
-      return (
-        <div className="gallery-layout-3">
-          <div className="gallery-item" onClick={() => openLightbox(photoUrls, 0)} style={{ backgroundImage: `url('${photoUrls[0]}')` }}></div>
-          <div className="gallery-item" onClick={() => openLightbox(photoUrls, 1)} style={{ backgroundImage: `url('${photoUrls[1]}')` }}></div>
-          <div className="gallery-item" onClick={() => openLightbox(photoUrls, 2)} style={{ backgroundImage: `url('${photoUrls[2]}')` }}></div>
-        </div>
-      );
-    }
-
-    if (photoUrls.length === 4) {
-      return (
-        <div className="gallery-layout-4">
-          {photoUrls.slice(0, 4).map((url, i) => (
-            <div key={i} className="gallery-item" onClick={() => openLightbox(photoUrls, i)} style={{ backgroundImage: `url('${url}')` }}></div>
-          ))}
-        </div>
-      );
-    }
-
-    // От 5 и более фотографий (Макет Airbnb с оверлеем)
-    const hasMore = photoUrls.length > 5;
-    const moreCount = photoUrls.length - 4;
-
-    return (
-      <div className="gallery-layout-5">
-        <div className="gallery-item gallery-item-main" onClick={() => openLightbox(photoUrls, 0)} style={{ backgroundImage: `url('${photoUrls[0]}')` }}></div>
-        <div className="gallery-item gallery-item-top-mid" onClick={() => openLightbox(photoUrls, 1)} style={{ backgroundImage: `url('${photoUrls[1]}')` }}></div>
-        <div className="gallery-item gallery-item-top-right" onClick={() => openLightbox(photoUrls, 2)} style={{ backgroundImage: `url('${photoUrls[2]}')` }}></div>
-        <div className="gallery-item gallery-item-bottom-mid" onClick={() => openLightbox(photoUrls, 3)} style={{ backgroundImage: `url('${photoUrls[3]}')` }}></div>
-        <div className="gallery-item gallery-item-bottom-right" onClick={() => openLightbox(photoUrls, 4)} style={{ backgroundImage: `url('${photoUrls[4]}')` }}>
-          {hasMore && (
-            <div className="gallery-overlay" onClick={(e) => { e.stopPropagation(); openLightbox(photoUrls, 4); }}>
-              <span className="gallery-overlay-text">+{moreCount}</span>
-              <span className="gallery-overlay-subtext">Hepsini Gör</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
+  // SEO Описание
+  const seoDesc = property.Açıklama 
+    ? property.Açıklama.substring(0, 160) 
+    : `${property.testproje || 'Lansman'} projesi detayları, fiyatları ve doğrudan müteahhit iletişim bilgileri.`;
 
   return (
     <>
       <Head>
-        <title>{projectTitle} | LANSMANBUL</title>
-        <meta name="description" content={property.Açıklama || property.Aciklama || "Proje Detayları"} />
-        <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <title>{`${property.testproje || 'Proje Detayı'} | lansmanbul.com`}</title>
+        <meta name="description" content={seoDesc} />
+        <meta property="og:title" content={`${property.testproje || 'Proje Detayı'} | lansmanbul.com`} />
+        <meta property="og:description" content={seoDesc} />
+        {galleryPhotos.length > 0 && <meta property="og:image" content={galleryPhotos[0]} />}
       </Head>
 
-      <Header />
+      <Header setFilters={() => {}} />
 
-      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-4 pt-4 fade-in">
+      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12 font-sans">
+        <div className="max-w-7xl mx-auto px-4">
           
-          {/* ШАПКА КАРТОЧКИ ОБЪЕКТА */}
+          {/* ШАПКА КАРТОЧКИ */}
           <header className="mb-6">
             <div className="flex justify-between items-start w-full">
               <div>
-                {statusValue && (
-                  <div className="mb-2">
-                    <span className="text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider inline-block" style={{ backgroundColor: badgeColor }}>
-                      {statusValue}
-                    </span>
-                  </div>
+                {property.konutcesit && (
+                  <span 
+                    className="text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider inline-block"
+                    style={{ backgroundColor: property.konutcesit.toLowerCase() === 'lansman' ? '#FF9800' : '#00A4A6' }}
+                  >
+                    {property.konutcesit}
+                  </span>
                 )}
-                <h1 className="text-3xl font-black text-slate-900 mt-2">{projectTitle}</h1>
-                <div className="mt-1">
-                  <p className="text-slate-500 mt-1 flex items-center gap-1 text-sm">
-                    <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span className="break-words max-w-full">{property["Tam Adres"] || property["İlçe/Semt"] || "Ankara"}</span>
-                  </p>
-                </div>
+                <h1 className="text-3xl font-black text-gray-900 mt-2">
+                  {property.testproje || ''}
+                </h1>
+                <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
+                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span className="break-words max-w-full">
+                    {property['İlçe/Semt'] ? `${property['İlçe/Semt']}, Ankara` : 'Ankara, Türkiye'}
+                  </span>
+                </p>
               </div>
-              
-              <button onClick={() => router.push(backUrl)} className="text-slate-500 hover:text-slate-900 font-bold text-sm inline-flex items-center gap-1 transition">
+
+              {/* Кнопка плавного возврата на главную с параметром скролла */}
+              <Link href={`/?scrollto=${property.id}`} className="back-button" id="back-button">
                 ◀ Kataloğa Dön
-              </button>
+              </Link>
             </div>
           </header>
 
-          {/* ГАЛЕРЕЯ */}
-          <section className="mb-8 overflow-hidden rounded-2xl shadow-sm airbnb-gallery-section">
-            <div className="airbnb-gallery w-full relative">
-              {renderGallery()}
-            </div>
+          {/* СЕТКА ГАЛЕРЕИ (AIRBNB STYLE) */}
+          <section className="mb-8 overflow-hidden rounded-2xl shadow-sm h-[250px] md:h-[500px]">
+            {galleryPhotos.length === 1 && (
+              <div className="gallery-layout-1">
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
+              </div>
+            )}
+            
+            {galleryPhotos.length === 2 && (
+              <div className="gallery-layout-2">
+                {galleryPhotos.map((url, i) => (
+                  <div key={i} className="gallery-item" onClick={() => openLightbox(galleryPhotos, i)} style={{ backgroundImage: `url('${url}')` }}></div>
+                ))}
+              </div>
+            )}
+
+            {galleryPhotos.length === 3 && (
+              <div className="gallery-layout-3">
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
+              </div>
+            )}
+
+            {galleryPhotos.length === 4 && (
+              <div className="gallery-layout-4">
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
+                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 3)} style={{ backgroundImage: `url('${galleryPhotos[3]}')` }}></div>
+              </div>
+            )}
+
+            {galleryPhotos.length >= 5 && (
+              <div className="gallery-layout-5">
+                <div className="gallery-item gallery-item-main" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
+                <div className="gallery-item gallery-item-top-mid" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
+                <div className="gallery-item gallery-item-top-right" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
+                <div className="gallery-item gallery-item-bottom-mid" onClick={() => openLightbox(galleryPhotos, 3)} style={{ backgroundImage: `url('${galleryPhotos[3]}')` }}></div>
+                <div className="gallery-item gallery-item-bottom-right" onClick={() => openLightbox(galleryPhotos, 4)} style={{ backgroundImage: `url('${galleryPhotos[4]}')` }}>
+                  {galleryPhotos.length > 5 && (
+                    <div className="gallery-overlay">
+                      <span className="gallery-overlay-text">+{galleryPhotos.length - 4}</span>
+                      <span className="gallery-overlay-subtext">Hepsini Gör</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
 
-          {/* СЕТКА С ДВУМЯ КОЛОНКАМИ */}
+          {/* КОЛОНКИ КОНТЕНТА */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            {/* ЛЕВАЯ КОЛОНКА (КОНТЕНТ) */}
+            {/* ЛЕВАЯ КОЛОНКА (ОПИСАНИЕ И ДЕТАЛИ) */}
             <div className="lg:col-span-2 space-y-8">
               
-              {/* ОПИСАНИЕ И ХАРАКТЕРИСТИКИ */}
-              {(property.Açıklama || property.Aciklama) && (
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                  <h2 className="border-b border-slate-200/60 pb-2 mb-4 text-xl font-bold text-slate-900">Proje Hakkında</h2>
-                  <div className="text-slate-600 leading-relaxed whitespace-pre-line break-words text-sm md:text-base">
-                    {property.Açıklama || property.Aciklama}
+              {/* Описание */}
+              {property.Açıklama && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="title-section">Proje Hakkında</h2>
+                  <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words">
+                    {property.Açıklama}
                   </div>
-                  {features.length > 0 && (
+                  {featuresList.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-6">
-                      {features.map((feat, idx) => (
-                        <span key={idx} className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
+                      {featuresList.map((feat, index) => (
+                        <span key={index} className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
                           {getFeatureIcon(feat)}{feat}
                         </span>
                       ))}
@@ -323,75 +304,85 @@ export default function PropertyDetails({ property, error }) {
                 </div>
               )}
 
-              {/* РАССТОЯНИЯ И КАРТА */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <h2 className="border-b border-slate-200/60 pb-2 mb-4 text-xl font-bold text-slate-900">Konum ve Mesafeler</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="w-full h-48 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
-                    {property.Harita_Link ? (
-                      <iframe src={property.Harita_Link} width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy"></iframe>
+              {/* Местоположение и Расстояния */}
+              {(parsedDistances.length > 0 || property.latitude || property.Harita_Link) && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="title-section">Konum ve Mesafeler</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Карта */}
+                    <div className="w-full h-48 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                      {property.latitude && property.longitude ? (
+                        <div ref={mapRef} className="w-full h-full" />
+                      ) : property.Harita_Link ? (
+                        <iframe src={property.Harita_Link} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">📍 Harita Alanı</div>
+                      )}
+                    </div>
+
+                    {/* Расстояния ручного ввода */}
+                    {parsedDistances.length > 0 ? (
+                      <div className="space-y-3 justify-center flex flex-col">
+                        {parsedDistances.map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600 font-medium flex items-center gap-1.5">
+                              <span className="text-base leading-none">{getEmoji(item.label)}</span>
+                              <span>{item.label}</span>
+                            </span>
+                            <span className="text-[#00A4A6] font-bold">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">📍 Konum bilgisi eklenmemiş</div>
-                    )}
-                  </div>
-                  <div className="space-y-3 justify-center flex flex-col">
-                    {distancesList.length > 0 ? (
-                      distancesList.map((dist, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm">
-                          <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                            <span className="text-base leading-none">{getEmoji(dist.label)}</span>
-                            <span>{dist.label}</span>
-                          </span>
-                          <span className="text-[#00A4A6] font-bold">{dist.value}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-400">Konum mesafeleri belirtilmemiş.</p>
+                      <div className="flex items-center justify-center text-sm text-gray-400">
+                        Konum mesafeleri belirtilmemiş.
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* ПЛАНИРОВКА (KAT PLANI) */}
-              {planPhotoUrl && (
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                  <h2 className="border-b border-slate-200/60 pb-2 mb-4 text-xl font-bold text-slate-900">Kat ve Daire Planları</h2>
-                  <p className="text-sm text-slate-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
-                  <div className="border border-slate-100 rounded-xl p-4 flex flex-col items-center bg-slate-50">
+              {/* Чертеж планировки */}
+              {planPhoto && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="title-section font-bold">Kat ve Daire Planları</h2>
+                  <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
+                  <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
                     
-                    {property["card odalar"] && (
+                    {property['card odalar'] && (
                       <span className="bg-[#00A4A6] text-white text-xs font-bold px-3 py-1 rounded mb-4 inline-block">
-                        Örnek {roomType} Planı {property["card-area"] ? `(${property["card-area"]} m²)` : ""}
+                        Örnek {property['card odalar']} Planı {property['card-area'] ? `(${property['card-area']} m²)` : ''}
                       </span>
                     )}
 
                     <div className="max-w-xs md:max-w-sm w-full">
                       <img 
-                        src={planPhotoUrl} 
+                        src={planPhoto} 
                         alt="Daire Planı" 
-                        onClick={() => openLightbox(planUrls, 0)}
-                        className="w-full h-auto object-contain max-h-64 rounded-lg mix-blend-multiply cursor-zoom-in hover:opacity-95 transition duration-200"
+                        onClick={() => openLightbox([planPhoto], 0)}
+                        className="w-full h-auto object-contain max-h-64 rounded-lg mix-blend-multiply cursor-zoom-in hover:opacity-95 transition duration-200" 
                       />
                     </div>
                     
-                    {/* ТЕХНИЧЕСКИЕ БЭДЖИ */}
+                    {/* Баджи этажей */}
                     <div className="mt-4 flex flex-wrap gap-2 justify-center">
                       <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
                         🟢 Farklı Kat Seçenekleri Mevcut
                       </span>
-                      {showKatBadge && (
-                        <span className="bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
-                          🏢 {isNaN(katSayisi) ? katSayisi : `${katSayisi} Katlı`}
+                      
+                      {(property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi) && (
+                        <span className="bg-gray-100 text-gray-600 border border-gray-200 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
+                          🏢 {property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi} Katlı
                         </span>
                       )}
                     </div>
                     
-                    <p className="text-center text-xs text-slate-400 mt-4 max-w-md leading-relaxed border-t border-slate-200/60 pt-3">
+                    <p className="text-center text-xs text-gray-400 mt-4 max-w-md leading-relaxed border-t border-gray-200/60 pt-3">
                       Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
                     </p>
 
-                    {/* WhatsApp планировки */}
-                    <a href={waFloorUrl} target="_blank" rel="noopener noreferrer" className="whatsapp-action-btn mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition w-full md:w-auto uppercase tracking-wider bg-[#00A4A6] hover:bg-[#00898B] text-white font-black text-xs">
+                    <a href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 bg-[#00A4A6] text-white rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#00898B] transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
                       <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                       </svg>
@@ -401,129 +392,157 @@ export default function PropertyDetails({ property, error }) {
                 </div>
               )}
 
-              {/* ШАНТИЙЕ (ДНЕВНИК СТРОИТЕЛЬСТВА) */}
-              {constructionUrls.length > 0 && (
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                  <h2 className="text-xl font-bold text-slate-900 pb-2 border-b border-slate-200/60 mb-4">{formattedConstructionTitle}</h2>
+              {/* Дневник Стройки */}
+              {constructionPhotos.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="title-section">Şantiye Günlüğü</h2>
                   <div className="grid grid-cols-2 gap-3">
-                    {constructionUrls.slice(0, 4).map((url, idx) => (
+                    {constructionPhotos.map((url, index) => (
                       <div 
-                        key={idx} 
-                        className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition"
-                        onClick={() => openLightbox(constructionUrls, idx)}
+                        key={index} 
+                        onClick={() => openLightbox(constructionPhotos, index)}
+                        className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition" 
                         style={{ backgroundImage: `url('${url}')` }}
                       ></div>
                     ))}
                   </div>
-                  {constructionDate && (
-                    <p className="text-xs text-slate-400 mt-3 text-right">Son Güncelleme: {constructionDate}</p>
-                  )}
                 </div>
               )}
-
             </div>
 
-            {/* ПРАВАЯ КОЛОНКА (СТОИМОСТЬ И КОНТАКТЫ) */}
+            {/* ПРАВАЯ СТИКИ-КОЛОНКА (САЙДБАР С ЦЕНОЙ) */}
             <div className="lg:col-span-1 lg:sticky lg:top-28 z-20">
               <div className="bg-white p-6 rounded-3xl border-2 border-[#00A4A6] shadow-lg space-y-6">
                 <div>
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
+                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
                   <div className="text-3xl font-black text-[#00A4A6] mt-1">
                     {formatPrice(property.Fiyat)}
                   </div>
                 </div>
 
-                {/* ФИНАНСОВЫЙ БЛОК */}
-                <div className="space-y-3 pt-4 pb-4 border-t border-b border-slate-200/60">
+                {/* Баланс и кредиты */}
+                <div className="space-y-3 py-4 border-t border-b border-gray-200">
                   <div className="flex justify-between text-sm items-center">
-                    <span className="text-slate-500 font-medium mr-2">İlk Peşinat</span>
-                    <span className="text-slate-900 font-bold text-right shrink-0 whitespace-nowrap">
-                      {property.Ilk_Pesinat || property.pesinat || "-"}
+                    <span className="text-gray-500 font-medium mr-2">İlk Peşinat</span>
+                    <span className="text-gray-900 font-bold text-right shrink-0 whitespace-nowrap">
+                      {property.Ilk_Pesinat || property.pesinat || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm items-center">
-                    <span className="text-slate-500 font-medium mr-2">Vade Seçeneği</span>
-                    <span className="text-slate-900 font-bold text-right shrink-0 whitespace-nowrap">
-                      {property.Vade_Secenegi || property.vade || "-"}
+                    <span className="text-gray-500 font-medium mr-2">Vade Seçeneği</span>
+                    <span className="text-gray-900 font-bold text-right shrink-0 whitespace-nowrap">
+                      {property.Vade_Secenegi || property.vade || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm items-center">
-                    <span className="text-slate-500 font-medium mr-2">Kredi Durumu</span>
+                    <span className="text-gray-500 font-medium mr-2">Kredi Durumu</span>
                     <span className={`font-bold text-right shrink-0 whitespace-nowrap ${
-                      String(property.Kredi_Durumu).toLowerCase().includes('değil') || !property.Kredi_Durumu
+                      property.Kredi_Durumu?.toLowerCase().includes('uygun değil') || property.Kredi_Durumu?.toLowerCase().includes('değil')
                         ? 'text-red-500' 
-                        : 'text-emerald-600'
+                        : 'text-green-600'
                     }`}>
-                      {property.Kredi_Durumu || "Krediye Uygun Değil"}
+                      {property.Kredi_Durumu || 'Krediye Uygun Değil'}
                     </span>
                   </div>
                 </div>
 
-                {/* КНОПКА СВЯЗИ */}
+                {/* Главная кнопка WhatsApp */}
                 <div className="space-y-2">
-                  <a href={waMainUrl} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm transition bg-[#00A4A6] hover:bg-[#00898B] text-white">
+                  <a href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 bg-[#00A4A6] text-white rounded-xl flex items-center justify-center gap-3 shadow-sm hover:bg-[#00898B] transition duration-200">
                     <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
                     </svg>
-                    <span className="flex flex-col text-center leading-tight tracking-wider uppercase">
-                      <span className="font-black text-xs text-white">Doğrudan Müteahhitten</span>
+                    <span className="flex flex-col text-center leading-tight tracking-wider uppercase font-black">
+                      <span className="text-xs text-white">Doğrudan Müteahhitten</span>
                       <span className="font-bold opacity-90 text-[10px] mt-0.5 text-white">Bilgi Al</span>
                     </span>
                   </a>
-                  <p className="text-center text-xs text-slate-400 mt-2">
+                  <p className="text-center text-xs text-gray-400 mt-2">
                     Tıklama sayınız KonutBudur güvencesiyle kaydedilmektedir.
                   </p>
                 </div>
-
               </div>
             </div>
 
           </div>
-
         </div>
       </div>
 
-      {/* ЛАЙТБОКС СЛАЙДЕР */}
-      {lightbox.isOpen && (
-        <div className="custom-lightbox-overlay active" onClick={() => setLightbox(prev => ({ ...prev, isOpen: false }))}>
-          <span className="custom-lightbox-close" onClick={() => setLightbox(prev => ({ ...prev, isOpen: false }))}>&times;</span>
+      {/* ЛАЙТБОКС СЛАЙДЕР ДЛЯ ГАЛЕРЕИ */}
+      {lightboxState.isOpen && (
+        <div id="custom-lightbox" className="active-lightbox" onClick={() => setLightboxState(prev => ({ ...prev, isOpen: false }))}>
+          <button 
+            className="lightbox-close absolute top-6 right-6 text-white text-4xl font-light hover:scale-110 transition"
+            onClick={() => setLightboxState(prev => ({ ...prev, isOpen: false }))}
+          >
+            &times;
+          </button>
           
-          <div className="lightbox-slider-container" onClick={(e) => e.stopPropagation()}>
-            <div className="lightbox-slide">
-              <img src={lightbox.photos[lightbox.activeIndex]} alt="Büyük Görsel" />
-            </div>
+          {lightboxState.photos.length > 1 && (
+            <button 
+              className="lightbox-arrow l-prev absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxState(prev => ({
+                  ...prev,
+                  activeIndex: (prev.activeIndex - 1 + prev.photos.length) % prev.photos.length
+                }));
+              }}
+            >
+              &#10094;
+            </button>
+          )}
 
-            {lightbox.photos.length > 1 && (
-              <>
-                <button className="lightbox-arrow lightbox-arrow-left" onClick={handlePrev}>❮</button>
-                <button className="lightbox-arrow lightbox-arrow-right" onClick={handleNext}>❯</button>
-              </>
-            )}
+          <div className="lightbox-content max-w-[85vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+            <img src={lightboxState.photos[lightboxState.activeIndex]} className="object-contain max-w-full max-h-[80vh] rounded-lg shadow-2xl" alt="Mülk Görseli" />
           </div>
 
-          <div className="lightbox-counter">
-            {(lightbox.activeIndex + 1) + ' / ' + lightbox.photos.length}
+          {lightboxState.photos.length > 1 && (
+            <button 
+              className="lightbox-arrow l-next absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl transition"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxState(prev => ({
+                  ...prev,
+                  activeIndex: (prev.activeIndex + 1) % prev.photos.length
+                }));
+              }}
+            >
+              &#10095;
+            </button>
+          )}
+
+          <div className="absolute bottom-6 text-white/70 text-sm font-medium">
+            {lightboxState.activeIndex + 1} / {lightboxState.photos.length}
           </div>
         </div>
       )}
 
-      <Footer />
+      <Footer setFilters={() => {}} />
 
-      {/* ЛОКАЛЬНЫЕ СТИЛИ СТРАНИЦЫ КАРТОЧКИ */}
+      {/* СТИЛИ ИЗ ТИЛЬДЫ, ИЗОЛИРОВАННЫЕ В STYLE JSX */}
       <style jsx global>{`
-        .fade-in {
-          animation: fadeIn 0.4s ease-out forwards;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        .title-section {
+          border-bottom: 1px solid #E5E7EB !important;
+          padding-bottom: 8px !important;
+          margin-bottom: 16px !important;
+          font-size: 1.25rem !important;
+          font-weight: 700 !important;
+          color: #111827 !important;
         }
 
-        /* Адаптивная галерея */
-        .airbnb-gallery {
-          width: 100%;
-          height: 500px;
-          box-sizing: border-box;
+        .back-button {
+          color: #64748B !important;
+          font-weight: 700 !important;
+          font-size: 0.875rem !important;
+          text-decoration: none !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 0.25rem !important;
+          transition: color 0.2s ease !important;
+        }
+        .back-button:hover {
+          color: #111827 !important;
         }
 
         .gallery-item {
@@ -538,123 +557,127 @@ export default function PropertyDetails({ property, error }) {
         .gallery-item:hover { filter: brightness(0.9); }
 
         .gallery-layout-1 { display: block; width: 100%; height: 100%; }
-        .gallery-layout-1 .gallery-item { border-radius: 16px; }
+        .gallery-layout-1 .gallery-item { border-radius: 16px !important; }
 
         .gallery-layout-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-2 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px; }
-        .gallery-layout-2 .gallery-item:nth-child(2) { border-radius: 0 16px 16px 0; }
+        .gallery-layout-2 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
+        .gallery-layout-2 .gallery-item:nth-child(2) { border-radius: 0 16px 16px 0 !important; }
 
         .gallery-layout-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-3 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px; }
-        .gallery-layout-3 .gallery-item:nth-child(2) { border-radius: 0px; }
-        .gallery-layout-3 .gallery-item:nth-child(3) { border-radius: 0 16px 16px 0; }
+        .gallery-layout-3 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
+        .gallery-layout-3 .gallery-item:nth-child(2) { border-radius: 0px !important; }
+        .gallery-layout-3 .gallery-item:nth-child(3) { border-radius: 0 16px 16px 0 !important; }
 
         .gallery-layout-4 { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-4 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px; }
-        .gallery-layout-4 .gallery-item:nth-child(2), .gallery-layout-4 .gallery-item:nth-child(3) { border-radius: 0px; }
-        .gallery-layout-4 .gallery-item:nth-child(4) { border-radius: 0 16px 16px 0; }
+        .gallery-layout-4 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
+        .gallery-layout-4 .gallery-item:nth-child(2), .gallery-layout-4 .gallery-item:nth-child(3) { border-radius: 0px !important; }
+        .gallery-layout-4 .gallery-item:nth-child(4) { border-radius: 0 16px 16px 0 !important; }
 
         .gallery-layout-5 {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr;
-          grid-template-rows: 1fr 1fr;
-          gap: 12px;
-          width: 100%;
-          height: 100%;
+          display: grid !important;
+          grid-template-columns: 2fr 1fr 1fr !important;
+          grid-template-rows: 1fr 1fr !important;
+          gap: 12px !important;
+          width: 100% !important;
+          height: 100% !important;
         }
-        .gallery-layout-5 .gallery-item-main { grid-row: span 2; border-radius: 16px 0 0 16px; }
-        .gallery-layout-5 .gallery-item-top-mid, .gallery-layout-5 .gallery-item-bottom-mid { border-radius: 0px; }
-        .gallery-layout-5 .gallery-item-top-right { border-radius: 0 16px 0 0; }
-        .gallery-layout-5 .gallery-item-bottom-right { border-radius: 0 0 16px 0; position: relative; }
+        .gallery-layout-5 .gallery-item-main { grid-row: span 2; border-radius: 16px 0 0 16px !important; }
+        .gallery-layout-5 .gallery-item-top-mid, .gallery-layout-5 .gallery-item-bottom-mid { border-radius: 0px !important; }
+        .gallery-layout-5 .gallery-item-top-right { border-radius: 0 16px 0 0 !important; }
+        .gallery-layout-5 .gallery-item-bottom-right { border-radius: 0 0 16px 0 !important; position: relative; }
 
-        /* Кнопка "+ ещё фото" */
         .gallery-overlay {
           position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          color: #ffffff;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          transition: background 0.25s ease;
-          border-radius: 0 0 16px 0;
-          text-align: center;
-          box-sizing: border-box;
+          background: rgba(0, 0, 0, 0.5) !important;
+          color: #ffffff !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          align-items: center !important;
+          transition: background 0.25s ease !important;
+          border-radius: 0 0 16px 0 !important;
+          text-align: center !important;
+          box-sizing: border-box !important;
           user-select: none;
         }
         .gallery-overlay:hover {
-          background: rgba(0, 0, 0, 0.65);
+          background: rgba(0, 0, 0, 0.65) !important;
         }
         .gallery-overlay-text {
-          font-size: 1.5rem;
-          font-weight: 800;
-          color: #ffffff;
-          line-height: 1;
+          font-size: 1.5rem !important;
+          font-weight: 800 !important;
+          color: #ffffff !important;
+          line-height: 1 !important;
         }
         .gallery-overlay-subtext {
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.9);
-          margin-top: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          background-color: rgba(255, 255, 255, 0.15);
-          padding: 4px 10px;
-          border-radius: 9999px;
-          display: inline-block;
+          font-size: 0.75rem !important;
+          font-weight: 700 !important;
+          color: rgba(255, 255, 255, 0.9) !important;
+          margin-top: 6px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.05em !important;
+          background-color: rgba(255, 255, 255, 0.15) !important;
+          padding: 4px 10px !important;
+          border-radius: 9999px !important;
+          display: inline-block !important;
         }
 
-        /* Стилизация заголовков и линий */
-        .projeland-card-container h2 {
-          font-family: 'Mulish', sans-serif;
+        .active-lightbox {
+          display: flex !important;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.95);
+          z-index: 9999999999;
+          justify-content: center;
+          align-items: center;
+          user-select: none;
         }
 
         @media (max-width: 768px) {
-          .airbnb-gallery {
-            height: 250px;
-          }
           .gallery-layout-2, .gallery-layout-3, .gallery-layout-4, .gallery-layout-5 {
-            display: block;
+            display: block !important;
           }
           .gallery-layout-2 .gallery-item:not(:first-child),
           .gallery-layout-3 .gallery-item:not(:first-child),
           .gallery-layout-4 .gallery-item:not(:first-child),
           .gallery-layout-5 .gallery-item:not(.gallery-item-main) {
-            display: none;
+            display: none !important;
           }
           .gallery-layout-2 .gallery-item:first-child,
           .gallery-layout-3 .gallery-item:first-child,
           .gallery-layout-4 .gallery-item:first-child,
           .gallery-layout-5 .gallery-item-main {
-            border-radius: 16px;
+            border-radius: 16px !important;
           }
 
-          /* Летающая плавающая кнопка в мобильном макете */
           .gallery-layout-2::after, 
           .gallery-layout-3::after, 
           .gallery-layout-4::after, 
           .gallery-layout-5::after {
-            content: "📷 Tüm Fotoğraflar";
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background-color: rgba(30, 41, 59, 0.85);
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 6px 14px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 10;
-            pointer-events: none;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            content: "📷 Tüm Fotoğraflar" !important;
+            position: absolute !important;
+            bottom: 15px !important;
+            right: 15px !important;
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            padding: 6px 14px !important;
+            border-radius: 20px !important;
+            backdrop-filter: blur(4px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            z-index: 10 !important;
+            pointer-events: none !important;
+            letter-spacing: 0.05em !important;
+            text-transform: uppercase !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
           }
         }
       `}</style>
@@ -662,45 +685,38 @@ export default function PropertyDetails({ property, error }) {
   );
 }
 
-// Запрос данных на сервере для оптимального SEO и быстрой загрузки
+// Данные запрашиваются на сервере (SSR)
 export async function getServerSideProps(context) {
   const { id } = context.params;
 
-  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
-  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return {
-      props: {
-        property: null,
-        error: "Supabase key missing",
-      },
-    };
-  }
-
   try {
-    const { data, error } = await supabase
+    const { data: property, error } = await supabase
       .from('properties')
       .select('*, property_images(*)')
       .eq('id', id)
       .single();
 
-    if (error) {
-      throw error;
+    if (error || !property) {
+      return {
+        props: {
+          property: null,
+          error: true,
+        },
+      };
     }
 
     return {
       props: {
-        property: data || null,
-        error: null,
+        property,
+        error: false,
       },
     };
   } catch (err) {
-    console.error("Fetch detailed property error:", err);
+    console.error('Server side props error:', err);
     return {
       props: {
         property: null,
-        error: err.message || "Failed to load",
+        error: true,
       },
     };
   }
