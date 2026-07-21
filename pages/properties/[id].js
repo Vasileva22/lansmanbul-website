@@ -212,7 +212,7 @@ export default function PropertyDetail({ property, error }) {
       <Header setFilters={() => {}} />
 
       <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12">
-        <div className="max-w-[1440px] mx-auto px-5">
+        <div className="max-w-[1400px] mx-auto px-5">
           
           {/* ШАПКА КАРТОЧКИ */}
           <header className="mb-6">
