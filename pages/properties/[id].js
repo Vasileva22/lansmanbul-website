@@ -428,9 +428,9 @@ export default function PropertyDetail({ property, error }) {
               )}
             </div>
 
-            {/* ПРАВАЯ СТИКИ-КОЛОНКА */}
-            <div className="lg:col-span-1 lg:sticky lg:top-28 z-20">
-              <div className="bg-white p-6 rounded-3xl border-2 border-[#00A4A6] shadow-lg space-y-6">
+           {/* ПРАВАЯ СТИКИ-КОЛОНКА */}
+            <div className="lg:col-span-1 luxe-sticky-sidebar">
+              <div className="bg-white p-6 rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.07)] space-y-6">
                 <div>
                   <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
                   <div className="text-3xl font-black text-[#00A4A6] mt-1">
@@ -567,6 +567,17 @@ export default function PropertyDetail({ property, error }) {
         }
         #back-button:hover {
           color: #111827 !important;
+        }
+        /* Обеспечиваем работу липкого (sticky) сайдбара при прокрутке */
+        .luxe-sticky-sidebar {
+          position: sticky !important;
+          top: 130px !important; /* Расстояние от верха экрана при прокрутке */
+          z-index: 20 !important;
+        }
+
+        /* Защита от блокировки sticky-эффекта родительскими правилами overflow */
+        html, body, .projeland-card-container {
+          overflow: visible !important;
         }
 
         /* Жесткий каркас галереи */
