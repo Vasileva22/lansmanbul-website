@@ -68,24 +68,24 @@ export default function Footer({ setFilters }) {
             <h4 className="v3-title">Gizlilik ve Kullanım</h4>
             <ul className="v3-links">
               <li>
-                <a href="https://increase-fine-snappea.tilda.ws/kullanim-kosullari" target="_blank" rel="noopener noreferrer">
+                <Link href="/kullanim-kosullari">
                   Kullanım koşulları
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="https://increase-fine-snappea.tilda.ws/kisisel-verilerin-korunmasi" target="_blank" rel="noopener noreferrer">
+                <Link href="/kisisel-verilerin-korunmasi">
                   Kişisel Verilerin Korunması
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="https://increase-fine-snappea.tilda.ws/cerez-politikasi" target="_blank" rel="noopener noreferrer">
+                <Link href="/cerez-politikasi">
                   Çerez Yönetimi
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="https://increase-fine-snappea.tilda.ws/gizlilik-politikasi" target="_blank" rel="noopener noreferrer">
+                <Link href="/gizlilik-politikasi">
                   Gizlilik politikası
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
