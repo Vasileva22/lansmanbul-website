@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function PropertyCard({ property, onImageClick }) {
-  // Перенесли функцию внутрь компонента — теперь она гарантированно определена
+  // 1. Функция парсинга картинок
   const parseJsonbPhotos = (value) => {
     if (!value) return [];
     
@@ -30,12 +30,42 @@ export default function PropertyCard({ property, onImageClick }) {
     return [];
   };
 
-  // Безопасно парсим изображения
   const photos = property?.property_images
     ? property.property_images.flatMap(img => parseJsonbPhotos(img?.image_url))
     : [];
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // 2. Считываем состояние избранного при монтировании
+  useEffect(() => {
+    if (typeof window === 'undefined' || !property?.id) return;
+    const favs = JSON.parse(localStorage.getItem('kb-favorites') || '[]');
+    setIsFavorite(favs.includes(property.id));
+  }, [property?.id]);
+
+  // 3. Функция переключения избранного
+  const toggleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof window === 'undefined' || !property?.id) return;
+    
+    const favs = JSON.parse(localStorage.getItem('kb-favorites') || '[]');
+    let updatedFavs;
+    
+    if (favs.includes(property.id)) {
+      updatedFavs = favs.filter(id => id !== property.id);
+      setIsFavorite(false);
+    } else {
+      updatedFavs = [...favs, property.id];
+      setIsFavorite(true);
+    }
+    
+    localStorage.setItem('kb-favorites', JSON.stringify(updatedFavs));
+    
+    // Отправляем глобальное событие, чтобы шапка мгновенно обновила счетчик
+    window.dispatchEvent(new Event('favorites-updated'));
+  };
 
   const nextSlide = (e) => {
     e.preventDefault();
@@ -133,9 +163,21 @@ export default function PropertyCard({ property, onImageClick }) {
   return (
     <div className="custom-card" data-id={property?.id}>
       <div 
-        className="img-container" 
+        className="img-container relative" 
         onClick={() => onImageClick && onImageClick(photos, currentSlide)}
       >
+        {/* КНОПКА ИЗБРАННОГО НАД КАРТИНКОЙ */}
+        <button 
+          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${isFavorite ? 'bg-white/95' : ''}`}
+          onClick={toggleFavorite}
+          title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"}
+          style={{ border: 'none' }}
+        >
+          <svg className="w-5 h-5 transition-colors duration-200" viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#ffffff"} strokeWidth="2.5">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+
         {photos.length > 0 ? (
           <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
             {photos.map((url, idx) => (
