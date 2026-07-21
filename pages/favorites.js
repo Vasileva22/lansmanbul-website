@@ -78,15 +78,20 @@ export default function FavoritesPage() {
               <span className="animate-pulse">Projeler yükleniyor...</span>
             </div>
           ) : favoriteProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {favoriteProperties.map((property) => (
-                <PropertyCard 
-                  key={property.id} 
-                  property={property} 
-                  onImageClick={null} 
-                />
-              ))}
-            </div>
+            /* Обертки для принудительного подключения всех стилей из globals.css */
+            <section id="custom-catalog-search" style={{ padding: 0, background: 'none' }}>
+              <div id="catalog-content-wrapper" className="full-width" style={{ padding: 0 }}>
+                <div id="catalog-list" className="grid-layout">
+                  {favoriteProperties.map((property) => (
+                    <PropertyCard 
+                      key={property.id} 
+                      property={property} 
+                      onImageClick={null} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
           ) : (
             /* ЗАГЛУШКА, ЕСЛИ СПИСОК ПУСТ */
             <div className="text-center py-24 bg-white rounded-2xl border border-slate-100 shadow-sm max-w-lg mx-auto px-6">
