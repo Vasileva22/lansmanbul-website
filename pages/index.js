@@ -279,7 +279,7 @@ export default function Home({ initialProperties }) {
         if (!allMatched) return false;
       }
 
-      if (filters.activePaymentFilters.length > 0) {
+     if (filters.activePaymentFilters.length > 0) {
         const matchesAny = filters.activePaymentFilters.some((pay) => {
           const normPay = pay.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
           const krediDurumu = String(property.Kredi_Durumu || "").trim();
@@ -293,6 +293,21 @@ export default function Home({ initialProperties }) {
         });
         if (!matchesAny) return false;
       }
+
+      // === НАЧАЛО ВСТАВКИ ===
+      if (isForeigner) {
+        const isVatandaslikChecked = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun');
+        const isIkametChecked = filters.activeFeatureFilters.includes('İkamete Uygun');
+
+        // Проверяем новые колонки в таблице properties (если пустые — скрываем)
+        if (isVatandaslikChecked && (!property.vatandaslik || String(property.vatandaslik).trim() === "")) {
+          return false;
+        }
+        if (isIkametChecked && (!property.ikamet || String(property.ikamet).trim() === "")) {
+          return false;
+        }
+      }
+      // === КОНЕЦ ВСТАВКИ ===
 
       return true;
     });
