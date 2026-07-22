@@ -276,7 +276,6 @@ export default function SidebarFilters({
             {/* === ЕДИНЫЙ АККУРАТНЫЙ СТИЛЬ ШАПКИ === */}
             <div className="flex flex-col w-full">
               <div className="flex justify-between items-baseline w-full">
-                {/* Смягчили черный цвет до графитового (text-slate-700) */}
                 <span className="text-xl font-black text-slate-700 leading-none">Filtreleme</span>
                 
                 {isForeigner ? (
@@ -293,7 +292,7 @@ export default function SidebarFilters({
                       }));
                     }}
                   >
-                    ◀ Normal Filtreler
+                    Normal Filtreler
                   </span>
                 ) : (
                   <span 
@@ -308,19 +307,19 @@ export default function SidebarFilters({
                       }));
                     }}
                   >
-                    Yabancılar İçin ➔
+                    Yabancılar İçin
                   </span>
                 )}
               </div>
               
+              {/* Счетчик в обоих режимах теперь пишет просто "Proje Listeleniyor" */}
               <div className="luxe-sidebar-sub-count mt-2">
                 <span className="orange-count">
-                  <span>{totalCount}</span> {isForeigner ? 'Yabancı Proje' : 'Proje'}
+                  <span>{totalCount}</span> Proje
                 </span> Listeleniyor
               </div>
             </div>
             
-            {/* Перенесли кнопку очистки влево (mr-auto) */}
             <span className="clear-filters-btn clear-link mr-auto mt-2.5" onClick={onClearFilters}>
               Filtreleri Temizle
             </span>
