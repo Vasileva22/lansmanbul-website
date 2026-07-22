@@ -272,11 +272,12 @@ export default function SidebarFilters({
         <div className="luxe-sidebar-scrollable-body">
           <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
 
-          <div className="luxe-sidebar-header">
+          <div className="luxe-sidebar-header flex flex-col items-start w-full">
             {/* === ЕДИНЫЙ АККУРАТНЫЙ СТИЛЬ ШАПКИ === */}
             <div className="flex flex-col w-full">
               <div className="flex justify-between items-baseline w-full">
-                <span className="text-xl font-black text-slate-900 leading-none">Filtreleme</span>
+                {/* Смягчили черный цвет до графитового (text-slate-700) */}
+                <span className="text-xl font-black text-slate-700 leading-none">Filtreleme</span>
                 
                 {isForeigner ? (
                   <span 
@@ -318,9 +319,9 @@ export default function SidebarFilters({
                 </span> Listeleniyor
               </div>
             </div>
-            {/* === КОНЕЦ ИЗМЕНЕНИЙ === */}
             
-            <span className="clear-filters-btn clear-link ml-auto" onClick={onClearFilters}>
+            {/* Перенесли кнопку очистки влево (mr-auto) */}
+            <span className="clear-filters-btn clear-link mr-auto mt-2.5" onClick={onClearFilters}>
               Filtreleri Temizle
             </span>
           </div>
