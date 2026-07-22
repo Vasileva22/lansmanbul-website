@@ -9,6 +9,11 @@ export default function SidebarFilters({
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
   isSidebarHidden,
+  // === НАЧАЛО ВСТАВКИ ===
+  isForeigner,
+  setIsForeigner,
+  usdRate
+  // === КОНЕЦ ВСТАВКИ ===
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
