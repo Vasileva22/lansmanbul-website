@@ -61,6 +61,11 @@ export default function Home({ initialProperties }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
+  // === НАЧАЛО ВСТАВКИ ===
+  const [usdRate, setUsdRate] = useState(47.2); // Курс доллара к лире (резервный)
+  const [isForeigner, setIsForeigner] = useState(false); // Включен ли режим иностранца
+  // === КОНЕЦ ВСТАВКИ ===
+
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
