@@ -368,6 +368,11 @@ export default function Home({ initialProperties }) {
           isMobileSidebarOpen={isMobileSidebarOpen}
           setIsMobileSidebarOpen={setIsMobileSidebarOpen}
           isSidebarHidden={isSidebarHidden}
+          // === НАЧАЛО ВСТАВКИ ===
+          isForeigner={isForeigner}
+          setIsForeigner={setIsForeigner}
+          usdRate={usdRate}
+          // === КОНЕЦ ВСТАВКИ ===
         />
 
         <button 
