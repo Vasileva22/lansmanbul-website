@@ -326,56 +326,26 @@ export default function SidebarFilters({
             </span>
           </div>
 
-         {/* === НАЧАЛО ВСТАВКИ (Отдельный блок параметров для иностранцев) === */}
+        {/* === НАЧАЛО ВСТАВКИ (Аккуратные овальные теги) === */}
           {isForeigner && (
             <>
               <div className="luxe-divider"></div>
               <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title fs-14 fw-600">Yabancı Parametreleri</span>
-                <div className="luxe-checkboxes mt-3 space-y-3">
-                  
-                  {/* ЧЕКБОКС ГРАЖДАНСТВА */}
+                <div className="luxe-tags flex flex-wrap gap-2.5 mt-2">
                   <div 
-                    className="flex items-center cursor-pointer select-none"
+                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') ? 'active' : '')}
                     onClick={() => handleTagToggle('Vatandaşlığa Uygun')}
+                    style={{ cursor: 'pointer', fontWeight: '800' }}
                   >
-                    <div 
-                      className={`flex items-center justify-center border-2 rounded transition-all duration-200 mr-2.5`}
-                      style={{ 
-                        width: 18, 
-                        height: 18, 
-                        borderColor: filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') ? '#00A4A6' : '#CBD5E1',
-                        backgroundColor: filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') ? '#00A4A6' : '#ffffff'
-                      }}
-                    >
-                      {filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') && (
-                        <span className="text-white text-xs font-black leading-none">✓</span>
-                      )}
-                    </div>
-                    <span className="text-xs font-semibold text-slate-700">🇹🇷 Vatandaşlığa Uygun</span>
+                    Vatandaşlığa Uygun
                   </div>
-
-                  {/* ЧЕКБОКС ВНЖ */}
                   <div 
-                    className="flex items-center cursor-pointer select-none"
+                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes('İkamete Uygun') ? 'active' : '')}
                     onClick={() => handleTagToggle('İkamete Uygun')}
+                    style={{ cursor: 'pointer', fontWeight: '800' }}
                   >
-                    <div 
-                      className={`flex items-center justify-center border-2 rounded transition-all duration-200 mr-2.5`}
-                      style={{ 
-                        width: 18, 
-                        height: 18, 
-                        borderColor: filters.activeFeatureFilters.includes('İkamete Uygun') ? '#00A4A6' : '#CBD5E1',
-                        backgroundColor: filters.activeFeatureFilters.includes('İkamete Uygun') ? '#00A4A6' : '#ffffff'
-                      }}
-                    >
-                      {filters.activeFeatureFilters.includes('İkamete Uygun') && (
-                        <span className="text-white text-xs font-black leading-none">✓</span>
-                      )}
-                    </div>
-                    <span className="text-xs font-semibold text-slate-700">🛂 İkamete Uygun</span>
+                    İkamete Uygun
                   </div>
-
                 </div>
               </div>
             </>
