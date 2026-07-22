@@ -273,16 +273,53 @@ export default function SidebarFilters({
           <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
 
           <div className="luxe-sidebar-header">
-            <div className="luxe-sidebar-mobile-title-container" style={{ display: 'none' }}>
-              <span className="luxe-sidebar-mobile-title c-filter__title fs-20">Filtreleme</span>
-            </div>
-            <span className="luxe-sidebar-mobile-subtitle c-filter__title fs-14" style={{ display: 'none', marginBottom: '12px', color: 'var(--text-muted)' }}>
-              Sonuçları Filtreleyin
-            </span>
-            <div className="luxe-sidebar-sub-count">
-              <span className="orange-count"><span>{totalCount}</span> Proje</span> Listeleniyor
-            </div>
-            <span className="clear-filters-btn clear-link" onClick={onClearFilters}>
+            {/* === НАЧАЛО ИЗМЕНЕНИЙ (Динамическая шапка) === */}
+            {isForeigner ? (
+              <div className="flex flex-col w-full">
+                <div 
+                  className="flex items-center gap-1 cursor-pointer text-slate-400 hover:text-slate-800 transition-colors mb-2"
+                  onClick={() => {
+                    setIsForeigner(false);
+                    // Возвращаем ползунок цен к 0 и отключаем галочки иностранца
+                    setFilters(prev => ({
+                      ...prev,
+                      priceRange: [0, prev.priceRange[1]],
+                      activeFeatureFilters: prev.activeFeatureFilters.filter(
+                        t => t !== 'Vatandaşlığa Uygun' && t !== 'İkamete Uygun'
+                      )
+                    }));
+                  }}
+                >
+                  <span className="text-xs font-black">◀ Geri (Normal Filtreler)</span>
+                </div>
+                <div className="text-xl font-black text-slate-900 leading-tight">Yabancılar İçin</div>
+              </div>
+            ) : (
+              <div className="flex flex-col w-full">
+                <button 
+                  className="w-full py-3 px-4 mb-4 bg-[#00A4A6] hover:bg-[#00898B] text-white rounded-xl font-bold flex items-center justify-between shadow-sm transition-all duration-200 border-none cursor-pointer"
+                  onClick={() => {
+                    setIsForeigner(true);
+                    // Считаем минимальную цену в лирах ($200,000 * курс)
+                    const minPriceTry = Math.round(200000 * usdRate);
+                    setFilters(prev => ({
+                      ...prev,
+                      priceRange: [minPriceTry, prev.priceRange[1]],
+                      activeFeatureFilters: [...new Set([...prev.activeFeatureFilters, 'Vatandaşlığa Uygun', 'İkamete Uygun'])]
+                    }));
+                  }}
+                >
+                  <span className="text-sm">Yabancılar İçin Filtreler</span>
+                  <span className="text-xs">➔</span>
+                </button>
+                <div className="luxe-sidebar-sub-count">
+                  <span className="orange-count"><span>{totalCount}</span> Proje</span> Listeleniyor
+                </div>
+              </div>
+            )}
+            {/* === КОНЕЦ ИЗМЕНЕНИЙ === */}
+            
+            <span className="clear-filters-btn clear-link ml-auto" onClick={onClearFilters}>
               Filtreleri Temizle
             </span>
           </div>
