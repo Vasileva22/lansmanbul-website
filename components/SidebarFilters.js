@@ -272,7 +272,7 @@ export default function SidebarFilters({
         <div className="luxe-sidebar-scrollable-body">
           <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
 
-         <div className="luxe-sidebar-header flex flex-col items-start w-full">
+        <div className="luxe-sidebar-header flex flex-col items-start w-full">
             {/* === ЕДИНЫЙ АККУРАТНЫЙ СТИЛЬ ШАПКИ === */}
             <div className="flex flex-col w-full">
               <div className="flex justify-between items-baseline w-full">
@@ -292,7 +292,7 @@ export default function SidebarFilters({
                       }));
                     }}
                   >
-                    Normal Filtreler
+                    ‹ Genel Filtreler
                   </span>
                 ) : (
                   <span 
@@ -307,7 +307,7 @@ export default function SidebarFilters({
                       }));
                     }}
                   >
-                    Yabancılar İçin
+                    Yabancılar İçin ›
                   </span>
                 )}
               </div>
