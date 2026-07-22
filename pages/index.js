@@ -83,13 +83,25 @@ export default function Home({ initialProperties }) {
     activePaymentFilters: [],
   });
 
+// === НАЧАЛО ВСТАВКИ ===
+  // Запрос курса Центробанка один раз при загрузке страницы
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.rates && data.rates.TRY) {
+          setUsdRate(data.rates.TRY);
+        }
+      })
+      .catch(err => console.error("Doviz kuru yukleme hatasi:", err));
+  }, []);
+  // === КОНЕЦ ВСТАВКИ ===
+
   // Безопасный клиентский fetch
   useEffect(() => {
     async function loadClientData() {
       if (masterProperties.length === 0) {
         const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
-        const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
-
         if (!supabaseUrl || !supabaseAnonKey) return;
 
         try {
