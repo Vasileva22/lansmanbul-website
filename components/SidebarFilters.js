@@ -324,6 +324,33 @@ export default function SidebarFilters({
             </span>
           </div>
 
+          {/* === НАЧАЛО ВСТАВКИ (Отдельный блок параметров для иностранцев) === */}
+          {isForeigner && (
+            <>
+              <div className="luxe-divider"></div>
+              <div className="luxe-group">
+                <span className="luxe-group-label c-filter__title fs-14 fw-600">Yabancı Parametreleri</span>
+                <div className="luxe-checkboxes mt-2">
+                  <div 
+                    className={'luxe-checkbox-item ' + (filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') ? 'checked' : '')}
+                    onClick={() => handleTagToggle('Vatandaşlığa Uygun')}
+                  >
+                    <div className="luxe-radio-dot"></div>
+                    <label style={{ cursor: 'pointer', margin: 0 }}>🇹🇷 Vatandaşlığa Uygun</label>
+                  </div>
+                  <div 
+                    className={'luxe-checkbox-item ' + (filters.activeFeatureFilters.includes('İkamete Uygun') ? 'checked' : '')}
+                    onClick={() => handleTagToggle('İkamete Uygun')}
+                  >
+                    <div className="luxe-radio-dot"></div>
+                    <label style={{ cursor: 'pointer', margin: 0 }}>🛂 İkamete Uygun</label>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          {/* === КОНЕЦ ВСТАВКИ === */}
+
           <div className="luxe-divider"></div>
 
           <div className="luxe-group">
