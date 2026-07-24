@@ -294,7 +294,7 @@ export default function Home({ initialProperties }) {
         if (!matchesAny) return false;
       }
 
-      // === НАЧАЛО ВСТАВКИ ===
+    // === НАЧАЛО ВСТАВКИ ===
       if (isForeigner) {
         // 1. Если объект находится в закрытом районе (is_open_area = false) — скрываем его сразу
         if (property.is_open_area === false) {
