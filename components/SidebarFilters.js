@@ -232,6 +232,43 @@ export default function SidebarFilters({
     }
   }, [filters.areaRange, filters.katRange, filters.priceRange]);
 
+  // === НАЧАЛО ВСТАВКИ (Умная фиксация лимита цены для иностранцев) ===
+  useEffect(() => {
+    if (!priceSliderInst.current) return;
+    
+    let minLimit = 0;
+    
+    if (isForeigner) {
+      const isVatandaslik = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun');
+      const isIkamet = filters.activeFeatureFilters.includes('İkamete Uygun');
+      
+      if (isVatandaslik && isIkamet) {
+        // Если выбраны обе галочки (ВНЖ или Гражданство) — минимальный порог из двух равен ВНЖ ($200k)
+        minLimit = Math.round(200000 * usdRate);
+      } else if (isVatandaslik && !isIkamet) {
+        // Только Гражданство — $400,000 USD
+        minLimit = Math.round(400000 * usdRate);
+      } else if (isIkamet && !isVatandaslik) {
+        // Только ВНЖ — $200,000 USD
+        minLimit = Math.round(200000 * usdRate);
+      }
+    }
+    
+    priceSliderInst.current.updateOptions({
+      range: {
+        min: minLimit,
+        max: 50000000
+      }
+    });
+
+    // Если текущее положение левого ползунка меньше нового минимального порога —
+    // автоматически сдвигаем его к порогу ВНЖ/Гражданства для удобства пользователя
+    if (isForeigner && filters.priceRange[0] < minLimit) {
+      setFilters(prev => ({ ...prev, priceRange: [minLimit, prev.priceRange[1]] }));
+    }
+  }, [isForeigner, usdRate, filters.activeFeatureFilters]);
+  // === КОНЕЦ ВСТАВКИ ===
+
   const handleTagToggle = (tag) => {
     const isSelected = filters.activeFeatureFilters.includes(tag);
     const updated = isSelected
@@ -298,14 +335,9 @@ export default function SidebarFilters({
                   <span 
                     className="text-[11px] font-bold text-[#00A4A6] hover:text-[#00898B] cursor-pointer transition-colors"
                     onClick={() => {
-                      setIsForeigner(true);
-                      const minPriceTry = Math.round(200000 * usdRate);
-                      setFilters(prev => ({
-                        ...prev,
-                        priceRange: [minPriceTry, prev.priceRange[1]],
-                        activeFeatureFilters: [...new Set([...prev.activeFeatureFilters, 'Vatandaşlığa Uygun', 'İkamete Uygun'])]
-                      }));
-                    }}
+                    setIsForeigner(true);
+                    // Оставляем галочки серыми, а цену — свободной (от 0) при первом клике
+                  }}
                   >
                     Yabancılar İçin ›
                   </span>
