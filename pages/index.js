@@ -295,7 +295,9 @@ export default function Home({ initialProperties }) {
       }
 
     // === НАЧАЛО ВСТАВКИ ===
-      if (isForeigner) {
+      if (isForeigner) {// === ДИАГНОСТИЧЕСКАЯ СТРОКА (вставьте её сюда) ===
+        console.log("Диагностика:", property.testproje, "ВНЖ:", property.is_residence_eligible, "Цена лиры:", price);
+
         // 1. Если объект находится в закрытом районе (is_open_area = false) — скрываем его сразу
         if (property.is_open_area === false) {
           return false;
