@@ -302,10 +302,8 @@ export default function Home({ initialProperties }) {
         if (!matchesAny) return false;
       }
 
-    // === НАЧАЛО ВСТАВКИ ===
-      if (isForeigner) {// === ДИАГНОСТИЧЕСКАЯ СТРОКА (вставьте её сюда) ===
-        console.log("Диагностика:", property.testproje, "ВНЖ:", property.is_residence_eligible, "Цена лиры:", price);
-
+   // === НАЧАЛО ВСТАВКИ ===
+      if (isForeigner) {
         // 1. Если объект находится в закрытом районе (is_open_area = false) — скрываем его сразу
         if (property.is_open_area === false) {
           return false;
@@ -315,11 +313,19 @@ export default function Home({ initialProperties }) {
         const isIkametChecked = filters.activeFeatureFilters.includes('İkamete Uygun');
 
         // 2. Сверяем с автоматически рассчитанной пригодностью под гражданство и ВНЖ
-        if (isVatandaslikChecked && property.is_citizenship_eligible === false) {
-          return false;
-        }
-        if (isIkametChecked && property.is_residence_eligible === false) {
-          return false;
+        if (isVatandaslikChecked && isIkametChecked) {
+          // Если включены обе галочки — скрываем объект, только если он не подходит ни под один критерий (логика "ИЛИ")
+          if (property.is_citizenship_eligible === false && property.is_residence_eligible === false) {
+            return false;
+          }
+        } else {
+          // Если включена только одна конкретная галочка
+          if (isVatandaslikChecked && property.is_citizenship_eligible === false) {
+            return false;
+          }
+          if (isIkametChecked && property.is_residence_eligible === false) {
+            return false;
+          }
         }
       }
       // === КОНЕЦ ВСТАВКИ ===
