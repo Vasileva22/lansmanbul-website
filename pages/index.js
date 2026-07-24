@@ -296,14 +296,19 @@ export default function Home({ initialProperties }) {
 
       // === НАЧАЛО ВСТАВКИ ===
       if (isForeigner) {
+        // 1. Если объект находится в закрытом районе (is_open_area = false) — скрываем его сразу
+        if (property.is_open_area === false) {
+          return false;
+        }
+
         const isVatandaslikChecked = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun');
         const isIkametChecked = filters.activeFeatureFilters.includes('İkamete Uygun');
 
-        // Проверяем новые колонки в таблице properties (если пустые — скрываем)
-        if (isVatandaslikChecked && (!property.vatandaslik || String(property.vatandaslik).trim() === "")) {
+        // 2. Сверяем с автоматически рассчитанной пригодностью под гражданство и ВНЖ
+        if (isVatandaslikChecked && property.is_citizenship_eligible === false) {
           return false;
         }
-        if (isIkametChecked && (!property.ikamet || String(property.ikamet).trim() === "")) {
+        if (isIkametChecked && property.is_residence_eligible === false) {
           return false;
         }
       }
