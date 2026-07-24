@@ -268,15 +268,23 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      if (filters.activeFeatureFilters.length > 0) {
-        const propFeatures = property.Özellikler
-          ? String(property.Özellikler).toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's')
-          : '';
-        const allMatched = filters.activeFeatureFilters.every((feat) => {
-          const normFeat = feat.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
-          return propFeatures.includes(normFeat);
-        });
-        if (!allMatched) return false;
+     if (filters.activeFeatureFilters.length > 0) {
+        // === НАЧАЛО ИЗМЕНЕНИЙ (Исключаем параметры иностранцев) ===
+        const physicalFeatures = filters.activeFeatureFilters.filter(
+          (feat) => feat !== 'Vatandaşlığa Uygun' && feat !== 'İkamete Uygun'
+        );
+
+        if (physicalFeatures.length > 0) {
+          const propFeatures = property.Özellikler
+            ? String(property.Özellikler).toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's')
+            : '';
+          const allMatched = physicalFeatures.every((feat) => {
+            const normFeat = feat.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
+            return propFeatures.includes(normFeat);
+          });
+          if (!allMatched) return false;
+        }
+        // === КОНЕЦ ИЗМЕНЕНИЙ ===
       }
 
      if (filters.activePaymentFilters.length > 0) {
