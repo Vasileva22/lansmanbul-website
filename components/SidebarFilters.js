@@ -261,9 +261,8 @@ export default function SidebarFilters({
       }
     });
 
-    // Если текущее положение левого ползунка меньше нового минимального порога —
-    // автоматически сдвигаем его к порогу ВНЖ/Гражданства для удобства пользователя
-    if (isForeigner && filters.priceRange[0] < minLimit) {
+   // Динамически сдвигаем левый ползунок точно к новому лимиту в обе стороны (и вверх, и вниз)
+    if (isForeigner) {
       setFilters(prev => ({ ...prev, priceRange: [minLimit, prev.priceRange[1]] }));
     }
   }, [isForeigner, usdRate, filters.activeFeatureFilters]);
