@@ -529,6 +529,49 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
+          {/* === НАЧАЛО ВСТАВКИ: Фильтр годов сдачи === */}
+          {uniqueYears.length > 0 && (
+            <>
+              <div className="luxe-group">
+                <span className="luxe-group-label c-filter__title fs-14 fw-600">Teslim Yılı</span>
+                <div className="luxe-tags flex flex-wrap gap-2.5">
+                  {(() => {
+                    const currentYear = 2026;
+                    const isCompletedSelected = filters.selectedStatuses?.includes('Tamamlandı');
+                    
+                    const yearsToShow = uniqueYears.filter((year) => {
+                      const yrNum = parseInt(year);
+                      if (isNaN(yrNum)) return true;
+                      
+                      if (isCompletedSelected) {
+                        return yrNum <= currentYear;
+                      } else if (filters.selectedStatuses?.length > 0) {
+                        return yrNum > currentYear;
+                      }
+                      return true;
+                    });
+
+                    return yearsToShow.map((year) => {
+                      const isActive = (filters.selectedYears || []).includes(year);
+                      return (
+                        <div
+                          key={year}
+                          className={`luxe-tag-item ${isActive ? 'active' : ''}`}
+                          onClick={() => handleYearToggle(year)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {year}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+              <div className="luxe-divider"></div>
+            </>
+          )}
+          {/* === КОНЕЦ ВСТАВКИ === */}
+
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Olanaklar</span>
             <div className={'luxe-tags ' + (isTagsExpanded ? 'expanded' : '')}>
