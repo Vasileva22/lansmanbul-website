@@ -41,18 +41,22 @@ export default async function handler(req, res) {
     const $ = cheerio.load(html);
     const projects = [];
 
-    // Обходим все блочные контейнеры на странице
+    // Обходим блочные контейнеры на странице
     $('div, section').each((index, element) => {
       const cardText = $(element).text();
 
-      // Отбираем только те карточки, которые содержат упоминание района SİNCAN
+      // Фильтруем только карточки SİNCAN
       if (cardText.includes('SİNCAN') || cardText.includes('Sincan')) {
-        // Находим заголовок (обычно это h3, h2 или h4) внутри карточки
         const title = $(element).find('h3, h2, h4, [class*="title"]').first().text().trim();
         const description = $(element).find('.desc, [class*="desc"], p').first().text().trim();
 
-        // Проверяем уникальность проекта, чтобы не добавлять одну карточку дважды
-        if (title && !projects.some(p => p.testproje === title)) {
+        // Отсеиваем системные SEO-заголовки сайта-источника
+        if (
+          title && 
+          !title.includes('Fiyatları') && 
+          !title.includes('Konut Projeleri') &&
+          !projects.some(p => p.testproje === title)
+        ) {
           const detectedStatus = detectStatus(title + " " + description);
 
           projects.push({
@@ -61,7 +65,7 @@ export default async function handler(req, res) {
             city: "Ankara",
             "İlçe/Semt": "Sincan",
             Açıklama: description || "Proje detayları yakında eklenecektir.",
-            Fiyat: "Fiyat Belirtilmemiş", // Заглушка, цену добавит модератор
+            Fiyat: "Fiyat Belirtilmemiş",
             is_active: true,
             last_seen_at: new Date().toISOString()
           });
@@ -76,33 +80,49 @@ export default async function handler(req, res) {
       });
     }
 
-    // Сохраняем собранные ЖК в Supabase с обновлением по ключу testproje (upsert)
-    let addedCount = 0;
+    // БЕЗОПАСНАЯ ПРОГРАММНАЯ ЗАПИСЬ (БЕЗ ТРЕБОВАНИЯ ИНДЕКСОВ В БД)
+    let savedCount = 0;
     for (const proj of projects) {
-      const { error } = await supabase
+      // 1. Проверяем, существует ли уже проект с таким именем
+      const { data: existing, error: fetchError } = await supabase
         .from('properties')
-        .upsert(proj, { onConflict: 'testproje' });
+        .select('id')
+        .eq('testproje', proj.testproje)
+        .maybeSingle();
 
-      if (error) {
-        console.error(`Supabase Hatası (${proj.testproje}):`, error.message);
+      if (fetchError) {
+        console.error("Hata проверяем:", fetchError.message);
+        continue;
+      }
+
+      if (existing) {
+        // 2. Если существует — просто обновляем дату проверки и статус активности
+        const { error: updateError } = await supabase
+          .from('properties')
+          .update({ last_seen_at: proj.last_seen_at, is_active: true })
+          .eq('id', existing.id);
+          
+        if (!updateError) savedCount++;
       } else {
-        addedCount++;
+        // 3. Если проекта нет в базе — вставляем новую запись
+        const { error: insertError } = await supabase
+          .from('properties')
+          .insert(proj);
+          
+        if (!insertError) savedCount++;
       }
     }
 
     return res.status(200).json({ 
       success: true, 
-      message: 'Sincan projeleri başarıyla taranıp filtrelendi!', 
+      message: 'Sincan projeleri başarıyla kaydedildi!', 
       found_sincan_projects_count: projects.length,
-      saved_to_db_count: addedCount,
+      saved_to_db_count: savedCount,
       projects: projects.map(p => ({ isim: p.testproje, durum: p.konutcesit }))
     });
 
   } catch (error) {
     console.error("Tarama hatası:", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 }
