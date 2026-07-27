@@ -1,6 +1,6 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const { createClient } = require('@supabase/supabase-js');
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import { createClient } from '@supabase/supabase-js';
 
 // Инициализация безопасного клиента Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -53,11 +53,12 @@ export default async function handler(req, res) {
 
     console.log(`[Parser] Найдено ${projectUrls.length} ссылок для глубокого парсинга.`);
 
-    // ЭТАП 2: Заходим внутрь каждого проекта и вытягиваем детальную информацию
+    // ЭТАП 2: Заходим внутрь каждого проекта с помощью классического индексного цикла
     let savedCount = 0;
     const scrapedResult = [];
 
-    for (const item of projectUrls) {
+    for (let i = 0; i < projectUrls.length; i++) {
+      const item = projectUrls[i];
       try {
         const { data: detailHtml } = await axios.get(item.url, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
