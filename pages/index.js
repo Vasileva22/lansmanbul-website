@@ -237,15 +237,24 @@ export default function Home({ initialProperties }) {
   // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
-     if (
-        filters.selectedYears && filters.selectedYears.length > 0 &&
-        !filters.selectedYears.includes(String(property.Teslim_Yili || '').trim())
-      ) {
-        return false;
-      }
       if (
         filters.selectedLocations.length > 0 &&
         !filters.selectedLocations.includes(property['İlçe/Semt'])
+      ) {
+        return false;
+      }
+
+      if (
+        filters.selectedRooms.length > 0 &&
+        !filters.selectedRooms.includes(property['card odalar'])
+      ) {
+        return false;
+      }
+
+      // Фильтрация по годам сдачи (Teslim_Yili)
+      if (
+        filters.selectedYears && filters.selectedYears.length > 0 &&
+        !filters.selectedYears.includes(String(property.Teslim_Yili || '').trim())
       ) {
         return false;
       }
