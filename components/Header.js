@@ -116,13 +116,36 @@ export default function Header({ setFilters }) {
               Hakkımızda
             </Link>
 
-            {/* КНОПКА PROJE EKLE В МЕНЮ */}
+           {/* КНОПКА PROJE EKLE В МЕНЮ (СТИЛЬ ПИЛЮЛИ С РАМКОЙ) */}
             <button 
               onClick={() => setIsAddProjectOpen(true)}
-              className="nav-item btn-reset"
-              style={{ color: '#00A4A6', fontWeight: '800', cursor: 'pointer' }}
+              className="btn-reset"
+              style={{ 
+                color: '#00A4A6', 
+                border: '2px solid #00A4A6', 
+                borderRadius: '9999px', 
+                padding: '8px 20px', 
+                fontWeight: '800',
+                fontSize: '14px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                backgroundColor: 'transparent',
+                transition: 'all 0.2s ease-in-out',
+                fontFamily: "'Mulish', sans-serif"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#00A4A6';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#00A4A6';
+              }}
             >
-              <span style={{ color: '#FF9800', marginRight: '4px', fontSize: '16px' }}>+</span> 0 TL'ye Proje Ekle
+              <span style={{ fontSize: '16px', fontWeight: '900' }}>+</span> 0 TL'ye İlan Ver
             </button>
           </nav>
 
@@ -248,10 +271,25 @@ export default function Header({ setFilters }) {
          {/* КНОПКА PROJE EKLE В МОБИЛЬНОМ МЕНЮ */}
           <button 
             onClick={() => { setIsMobileMenuOpen(false); setIsAddProjectOpen(true); }}
-            className="mobile-nav-item btn-reset font-extrabold"
-            style={{ color: '#00A4A6', textAlign: 'left', width: '100%', marginTop: '12px' }}
+            className="mobile-nav-item btn-reset"
+            style={{ 
+              color: '#00A4A6', 
+              border: '2px solid #00A4A6', 
+              borderRadius: '9999px', 
+              padding: '10px 20px', 
+              fontWeight: '800',
+              cursor: 'pointer',
+              textAlign: 'center', 
+              width: '100%', 
+              marginTop: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxSizing: 'border-box'
+            }}
           >
-            <span style={{ color: '#FF9800', marginRight: '6px', fontSize: '18px' }}>+</span> 0 TL'ye Proje Ekle
+            <span style={{ fontSize: '18px', fontWeight: '900' }}>+</span> 0 TL'ye İlan Ver
           </button>
         </div>
       </div>
