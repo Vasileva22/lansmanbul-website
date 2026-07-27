@@ -42,7 +42,17 @@ export default async function handler(req, res) {
         const title = $list(element).find('h3, h2, h4, [class*="title"]').first().text().trim();
         const detailLink = $list(element).find('a[href*="/"]').first().attr('href') || '';
 
-        if (title && detailLink && !detailLink.includes('fiyatlari') && !projectUrls.some(p => p.title === title)) {
+        // Фильтруем системные ссылки, рекламу и другие районы (например, Чанкаю)
+        const isSystemLink = 
+          title.toLowerCase().includes('haberler') ||
+          title.toLowerCase().includes('ara!') ||
+          title.toLowerCase().includes('cankaya') || 
+          title.toLowerCase().includes('konut projeleri') ||
+          detailLink.includes('/haberler') ||
+          detailLink.includes('/blog') ||
+          detailLink.includes('/karsilastir');
+
+        if (title && detailLink && !isSystemLink && !projectUrls.some(p => p.title === title)) {
           projectUrls.push({
             title,
             url: detailLink.startsWith('http') ? detailLink : `${baseUrl}${detailLink}`
@@ -53,7 +63,7 @@ export default async function handler(req, res) {
 
     console.log(`[Parser] Найдено ${projectUrls.length} ссылок для глубокого парсинга.`);
 
-    // ЭТАП 2: Заходим внутрь каждого проекта с помощью классического индексного цикла
+    // ЭТАП 2: Заходим внутрь каждого проекта
     let savedCount = 0;
     const scrapedResult = [];
 
@@ -92,7 +102,7 @@ export default async function handler(req, res) {
         let areaText = '85';
         $detail('td, span, div').each((i, el) => {
           const text = $detail(el).text().trim();
-          if (text.match(/^\d\+\d$/)) roomsText = text; // Находим комнатность вроде "1+1", "2+1"
+          if (text.match(/^\d\+\d$/)) roomsText = text; // Находим комнатность
           if (text.match(/^\d+\s*m²/)) areaText = text.replace(/\D/g, ''); // Находим площадь
         });
 
@@ -148,7 +158,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       success: true, 
-      message: 'Giriş derinliği taranıp tüm veriler başarıyla kaydedildi!', 
+      message: 'Sincan projeleri derinlemesine taranıp kaydedildi!', 
       scraped_projects_count: scrapedResult.length,
       saved_to_db_count: savedCount,
       projects: scrapedResult
