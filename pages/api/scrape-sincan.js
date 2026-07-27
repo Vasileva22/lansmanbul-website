@@ -20,61 +20,63 @@ function detectStatus(text) {
 }
 
 export default async function handler(req, res) {
-  // Разрешаем запускать только методом GET для простоты открытия в браузере
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Sadece GET isteği destekleniyor' });
   }
 
-  console.log("[Parser] Ankara/Sincan projeleri taranıyor...");
-  const targetUrl = 'https://projedefirsat.com/sincan-konut-projeleri-ve-ilanlari';
+  console.log("[Parser] Ankara projeleri taranıyor...");
+  // Главная стабильная страница новостроек Анкары
+  const targetUrl = 'https://www.projedefirsat.com/ankara-konut-projeleri';
 
   try {
     const { data: html } = await axios.get(targetUrl, {
       headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
-        'Referer': 'https://projedefirsat.com/',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'same-origin'
+        'Referer': 'https://www.projedefirsat.com/'
       }
     });
     
     const $ = cheerio.load(html);
     const projects = [];
 
-    // Парсим карточки проектов на странице
-    $('.project-card, .card, div[class*="project"]').each((index, element) => {
-      const title = $(element).find('h3, h4, .title, .project-title').first().text().trim();
-      const description = $(element).find('.desc, .project-desc, p').first().text().trim();
-      
-      if (title) {
-        const detectedStatus = detectStatus(title + " " + description);
+    // Обходим все блочные контейнеры на странице
+    $('div, section').each((index, element) => {
+      const cardText = $(element).text();
 
-        projects.push({
-          testproje: title,
-          konutcesit: detectedStatus,
-          city: "Ankara",
-          "İlçe/Semt": "Sincan",
-          Açıklama: description || "Proje detayları yakında eklenecektir.",
-          Fiyat: "Fiyat Belirtilmemiş", // Заглушка, цену добавит модератор или детальный разбор
-          is_active: true,
-          last_seen_at: new Date().toISOString()
-        });
+      // Отбираем только те карточки, которые содержат упоминание района SİNCAN
+      if (cardText.includes('SİNCAN') || cardText.includes('Sincan')) {
+        // Находим заголовок (обычно это h3, h2 или h4) внутри карточки
+        const title = $(element).find('h3, h2, h4, [class*="title"]').first().text().trim();
+        const description = $(element).find('.desc, [class*="desc"], p').first().text().trim();
+
+        // Проверяем уникальность проекта, чтобы не добавлять одну карточку дважды
+        if (title && !projects.some(p => p.testproje === title)) {
+          const detectedStatus = detectStatus(title + " " + description);
+
+          projects.push({
+            testproje: title,
+            konutcesit: detectedStatus,
+            city: "Ankara",
+            "İlçe/Semt": "Sincan",
+            Açıklama: description || "Proje detayları yakında eklenecektir.",
+            Fiyat: "Fiyat Belirtilmemiş", // Заглушка, цену добавит модератор
+            is_active: true,
+            last_seen_at: new Date().toISOString()
+          });
+        }
       }
     });
 
     if (projects.length === 0) {
       return res.status(200).json({ 
         success: false, 
-        message: 'Sayfada hiç proje bulunamadı, HTML yapısı değişmiş olabilir.' 
+        message: 'Sincan ilçesine ait filtreyle eşleşen aktif proje kartı bulunamadı.' 
       });
     }
 
-    // Сохраняем в Supabase с обновлением по ключу testproje (upsert)
+    // Сохраняем собранные ЖК в Supabase с обновлением по ключу testproje (upsert)
     let addedCount = 0;
     for (const proj of projects) {
       const { error } = await supabase
@@ -90,8 +92,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       success: true, 
-      message: 'Tarama başarıyla tamamlandı!', 
-      processed_projects_count: projects.length,
+      message: 'Sincan projeleri başarıyla taranıp filtrelendi!', 
+      found_sincan_projects_count: projects.length,
       saved_to_db_count: addedCount,
       projects: projects.map(p => ({ isim: p.testproje, durum: p.konutcesit }))
     });
