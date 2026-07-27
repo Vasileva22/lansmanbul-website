@@ -12,7 +12,9 @@
     "react": "latest",
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
-    "nouislider": "latest"
+    "nouislider": "latest",
+    "cheerio": "latest",
+    "axios": "latest"
   },
   "devDependencies": {
     "tailwindcss": "latest",
