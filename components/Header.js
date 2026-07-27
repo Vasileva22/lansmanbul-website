@@ -122,7 +122,7 @@ export default function Header({ setFilters }) {
               className="nav-item btn-reset"
               style={{ color: '#00A4A6', fontWeight: '800', cursor: 'pointer' }}
             >
-              ➕ Proje Ekle
+              <span style={{ color: '#FF9800', marginRight: '4px', fontSize: '16px' }}>+</span> 0 TL'ye Proje Ekle
             </button>
           </nav>
 
@@ -245,13 +245,13 @@ export default function Header({ setFilters }) {
             Hakkımızda
           </Link>
 
-          {/* КНОПКА PROJE EKLE В МОБИЛЬНОМ МЕНЮ */}
+         {/* КНОПКА PROJE EKLE В МОБИЛЬНОМ МЕНЮ */}
           <button 
             onClick={() => { setIsMobileMenuOpen(false); setIsAddProjectOpen(true); }}
             className="mobile-nav-item btn-reset font-extrabold"
             style={{ color: '#00A4A6', textAlign: 'left', width: '100%', marginTop: '12px' }}
           >
-            ➕ Proje Ekle
+            <span style={{ color: '#FF9800', marginRight: '6px', fontSize: '18px' }}>+</span> 0 TL'ye Proje Ekle
           </button>
         </div>
       </div>
