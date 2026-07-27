@@ -1,11 +1,13 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import { createClient } from '@supabase/supabase-js';
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { createClient } = require('@supabase/supabase-js');
 
+// Инициализация безопасного клиента Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Умная функция автоопределения статуса по тексту
 function detectStatus(text) {
   const normText = text.toLowerCase();
   if (normText.includes('lansman') || normText.includes('on talep') || normText.includes('temel')) {
@@ -14,12 +16,12 @@ function detectStatus(text) {
   if (normText.includes('tamamlandi') || normText.includes('teslim edildi') || normText.includes('anahtar teslim') || normText.includes('oturuma hazir')) {
     return 'Tamamlandı';
   }
-  return 'Devam ediyor';
+  return 'Devam ediyor'; // По умолчанию строится
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Sadece GET destekleniyor' });
+    return res.status(405).json({ error: 'Sadece GET isteği destekleniyor' });
   }
 
   const baseUrl = 'https://www.projedefirsat.com';
@@ -155,4 +157,4 @@ export default async function handler(req, res) {
     console.error("Ana sayfa tarama hatası:", error);
     return res.status(500).json({ success: false, error: error.message });
   }
-}v
+}
