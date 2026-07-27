@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase'; // Путь к клиенту Supabase
+import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
@@ -35,6 +35,24 @@ export default function PropertyDetail({ property, error }) {
     }
     
     return [];
+  };
+
+  // Вспомогательная функция сопоставления иконок у удобств
+  const getFeatureIcon = (feat) => {
+    const lower = feat.toLowerCase().trim()
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u');
+    if (lower.includes('havuz')) return '🏊‍♂️';
+    if (lower.includes('fitness') || lower.includes('spor') || lower.includes('salon')) return '🏋️‍♀️';
+    if (lower.includes('guvenlik')) return '🛡️';
+    if (lower.includes('otopark') || lower.includes('park yeri')) return '🚗';
+    if (lower.includes('cocuk') || lower.includes('oyun') || lower.includes('parki')) return '🌳';
+    if (lower.includes('site')) return '🏡';
+    if (lower.includes('asansor')) return '🛗';
+    if (lower.includes('jenerator')) return '⚡';
+    if (lower.includes('yesil') || lower.includes('bahce') || lower.includes('peyzaj')) return '🌳';
+    if (lower.includes('sauna') || lower.includes('hamam')) return '🧖‍♀️';
+    return '✨';
   };
 
   // Состояния для интерактивной галереи и лайтбокса
@@ -151,9 +169,15 @@ export default function PropertyDetail({ property, error }) {
   const distancesRaw = property['Konum Mesafeler'] || property['Konum_Mesafeler'] || '';
   const parsedDistances = distancesRaw
     ? distancesRaw.split(',').map(item => {
-        const parts = item.split(':');
-        if (parts.length === 2) {
+        const trimmedItem = item.trim();
+        if (trimmedItem.includes(':')) {
+          const parts = trimmedItem.split(':');
           return { label: parts[0].trim(), value: parts[1].trim() };
+        }
+        // Если двоеточия нет, делим строку по первой встретившейся цифре времени
+        const match = trimmedItem.match(/^(.*?)\s*(\d+.*)$/);
+        if (match) {
+          return { label: match[1].trim(), value: match[2].trim() };
         }
         return null;
       }).filter(Boolean)
@@ -187,6 +211,22 @@ export default function PropertyDetail({ property, error }) {
       setActivePhotoIndex((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
     }
   };
+
+  // Парсинг и форматирование даты стройки (например, "21.11.2026" -> "Kasım 2026")
+  const rawSantiyeDate = property['Santiye Tarihi'] || property.Santiye_Tarihi || '';
+  const formattedSantiyeDate = (() => {
+    if (!rawSantiyeDate) return '';
+    const parts = String(rawSantiyeDate).split('.');
+    if (parts.length >= 3) {
+      const monthIdx = parseInt(parts[1]) - 1;
+      const year = parts[2].replace(/\D/g, ''); // очищаем от возможных точек на конце
+      const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+      if (monthIdx >= 0 && monthIdx < 12) {
+        return `${months[monthIdx]} ${year}`;
+      }
+    }
+    return rawSantiyeDate;
+  })();
 
   const seoDesc = property.Açıklama 
     ? property.Açıklama.substring(0, 160) 
@@ -224,7 +264,7 @@ export default function PropertyDetail({ property, error }) {
                 </h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
                   <span className="text-[#00A4A6] text-base leading-none">📍</span>
-                  <span class="break-words max-w-full">
+                  <span className="break-words max-w-full">
                     {property['İlçe/Semt'] ? `${property['İlçe/Semt']}, Ankara` : 'Ankara, Türkiye'}
                   </span>
                 </p>
@@ -435,7 +475,7 @@ export default function PropertyDetail({ property, error }) {
                 </div>
               )}
 
-              {/* Описание (ПЕРЕНЕСЕНО ПЕРЕД БЛОКОМ СТРОЙКИ) */}
+              {/* Описание */}
               {property.Açıklama && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Proje Hakkında</h2>
@@ -443,10 +483,11 @@ export default function PropertyDetail({ property, error }) {
                     {property.Açıklama}
                   </div>
                   {featuresList.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-6">
+                    <div className="flex flex-wrap gap-2.5 mt-6">
                       {featuresList.map((feat, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
-                          {feat}
+                        <span key={index} className="bg-slate-100 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-full inline-flex items-center gap-1.5 whitespace-nowrap shadow-sm border border-slate-200/40">
+                          <span>{getFeatureIcon(feat)}</span>
+                          <span>{feat}</span>
                         </span>
                       ))}
                     </div>
@@ -457,17 +498,22 @@ export default function PropertyDetail({ property, error }) {
               {/* Дневник Стройки */}
               {constructionPhotos.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2>Şantiye Günlüğü</h2>
+                  <h2>Şantiye Günlüğü {formattedSantiyeDate ? `(${formattedSantiyeDate})` : ''}</h2>
                   <div className="grid grid-cols-2 gap-3">
                     {constructionPhotos.map((url, index) => (
                       <div 
                         key={index} 
                         onClick={() => openLightbox(constructionPhotos, index)}
-                        className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition" 
+                        className="h-32 bg-cover bg-center rounded-lg cursor-zoom-in hover:opacity-95 transition shadow-sm" 
                         style={{ backgroundImage: `url('${url}')` }}
                       ></div>
                     ))}
                   </div>
+                  {rawSantiyeDate && (
+                    <p className="text-[11px] text-slate-400 mt-3 font-semibold flex items-center gap-1">
+                      📅 Son güncelleme: {rawSantiyeDate}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -482,7 +528,7 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
 
-                {/* Финансовый блок с красивыми оверлей-планировками вместо прочерков */}
+                {/* Финансовый блок */}
                 <div id="block-finance" className="space-y-3 border-t border-b border-gray-100 py-4">
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">İlk Peşinat</span>
@@ -518,7 +564,7 @@ export default function PropertyDetail({ property, error }) {
                   
                   {/* ИСПРАВЛЕННЫЙ БРЕНД СНОСКИ LANSMANBUL */}
                   <p className="text-center text-[10px] text-gray-400 mt-2 leading-relaxed">
-                    Tıklama sayınız <strong class="text-slate-500 font-bold">LansmanBul</strong> güvencesiyle kaydedilmektedir.
+                    Tıklama sayınız <strong className="text-slate-500 font-bold">LansmanBul</strong> güvencesiyle kaydedilmektedir.
                   </p>
                 </div>
               </div>
@@ -619,7 +665,6 @@ export default function PropertyDetail({ property, error }) {
           overflow: visible !important;
         }
 
-        /* Убираем скролл бар у горизонтальной ленты тамбнейлов */
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
