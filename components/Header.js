@@ -9,6 +9,9 @@ export default function Header({ setFilters }) {
   const [isMobileProjectsOpen, setIsMobileProjectsOpen] = useState(false);
   const [isDesktopProjectsOpen, setIsDesktopProjectsOpen] = useState(false);
   
+  // Состояние открытия модального окна "Proje Ekle"
+  const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
+  
   const [favsCount, setFavsCount] = useState(0); // Счетчик избранного
 
   const desktopDropdownRef = useRef(null);
@@ -31,7 +34,7 @@ export default function Header({ setFilters }) {
   }, []);
 
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    if (isMobileMenuOpen || isAddProjectOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -39,7 +42,7 @@ export default function Header({ setFilters }) {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isAddProjectOpen]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -108,9 +111,19 @@ export default function Header({ setFilters }) {
                 </div>
               )}
             </div>
+            
             <Link href="/#about-us-container" className="nav-item new-sapkahakkmzda">
               Hakkımızda
             </Link>
+
+            {/* КНОПКА PROJE EKLE В МЕНЮ */}
+            <button 
+              onClick={() => setIsAddProjectOpen(true)}
+              className="nav-item btn-reset"
+              style={{ color: '#00A4A6', fontWeight: '800', cursor: 'pointer' }}
+            >
+              ➕ Proje Ekle
+            </button>
           </nav>
 
           {/* КОНТАКТЫ И ИКОНКА ИЗБРАННОГО */}
@@ -223,6 +236,7 @@ export default function Header({ setFilters }) {
               </div>
             )}
           </div>
+          
           <Link 
             href="/#about-us-container" 
             className="mobile-nav-item new-sapkahakkmzda"
@@ -230,8 +244,56 @@ export default function Header({ setFilters }) {
           >
             Hakkımızda
           </Link>
+
+          {/* КНОПКА PROJE EKLE В МОБИЛЬНОМ МЕНЮ */}
+          <button 
+            onClick={() => { setIsMobileMenuOpen(false); setIsAddProjectOpen(true); }}
+            className="mobile-nav-item btn-reset font-extrabold"
+            style={{ color: '#00A4A6', textAlign: 'left', width: '100%', marginTop: '12px' }}
+          >
+            ➕ Proje Ekle
+          </button>
         </div>
       </div>
+
+      {/* КРАСИВОЕ МОДАЛЬНОЕ ОКНО "PROJE EKLE" */}
+      {isAddProjectOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" 
+          style={{ zIndex: 9999999 }}
+          onClick={() => setIsAddProjectOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-md w-full p-8 relative shadow-2xl border border-slate-100" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-4 right-4 text-3xl text-slate-400 hover:text-slate-600 transition" 
+              onClick={() => setIsAddProjectOpen(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              &times;
+            </button>
+            
+            <div className="text-center space-y-4">
+              <div className="text-5xl" style={{ marginBottom: '10px' }}>🏢</div>
+              <h3 className="text-2xl font-black text-slate-800" style={{ margin: '0 0 10px 0' }}>Projenizi Lansmanbul'da Yayınlayın</h3>
+              <p className="text-sm text-slate-500 leading-relaxed" style={{ marginBottom: '20px' }}>
+                İnşaat projenizi platformumuzda komisyonsuz ve doğrudan alıcılara ulaştıracak şekilde listelemek için bizimle hemen WhatsApp üzerinden iletişime geçebilirsiniz.
+              </p>
+              <a 
+                href={`https://wa.me/905459418536?text=${encodeURIComponent("Merhaba, yeni inşaat projemizi lansmanbul.com portalına eklemek ve detayları görüşmek istiyoruz.")}`}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="block py-3.5 px-6 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl font-bold transition shadow-md hover:shadow-lg"
+                style={{ textDecoration: 'none', display: 'block', width: '100%', boxSizing: 'border-box' }}
+              >
+                WhatsApp ile İletişime Geç
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .btn-reset {
