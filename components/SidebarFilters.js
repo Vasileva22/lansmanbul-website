@@ -9,11 +9,10 @@ export default function SidebarFilters({
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
   isSidebarHidden,
-  // === НАЧАЛО ВСТАВКИ ===
   isForeigner,
   setIsForeigner,
-  usdRate
-  // === КОНЕЦ ВСТАВКИ ===
+  usdRate,
+  uniqueYears = [] // <--- Принимаем динамические годы
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -58,6 +57,16 @@ export default function SidebarFilters({
     setMinKatInput(filters.katRange[0]);
     setMaxKatInput(filters.katRange[1]);
   }, [filters.katRange]);
+
+  // Обработчик выбора года
+  const handleYearToggle = (year) => {
+    const activeYears = filters.selectedYears || [];
+    const updated = activeYears.includes(year)
+      ? activeYears.filter((y) => y !== year)
+      : [...activeYears, year];
+    
+    setFilters((prev) => ({ ...prev, selectedYears: updated }));
+  };
 
   // Яндекс.Карты (выполняется строго на клиенте)
   useEffect(() => {
@@ -210,7 +219,7 @@ export default function SidebarFilters({
     };
   }, []);
 
-  // Синхронизация ползунков слайдеров с предохранителем от бесконечного цикла
+  // Синхронизация ползунков слайдеров
   useEffect(() => {
     if (areaSliderInst.current) {
       const current = areaSliderInst.current.get().map(Math.round);
@@ -232,7 +241,6 @@ export default function SidebarFilters({
     }
   }, [filters.areaRange, filters.katRange, filters.priceRange]);
 
-  // === НАЧАЛО ВСТАВКИ (Умная фиксация лимита цены для иностранцев) ===
   useEffect(() => {
     if (!priceSliderInst.current) return;
     
@@ -243,13 +251,10 @@ export default function SidebarFilters({
       const isIkamet = filters.activeFeatureFilters.includes('İkamete Uygun');
       
       if (isVatandaslik && isIkamet) {
-        // Если выбраны обе галочки (ВНЖ или Гражданство) — минимальный порог из двух равен ВНЖ ($200k)
         minLimit = Math.round(200000 * usdRate);
       } else if (isVatandaslik && !isIkamet) {
-        // Только Гражданство — $400,000 USD
         minLimit = Math.round(400000 * usdRate);
       } else if (isIkamet && !isVatandaslik) {
-        // Только ВНЖ — $200,000 USD
         minLimit = Math.round(200000 * usdRate);
       }
     }
@@ -261,12 +266,10 @@ export default function SidebarFilters({
       }
     });
 
-   // Динамически сдвигаем левый ползунок точно к новому лимиту в обе стороны (и вверх, и вниз)
     if (isForeigner) {
       setFilters(prev => ({ ...prev, priceRange: [minLimit, prev.priceRange[1]] }));
     }
   }, [isForeigner, usdRate, filters.activeFeatureFilters]);
-  // === КОНЕЦ ВСТАВКИ ===
 
   const handleTagToggle = (tag) => {
     const isSelected = filters.activeFeatureFilters.includes(tag);
@@ -308,8 +311,7 @@ export default function SidebarFilters({
         <div className="luxe-sidebar-scrollable-body">
           <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
 
-        <div className="luxe-sidebar-header flex flex-col items-start w-full">
-            {/* === ЕДИНЫЙ АККУРАТНЫЙ СТИЛЬ ШАПКИ === */}
+          <div className="luxe-sidebar-header flex flex-col items-start w-full">
             <div className="flex flex-col w-full">
               <div className="flex justify-between items-baseline w-full">
                 <span className="text-xl font-black text-slate-700 leading-none">Filtreleme</span>
@@ -334,16 +336,14 @@ export default function SidebarFilters({
                   <span 
                     className="text-[11px] font-bold text-[#00A4A6] hover:text-[#00898B] cursor-pointer transition-colors"
                     onClick={() => {
-                    setIsForeigner(true);
-                    // Оставляем галочки серыми, а цену — свободной (от 0) при первом клике
-                  }}
+                      setIsForeigner(true);
+                    }}
                   >
                     Yabancılar İçin ›
                   </span>
                 )}
               </div>
               
-              {/* Счетчик в обоих режимах теперь пишет просто "Proje Listeleniyor" */}
               <div className="luxe-sidebar-sub-count mt-2">
                 <span className="orange-count">
                   <span>{totalCount}</span> Proje
@@ -355,7 +355,7 @@ export default function SidebarFilters({
               Filtreleri Temizle
             </span>
           </div>
-        {/* === НАЧАЛО ВСТАВКИ (Аккуратные овальные теги) === */}
+
           {isForeigner && (
             <>
               <div className="luxe-divider"></div>
@@ -379,7 +379,6 @@ export default function SidebarFilters({
               </div>
             </>
           )}
-          {/* === КОНЕЦ ВСТАВКИ === */}
 
           <div className="luxe-divider"></div>
 
@@ -391,7 +390,7 @@ export default function SidebarFilters({
                 className="luxe-oval-input" 
                 value={minAreaInput}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, ''); // Разрешаем только цифры
+                  const val = e.target.value.replace(/\D/g, '');
                   setMinAreaInput(val);
                   const num = parseInt(val);
                   if (!isNaN(num)) {
@@ -399,7 +398,6 @@ export default function SidebarFilters({
                   }
                 }}
                 onBlur={() => {
-                  // Если поле оставили пустым при выходе из ячейки — страхуем и ставим 0
                   if (minAreaInput === "" || isNaN(parseInt(minAreaInput))) {
                     setMinAreaInput(0);
                     setFilters((prev) => ({ ...prev, areaRange: [0, prev.areaRange[1]] }));
@@ -420,7 +418,6 @@ export default function SidebarFilters({
                   }
                 }}
                 onBlur={() => {
-                  // Если поле оставили пустым при выходе — страхуем и возвращаем 500
                   if (maxAreaInput === "" || isNaN(parseInt(maxAreaInput))) {
                     setMaxAreaInput(500);
                     setFilters((prev) => ({ ...prev, areaRange: [prev.areaRange[0], 500] }));
@@ -449,7 +446,6 @@ export default function SidebarFilters({
                   }
                 }}
                 onBlur={() => {
-                  // Если поле пустое при выходе — страхуем и ставим 0
                   if (minKatInput === "" || isNaN(parseInt(minKatInput))) {
                     setMinKatInput(0);
                     setFilters((prev) => ({ ...prev, katRange: [0, prev.katRange[1]] }));
@@ -470,7 +466,6 @@ export default function SidebarFilters({
                   }
                 }}
                 onBlur={() => {
-                  // Если поле пустое при выходе — страхуем и возвращаем 40
                   if (maxKatInput === "" || isNaN(parseInt(maxKatInput))) {
                     setMaxKatInput(40);
                     setFilters((prev) => ({ ...prev, katRange: [prev.katRange[0], 40] }));
@@ -529,7 +524,7 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* === НАЧАЛО ВСТАВКИ: Фильтр годов сдачи === */}
+          {/* === НАЧАЛО ВСТАВКИ: Динамический фильтр годов сдачи === */}
           {uniqueYears.length > 0 && (
             <>
               <div className="luxe-group">
