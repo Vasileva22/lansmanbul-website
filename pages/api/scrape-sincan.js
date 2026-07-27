@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   }
 
   console.log("[Parser] Ankara/Sincan projeleri taranıyor...");
-  const targetUrl = 'https://projedefirsat.com/projeler/ankara/sincan';
+  const targetUrl = 'https://projedefirsat.com/sincan-konut-projeleri-ve-ilanlari';
 
   try {
     const { data: html } = await axios.get(targetUrl, {
