@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
+import { supabase } from '../../supabase'; // Путь к клиенту Supabase
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 export default function PropertyDetail({ property, error }) {
   const router = useRouter();
 
-  // Перенесли функцию внутрь компонента — теперь она гарантированно определена
+  // Безопасный парсинг фото
   const parseJsonbPhotos = (value) => {
     if (!value) return [];
     
@@ -37,7 +37,8 @@ export default function PropertyDetail({ property, error }) {
     return [];
   };
 
-  // Инициализируем хуки в самом верху (Правило хуков React)
+  // Состояния для интерактивной галереи и лайтбокса
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
@@ -47,6 +48,7 @@ export default function PropertyDetail({ property, error }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
+  // Карта Яндекса
   useEffect(() => {
     if (typeof window === 'undefined' || !property) return;
     const lat = parseFloat(property.latitude);
@@ -112,17 +114,11 @@ export default function PropertyDetail({ property, error }) {
     );
   }
 
-  // --- ВЫЧИСЛЕНИЯ ПЕРЕМЕННЫХ ---
+  // --- ВЫЧИСЛЕНИЯ ПЕРЕМЕННЫХ ИЗ БАЗЫ ---
   const images = property.property_images || [];
-  
- // 1. Основная галерея проекта
   const galleryPhotos = images.flatMap(img => parseJsonbPhotos(img?.image_url));
-
-  // 2. Чертеж планировки
   const planPhotosList = images.flatMap(img => parseJsonbPhotos(img?.planfoto));
   const planPhoto = planPhotosList.length > 0 ? planPhotosList[0] : null;
-
-  // 3. Фотографии стройки
   const constructionPhotos = images.flatMap(img => parseJsonbPhotos(img?.Construction));
 
   const formatPrice = (val) => {
@@ -142,21 +138,6 @@ export default function PropertyDetail({ property, error }) {
     if (lower.includes('okul') || lower.includes('kolej') || lower.includes('üniversite')) return '🎓';
     if (lower.includes('durak') || lower.includes('otobüs')) return '🚌';
     return '📍';
-  };
-
-  const getFeatureIcon = (feat) => {
-    const lower = feat.toLowerCase().trim();
-    if (lower.includes('havuz')) return '🏊‍♂️ ';
-    if (lower.includes('fitness') || lower.includes('spor') || lower.includes('salon')) return '🏋️‍♀️ ';
-    if (lower.includes('güvenlik') || lower.includes('guvenlik')) return '🛡️ ';
-    if (lower.includes('otopark') || lower.includes('park yeri')) return '🚗 ';
-    if (lower.includes('çocuk') || lower.includes('cocuk') || lower.includes('oyun') || lower.includes('parkı')) return '🛝 ';
-    if (lower.includes('site')) return '🏡 ';
-    if (lower.includes('asansör') || lower.includes('asansor')) return '🛗 ';
-    if (lower.includes('jeneratör') || lower.includes('jenerator')) return '⚡ ';
-    if (lower.includes('yeşil') || lower.includes('bahçe') || lower.includes('peyzaj')) return '🌳 ';
-    if (lower.includes('sauna') || lower.includes('hamam')) return '🧖‍♀️ ';
-    return '✨ ';
   };
 
   const parseFeatures = (featuresVal) => {
@@ -181,7 +162,7 @@ export default function PropertyDetail({ property, error }) {
   const waNum = property.WhatsApp ? String(property.WhatsApp).replace(/\D/g, '') : '905459418536';
   const formattedRoomType = property['card odalar'] || 'daire';
   
-  const mainWaMsg = `Merhaba, lansmanbul.com portalında yer alan ${property.testproje || ''} projenizdeki ${formattedRoomType} daire tipi ile ilgileniyorum. Güncel boş kat listesini og ödeme planını paylaşabilir misiniz?`;
+  const mainWaMsg = `Merhaba, lansmanbul.com portalında yer alan ${property.testproje || ''} projenizdeki ${formattedRoomType} daire tipi ile ilgileniyorum. Güncel boş kat listesini ve ödeme planını paylaşabilir misiniz?`;
   const planWaMsg = `Merhaba, lansmanbul.com portalında yer alan ${property.testproje || ''} projenizin ${formattedRoomType} planı için hangi katların şu an müsait olduğunu öğrenebilir miyim?`;
 
   const waBtnLink = `https://wa.me/${waNum}?text=${encodeURIComponent(mainWaMsg)}`;
@@ -193,6 +174,18 @@ export default function PropertyDetail({ property, error }) {
       photos: photoArray,
       activeIndex: index,
     });
+  };
+
+  const nextPhoto = () => {
+    if (galleryPhotos.length > 1) {
+      setActivePhotoIndex((prev) => (prev + 1) % galleryPhotos.length);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (galleryPhotos.length > 1) {
+      setActivePhotoIndex((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
+    }
   };
 
   const seoDesc = property.Açıklama 
@@ -230,11 +223,8 @@ export default function PropertyDetail({ property, error }) {
                   {property.testproje || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
-                  <svg className="w-4 h-4 text-[#00A4A6] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                  <span className="break-words max-w-full">
+                  <span className="text-[#00A4A6] text-base leading-none">📍</span>
+                  <span class="break-words max-w-full">
                     {property['İlçe/Semt'] ? `${property['İlçe/Semt']}, Ankara` : 'Ankara, Türkiye'}
                   </span>
                 </p>
@@ -246,79 +236,166 @@ export default function PropertyDetail({ property, error }) {
             </div>
           </header>
 
-          {/* СЕТКА ГАЛЕРЕИ (AIRBNB GALLERY) */}
-          <section className="mb-8 overflow-hidden rounded-2xl shadow-sm airbnb-gallery-wrapper">
-            {galleryPhotos.length === 1 && (
-              <div className="gallery-layout-1">
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
-              </div>
-            )}
-            
-            {galleryPhotos.length === 2 && (
-              <div className="gallery-layout-2">
-                {galleryPhotos.map((url, i) => (
-                  <div key={i} className="gallery-item" onClick={() => openLightbox(galleryPhotos, i)} style={{ backgroundImage: `url('${url}')` }}></div>
-                ))}
-              </div>
-            )}
-
-            {galleryPhotos.length === 3 && (
-              <div className="gallery-layout-3">
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
-              </div>
-            )}
-
-            {galleryPhotos.length === 4 && (
-              <div className="gallery-layout-4">
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
-                <div className="gallery-item" onClick={() => openLightbox(galleryPhotos, 3)} style={{ backgroundImage: `url('${galleryPhotos[3]}')` }}></div>
-              </div>
-            )}
-
-            {galleryPhotos.length >= 5 && (
-              <div className="gallery-layout-5">
-                <div className="gallery-item gallery-item-main" onClick={() => openLightbox(galleryPhotos, 0)} style={{ backgroundImage: `url('${galleryPhotos[0]}')` }}></div>
-                <div className="gallery-item gallery-item-top-mid" onClick={() => openLightbox(galleryPhotos, 1)} style={{ backgroundImage: `url('${galleryPhotos[1]}')` }}></div>
-                <div className="gallery-item gallery-item-top-right" onClick={() => openLightbox(galleryPhotos, 2)} style={{ backgroundImage: `url('${galleryPhotos[2]}')` }}></div>
-                <div className="gallery-item gallery-item-bottom-mid" onClick={() => openLightbox(galleryPhotos, 3)} style={{ backgroundImage: `url('${galleryPhotos[3]}')` }}></div>
-                <div className="gallery-item gallery-item-bottom-right" onClick={() => openLightbox(galleryPhotos, 4)} style={{ backgroundImage: `url('${galleryPhotos[4]}')` }}>
-                  {galleryPhotos.length > 5 && (
-                    <div className="gallery-overlay">
-                      <span className="gallery-overlay-text">+{galleryPhotos.length - 4}</span>
-                      <span className="gallery-overlay-subtext">Hepsini Gör</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </section>
-
           {/* КОЛОНКИ КОНТЕНТА */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
             {/* ЛЕВАЯ КОЛОНКА */}
             <div className="lg:col-span-2 space-y-8">
               
-              {/* Описание */}
-              {property.Açıklama && (
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2>Proje Hakkında</h2>
-                  <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words">
-                    {property.Açıklama}
+              {/* СЛАЙДЕР С ТАМБНЕЙЛАМИ */}
+              {galleryPhotos.length > 0 && (
+                <section className="space-y-3">
+                  <div className="relative w-full h-[500px] rounded-2xl overflow-hidden bg-slate-950 group shadow-sm border border-slate-100">
+                    <img 
+                      src={galleryPhotos[activePhotoIndex]} 
+                      className="w-full h-full object-cover cursor-zoom-in" 
+                      alt="Proje Görseli" 
+                      onClick={() => openLightbox(galleryPhotos, activePhotoIndex)}
+                    />
+
+                    {/* Кнопка во весь экран */}
+                    <button 
+                      onClick={() => openLightbox(galleryPhotos, activePhotoIndex)}
+                      className="absolute top-4 right-4 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white p-3 rounded-full transition shadow-md"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
+                      </svg>
+                    </button>
+
+                    {/* Стрелки */}
+                    {galleryPhotos.length > 1 && (
+                      <>
+                        <button onClick={prevPhoto} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg transition opacity-0 group-hover:opacity-100 shadow-md">❮</button>
+                        <button onClick={nextPhoto} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg transition opacity-0 group-hover:opacity-100 shadow-md">❯</button>
+                      </>
+                    )}
+
+                    {/* Плавающие капсулы по центру внизу фото */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg text-xs font-bold text-white whitespace-nowrap">
+                      {planPhoto && (
+                        <button 
+                          onClick={() => openLightbox(planPhotosList, 0)}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-800 hover:bg-slate-700 transition"
+                        >
+                          <span>📋</span>
+                          <span>Plan</span>
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => openLightbox(galleryPhotos, activePhotoIndex)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full hover:bg-slate-800 transition text-slate-300"
+                      >
+                        <span>📷</span>
+                        <span>{galleryPhotos.length} Fotoğraf</span>
+                      </button>
+                    </div>
                   </div>
-                  {featuresList.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-6">
-                      {featuresList.map((feat, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
-                          {getFeatureIcon(feat)}{feat}
-                        </span>
+
+                  {/* Горизонтальная лента миниатюр */}
+                  {galleryPhotos.length > 1 && (
+                    <div className="flex items-center gap-3 overflow-x-auto py-1 px-1 no-scrollbar">
+                      {galleryPhotos.map((url, idx) => (
+                        <div 
+                          key={idx}
+                          onClick={() => setActivePhotoIndex(idx)}
+                          className={`w-20 h-14 rounded-xl overflow-hidden cursor-pointer shrink-0 transition-all ${idx === activePhotoIndex ? 'border-2 border-[#00A4A6] scale-102' : 'border border-transparent opacity-70 hover:opacity-100'}`}
+                        >
+                          <img src={url} className="w-full h-full object-cover" />
+                        </div>
                       ))}
                     </div>
                   )}
+                </section>
+              )}
+
+              {/* ХАРАКТЕРИСТИКИ ЖК С КРАСИВЫМИ ИКОНКАМИ */}
+              <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
+                <h2 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-3 mb-6">Öne Çıkan Özellikler</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">📐</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Toplam Alan</div>
+                      <div className="text-base font-black text-slate-800">{property['card-area'] ? `${property['card-area']} m²` : 'Esnek'}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">🚪</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Oda Sayısı</div>
+                      <div className="text-base font-black text-slate-800">{property['card odalar'] || 'Belirtilmemiş'}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">🪜</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Toplam Kat</div>
+                      <div className="text-base font-black text-slate-800">
+                        {property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi ? `${property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi} Katlı` : 'Belirtilmemiş'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">🔑</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Teslim Yılı</div>
+                      <div className="text-base font-black text-slate-800">{property.Teslim_Yili || property.teslim_yili || '2027'}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">🏢</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Proje Durumu</div>
+                      <div className="text-base font-black text-slate-800">{property.konutcesit || 'Devam Ediyor'}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl text-slate-400 mt-0.5">🖌️</div>
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">İç Dekorasyon</div>
+                      <div className="text-base font-black text-slate-800">{property.Dekorasyon || 'Anahtar Teslim'}</div>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* Kat ve Daire Planları */}
+              {planPhoto && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2>Kat ve Daire Planları</h2>
+                  <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
+                  <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
+                    {property['card odalar'] && (
+                      <span className="bg-[#00A4A6] text-white text-xs font-bold px-3 py-1 rounded mb-4 inline-block">
+                        Örnek {property['card odalar']} Planı {property['card-area'] ? `(${property['card-area']} m²)` : ''}
+                      </span>
+                    )}
+
+                    <div className="max-w-xs md:max-w-sm w-full">
+                      <img 
+                        src={planPhoto} 
+                        alt="Daire Planı" 
+                        onClick={() => openLightbox([planPhoto], 0)}
+                        className="w-full h-auto object-contain max-h-64 rounded-lg mix-blend-multiply cursor-zoom-in hover:opacity-95 transition duration-200" 
+                      />
+                    </div>
+                    
+                    <p className="text-center text-xs text-gray-400 mt-4 max-w-md leading-relaxed border-t border-gray-200/60 pt-3">
+                      Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
+                    </p>
+
+                    <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
+                      Müsait Katları WhatsApp'tan Sor
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -327,8 +404,6 @@ export default function PropertyDetail({ property, error }) {
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Konum ve Mesafeler</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    {/* Карта */}
                     <div className="w-full h-48 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                       {property.latitude && property.longitude ? (
                         <div ref={mapRef} className="w-full h-full" />
@@ -339,7 +414,6 @@ export default function PropertyDetail({ property, error }) {
                       )}
                     </div>
 
-                    {/* Расстояния */}
                     {parsedDistances.length > 0 ? (
                       <div className="space-y-3 justify-center flex flex-col">
                         {parsedDistances.map((item, idx) => (
@@ -361,52 +435,22 @@ export default function PropertyDetail({ property, error }) {
                 </div>
               )}
 
-              {/* Чертеж планировки */}
-              {planPhoto && (
+              {/* Описание (ПЕРЕНЕСЕНО ПЕРЕД БЛОКОМ СТРОЙКИ) */}
+              {property.Açıklama && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2>Kat ve Daire Planları</h2>
-                  <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
-                  <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
-                    
-                    {property['card odalar'] && (
-                      <span className="bg-[#00A4A6] text-white text-xs font-bold px-3 py-1 rounded mb-4 inline-block">
-                        Örnek {property['card odalar']} Planı {property['card-area'] ? `(${property['card-area']} m²)` : ''}
-                      </span>
-                    )}
-
-                    <div className="max-w-xs md:max-w-sm w-full">
-                      <img 
-                        src={planPhoto} 
-                        alt="Daire Planı" 
-                        onClick={() => openLightbox([planPhoto], 0)}
-                        className="w-full h-auto object-contain max-h-64 rounded-lg mix-blend-multiply cursor-zoom-in hover:opacity-95 transition duration-200" 
-                      />
-                    </div>
-                    
-                    {/* Баджи этажей */}
-                    <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
-                        🟢 Farklı Kat Seçenekleri Mevcut
-                      </span>
-                      
-                      {(property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi) && (
-                        <span className="bg-gray-100 text-gray-600 border border-gray-200 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
-                          🏢 {property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi} Katlı
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-center text-xs text-gray-400 mt-4 max-w-md leading-relaxed border-t border-gray-200/60 pt-3">
-                      Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
-                    </p>
-
-                    <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
-                     <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
-                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
-                      </svg>
-                      Müsait Katları WhatsApp'tan Sor
-                    </a>
+                  <h2>Proje Hakkında</h2>
+                  <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words text-sm md:text-base">
+                    {property.Açıklama}
                   </div>
+                  {featuresList.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-6">
+                      {featuresList.map((feat, index) => (
+                        <span key={index} className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full inline-block whitespace-nowrap">
+                          {feat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -428,9 +472,9 @@ export default function PropertyDetail({ property, error }) {
               )}
             </div>
 
-           {/* ПРАВАЯ СТИКИ-КОЛОНКА */}
+            {/* ПРАВАЯ СТИКИ-КОЛОНКА (САЙДБАР) */}
             <div className="lg:col-span-1 luxe-sticky-sidebar">
-              <div className="bg-white p-6 rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.07)] space-y-6">
+              <div className="bg-white p-6 rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.06)] border border-slate-100 space-y-6">
                 <div>
                   <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
                   <div className="text-3xl font-black text-[#00A4A6] mt-1">
@@ -438,18 +482,18 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
 
-                {/* Финансовый блок */}
-                <div id="block-finance" className="space-y-3">
+                {/* Финансовый блок с красивыми оверлей-планировками вместо прочерков */}
+                <div id="block-finance" className="space-y-3 border-t border-b border-gray-100 py-4">
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">İlk Peşinat</span>
-                    <span className="text-gray-900 font-bold text-right shrink-0 whitespace-nowrap">
-                      {property.Ilk_Pesinat || property.pesinat || '-'}
+                    <span className="text-slate-900 font-bold">
+                      {property.Ilk_Pesinat || property.pesinat || 'Esnek Plan'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">Vade Seçeneği</span>
-                    <span className="text-gray-900 font-bold text-right shrink-0 whitespace-nowrap">
-                      {property.Vade_Secenegi || property.vade || '-'}
+                    <span className="text-slate-900 font-bold">
+                      {property.Vade_Secenegi || property.vade || 'Kişiye Özel'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm items-center">
@@ -466,16 +510,15 @@ export default function PropertyDetail({ property, error }) {
 
                 <div className="space-y-2">
                   <a id="whatsapp-btn" href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
-                   <svg className="w-6 h-6 shrink-0 fill-current text-white" viewBox="0 0 24 24" style={{ width: '24px', height: '24px' }}>
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.067.001 5.95 1.196 8.114 3.363 2.164 2.167 3.357 5.053 3.355 8.12-.003 6.325-5.157 11.48-11.485 11.48-1.999-.001-3.968-.521-5.71-1.513L0 24zm6.59-4.846c1.642.975 3.251 1.489 4.84 1.49 4.996 0 9.06-4.061 9.062-9.058 0-2.42-1.014-4.701-2.731-6.418C16.035 3.45 13.84 2.502 11.487 2.502 6.49 2.502 2.428 6.564 2.426 11.56c-.001 1.638.484 3.235 1.401 4.7l-.955 3.486 3.575-.937z"></path>
-                    </svg>
                     <span className="flex flex-col text-center leading-tight tracking-wider uppercase font-black">
                       <span className="text-xs text-white">Doğrudan Müteahhitten</span>
                       <span className="font-bold opacity-90 text-[10px] mt-0.5 text-white">Bilgi Al</span>
                     </span>
                   </a>
-                  <p className="text-center text-xs text-gray-400 mt-2">
-                    Tıklama sayınız KonutBudur güvencesiyle kaydedilmektedir.
+                  
+                  {/* ИСПРАВЛЕННЫЙ БРЕНД СНОСКИ LANSMANBUL */}
+                  <p className="text-center text-[10px] text-gray-400 mt-2 leading-relaxed">
+                    Tıklama sayınız <strong class="text-slate-500 font-bold">LansmanBul</strong> güvencesiyle kaydedilmektedir.
                   </p>
                 </div>
               </div>
@@ -537,14 +580,12 @@ export default function PropertyDetail({ property, error }) {
 
       <Footer setFilters={() => {}} />
 
-      {/* ИЗОЛИРОВАННЫЙ БЛОК ЛОКАЛЬНЫХ СТИЛЕЙ СТРАНИЦЫ */}
+      {/* ЛОКАЛЬНЫЕ ИЗОЛИРОВАННЫЕ СТИЛИ СТРАНИЦЫ */}
       <style jsx global>{`
-        /* Изоляция шрифта Mulish */
         .projeland-card-container {
           font-family: 'Mulish', sans-serif !important;
         }
 
-        /* Защита и оформление заголовков блоков */
         .projeland-card-container h2 {
           border-bottom: 1px solid #E5E7EB !important;
           padding-bottom: 8px !important;
@@ -554,7 +595,6 @@ export default function PropertyDetail({ property, error }) {
           color: #111827 !important;
         }
 
-        /* Кнопка возврата в каталог */
         #back-button {
           color: #64748B !important;
           font-weight: 700 !important;
@@ -568,116 +608,26 @@ export default function PropertyDetail({ property, error }) {
         #back-button:hover {
           color: #111827 !important;
         }
-        /* Обеспечиваем работу липкого (sticky) сайдбара при прокрутке */
+        
         .luxe-sticky-sidebar {
           position: sticky !important;
-          top: 130px !important; /* Расстояние от верха экрана при прокрутке */
+          top: 130px !important;
           z-index: 20 !important;
         }
 
-        /* Защита от блокировки sticky-эффекта родительскими правилами overflow */
         html, body, .projeland-card-container {
           overflow: visible !important;
         }
 
-        /* Жесткий каркас галереи */
-        .airbnb-gallery-wrapper {
-          width: 100% !important;
-          height: 500px !important;
-          box-sizing: border-box !important;
+        /* Убираем скролл бар у горизонтальной ленты тамбнейлов */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
 
-        .gallery-item {
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          width: 100%;
-          height: 100%;
-          cursor: pointer;
-          transition: filter 0.25s ease;
-        }
-        .gallery-item:hover { filter: brightness(0.9); }
-
-        .gallery-layout-1 { display: block; width: 100%; height: 100%; }
-        .gallery-layout-1 .gallery-item { border-radius: 16px !important; }
-
-        .gallery-layout-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-2 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
-        .gallery-layout-2 .gallery-item:nth-child(2) { border-radius: 0 16px 16px 0 !important; }
-
-        .gallery-layout-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-3 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
-        .gallery-layout-3 .gallery-item:nth-child(2) { border-radius: 0px !important; }
-        .gallery-layout-3 .gallery-item:nth-child(3) { border-radius: 0 16px 16px 0 !important; }
-
-        .gallery-layout-4 { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; gap: 12px; width: 100%; height: 100%; }
-        .gallery-layout-4 .gallery-item:nth-child(1) { border-radius: 16px 0 0 16px !important; }
-        .gallery-layout-4 .gallery-item:nth-child(2), .gallery-layout-4 .gallery-item:nth-child(3) { border-radius: 0px !important; }
-        .gallery-layout-4 .gallery-item:nth-child(4) { border-radius: 0 16px 16px 0 !important; }
-
-        .gallery-layout-5 {
-          display: grid !important;
-          grid-template-columns: 2fr 1fr 1fr !important;
-          grid-template-rows: 1fr 1fr !important;
-          gap: 12px !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        .gallery-layout-5 .gallery-item-main { grid-row: span 2; border-radius: 16px 0 0 16px !important; }
-        .gallery-layout-5 .gallery-item-top-mid, .gallery-layout-5 .gallery-item-bottom-mid { border-radius: 0px !important; }
-        .gallery-layout-5 .gallery-item-top-right { border-radius: 0 16px 0 0 !important; }
-        .gallery-layout-5 .gallery-item-bottom-right { border-radius: 0 0 16px 0 !important; position: relative; }
-
-        /* Оверлей "+" на последнем фото */
-        .gallery-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5) !important;
-          color: #ffffff !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: center !important;
-          align-items: center !important;
-          transition: background 0.25s ease !important;
-          border-radius: 0 0 16px 0 !important;
-          text-align: center !important;
-          box-sizing: border-box !important;
-          user-select: none;
-        }
-        .gallery-overlay:hover {
-          background: rgba(0, 0, 0, 0.65) !important;
-        }
-        .gallery-overlay-text {
-          font-size: 1.5rem !important;
-          font-weight: 800 !important;
-          color: #ffffff !important;
-          line-height: 1 !important;
-        }
-        .gallery-overlay-subtext {
-          font-size: 0.75rem !important;
-          font-weight: 700 !important;
-          color: rgba(255, 255, 255, 0.9) !important;
-          margin-top: 6px !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.05em !important;
-          background-color: rgba(255, 255, 255, 0.15) !important;
-          padding: 4px 10px !important;
-          border-radius: 9999px !important;
-          display: inline-block !important;
-        }
-
-        /* Принудительные линии финансового блока в сайдбаре */
-        #block-finance {
-          border-top: 1px solid #E5E7EB !important;
-          border-bottom: 1px solid #E5E7EB !important;
-          padding-top: 16px !important;
-          padding-bottom: 16px !important;
-        }
-
-        /* Кнопки обратной связи (WhatsApp и планы) */
         #whatsapp-btn {
           background-color: #00A4A6 !important;
           border: 2px solid #00A4A6 !important;
@@ -688,9 +638,6 @@ export default function PropertyDetail({ property, error }) {
           background-color: #00898B !important;
           border-color: #00898B !important;
           color: #ffffff !important;
-        }
-        #whatsapp-btn svg {
-          fill: #ffffff !important;
         }
 
         #whatsapp-plan-btn {
@@ -704,12 +651,7 @@ export default function PropertyDetail({ property, error }) {
           border-color: #00898B !important;
           color: #ffffff !important;
         }
-        #whatsapp-plan-btn span, #whatsapp-plan-btn svg {
-          color: #ffffff !important;
-          fill: #ffffff !important;
-        }
 
-        /* Лайтбокс */
         .active-lightbox {
           display: flex !important;
           position: fixed;
@@ -722,52 +664,6 @@ export default function PropertyDetail({ property, error }) {
           justify-content: center;
           align-items: center;
           user-select: none;
-        }
-
-        /* Мобильная адаптивность для кнопки "Tüm Fotoğraflar" */
-        @media (max-width: 768px) {
-          .airbnb-gallery-wrapper {
-            position: relative !important;
-            height: 250px !important;
-          }
-          .gallery-layout-2, .gallery-layout-3, .gallery-layout-4, .gallery-layout-5 {
-            display: block !important;
-          }
-          .gallery-layout-2 .gallery-item:not(:first-child),
-          .gallery-layout-3 .gallery-item:not(:first-child),
-          .gallery-layout-4 .gallery-item:not(:first-child),
-          .gallery-layout-5 .gallery-item:not(.gallery-item-main) {
-            display: none !important;
-          }
-          .gallery-layout-2 .gallery-item:first-child,
-          .gallery-layout-3 .gallery-item:first-child,
-          .gallery-layout-4 .gallery-item:first-child,
-          .gallery-layout-5 .gallery-item-main {
-            border-radius: 16px !important;
-          }
-
-          .gallery-layout-2::after, 
-          .gallery-layout-3::after, 
-          .gallery-layout-4::after, 
-          .gallery-layout-5::after {
-            content: "📷 Tüm Fotoğraflar" !important;
-            position: absolute !important;
-            bottom: 15px !important;
-            right: 15px !important;
-            background-color: rgba(30, 41, 59, 0.8) !important;
-            color: #ffffff !important;
-            font-size: 11px !important;
-            font-weight: 800 !important;
-            padding: 6px 14px !important;
-            border-radius: 20px !important;
-            backdrop-filter: blur(4px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            z-index: 10 !important;
-            pointer-events: none !important;
-            letter-spacing: 0.05em !important;
-            text-transform: uppercase !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-          }
         }
       `}</style>
     </>
