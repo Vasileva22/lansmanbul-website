@@ -76,6 +76,7 @@ export default function Home({ initialProperties }) {
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
+    selectedYears: [], // <--- Добавлено
     areaRange: [0, 500],
     katRange: [0, 40],
     priceRange: [0, 50000000],
@@ -223,10 +224,25 @@ export default function Home({ initialProperties }) {
   const uniqueStatuses = useMemo(() => {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
+  const uniqueYears = useMemo(() => {
+    const years = masterProperties
+      .map((p) => {
+        const yr = p.Teslim_Yili || p.teslim_yili;
+        return yr ? String(yr).trim() : null;
+      })
+      .filter(Boolean);
+    return [...new Set(years)].sort((a, b) => parseInt(a) - parseInt(b));
+  }, [masterProperties]);
 
   // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
+     if (
+        filters.selectedYears && filters.selectedYears.length > 0 &&
+        !filters.selectedYears.includes(String(property.Teslim_Yili || '').trim())
+      ) {
+        return false;
+      }
       if (
         filters.selectedLocations.length > 0 &&
         !filters.selectedLocations.includes(property['İlçe/Semt'])
@@ -351,6 +367,7 @@ export default function Home({ initialProperties }) {
       selectedLocations: [],
       selectedRooms: [],
       selectedStatuses: [],
+      selectedYears: [], // <--- Добавлено
       areaRange: [0, 500],
       katRange: [0, 40],
       priceRange: [0, 50000000],
@@ -408,6 +425,7 @@ export default function Home({ initialProperties }) {
           isForeigner={isForeigner}
           setIsForeigner={setIsForeigner}
           usdRate={usdRate}
+            uniqueYears={uniqueYears}
           // === КОНЕЦ ВСТАВКИ ===
         />
 
