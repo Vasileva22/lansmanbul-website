@@ -72,16 +72,17 @@ export default function Home({ initialProperties }) {
     activeIndex: 0,
   });
 
-  const [filters, setFilters] = useState({
+ const [filters, setFilters] = useState({
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
-    selectedYears: [], // <--- Добавлено
+    selectedYears: [],
     areaRange: [0, 500],
     katRange: [0, 40],
     priceRange: [0, 50000000],
     activeFeatureFilters: [],
     activePaymentFilters: [],
+    listingType: 'all', // <--- НОВОЕ: Переключатель типов (all | project | apartment)
   });
 
   // Запрос курса Центробанка один раз при загрузке страницы
@@ -231,9 +232,18 @@ export default function Home({ initialProperties }) {
     return [...new Set(years)].sort((a, b) => parseInt(a) - parseInt(b));
   }, [masterProperties]);
 
-  // Логика фильтрации
+// Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
+      // === НОВОЕ: Фильтрация по типу объекта (Проект / Квартира) ===
+      if (filters.listingType === 'project' && property.is_project !== true) {
+        return false;
+      }
+      if (filters.listingType === 'apartment' && property.is_project === true) {
+        return false;
+      }
+      // =============================================================
+
       if (
         filters.selectedLocations.length > 0 &&
         !filters.selectedLocations.includes(property['İlçe/Semt'])
@@ -352,17 +362,18 @@ export default function Home({ initialProperties }) {
     return filteredProperties.slice(startIdx, startIdx + itemsPerPage);
   }, [filteredProperties, currentPage, itemsPerPage]);
 
-  const handleClearFilters = () => {
+ const handleClearFilters = () => {
     setFilters({
       selectedLocations: [],
       selectedRooms: [],
       selectedStatuses: [],
-      selectedYears: [], // <--- Сброс
+      selectedYears: [],
       areaRange: [0, 500],
       katRange: [0, 40],
       priceRange: [0, 50000000],
       activeFeatureFilters: [],
       activePaymentFilters: [],
+      listingType: 'all', // <--- НОВОЕ: Сброс типа объявлений
     });
     router.push('/', undefined, { shallow: true });
   };
@@ -457,12 +468,13 @@ export default function Home({ initialProperties }) {
           </div>
 
           {paginatedProperties.length > 0 ? (
-            <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
+           <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
               {paginatedProperties.map((property) => (
                 <PropertyCard 
                   key={property.id} 
                   property={property} 
                   onImageClick={handleOpenLightbox}
+                  selectedRooms={filters.selectedRooms} // <--- НОВОЕ: Передаем активный фильтр комнат
                 />
               ))}
             </div>
