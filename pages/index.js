@@ -217,6 +217,18 @@ export default function Home({ initialProperties }) {
     return [...new Set(rooms)].sort();
   }, [masterProperties]);
 
+  // === НОВОЕ: Автоматически собираем только существующие удобства из базы ===
+  const uniqueFeatures = useMemo(() => {
+    const allFeats = masterProperties.flatMap((p) => {
+      if (!p.Özellikler) return [];
+      if (Array.isArray(p.Özellikler)) return p.Özellikler;
+      return String(p.Özellikler).split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+    });
+    // Приводим к красивому регистру (первая буква заглавная) и убираем дубликаты
+    const capitalized = allFeats.map(f => f.charAt(0).toUpperCase() + f.slice(1));
+    return [...new Set(capitalized)].sort();
+  }, [masterProperties]);
+
   const uniqueStatuses = useMemo(() => {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
@@ -413,7 +425,7 @@ export default function Home({ initialProperties }) {
       />
 
       <section id="custom-catalog-search">
-        <SidebarFilters 
+       <SidebarFilters 
           filteredProperties={filteredProperties}
           totalCount={filteredProperties.length}
           filters={filters}
@@ -425,7 +437,8 @@ export default function Home({ initialProperties }) {
           isForeigner={isForeigner}
           setIsForeigner={setIsForeigner}
           usdRate={usdRate}
-          uniqueYears={uniqueYears} // <--- Передано вниз
+          uniqueYears={uniqueYears}
+          uniqueFeatures={uniqueFeatures} // <--- НОВОЕ: передаем живой список удобств
         />
 
         <button 
