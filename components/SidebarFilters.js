@@ -350,8 +350,46 @@ export default function SidebarFilters({
                 </span> Listeleniyor
               </div>
             </div>
+
+            {/* === НОВОЕ: Переключатель типа объявлений (Tüm | Projeler | Tek Daireler) === */}
+            <div className="flex w-full bg-slate-100 p-1 rounded-xl mt-3.5 mb-2 border border-slate-200/60 select-none">
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, listingType: 'all' }))}
+                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
+                  (filters.listingType || 'all') === 'all'
+                    ? 'bg-white text-[#00A4A6] shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                style={{ border: 'none', cursor: 'pointer' }}
+              >
+                Tüm İlanlar
+              </button>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, listingType: 'project' }))}
+                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
+                  filters.listingType === 'project'
+                    ? 'bg-white text-[#00A4A6] shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                style={{ border: 'none', cursor: 'pointer' }}
+              >
+                Projeler
+              </button>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, listingType: 'apartment' }))}
+                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
+                  filters.listingType === 'apartment'
+                    ? 'bg-white text-[#00A4A6] shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                style={{ border: 'none', cursor: 'pointer' }}
+              >
+                Tek Daireler
+              </button>
+            </div>
+            {/* ========================================================================= */}
             
-            <span className="clear-filters-btn clear-link mr-auto mt-2.5" onClick={onClearFilters}>
+            <span className="clear-filters-btn clear-link mr-auto mt-2" onClick={onClearFilters}>
               Filtreleri Temizle
             </span>
           </div>
