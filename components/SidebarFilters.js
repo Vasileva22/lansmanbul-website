@@ -12,7 +12,8 @@ export default function SidebarFilters({
   isForeigner,
   setIsForeigner,
   usdRate,
-  uniqueYears = [] // <--- Принимаем динамические годы
+  uniqueYears = [],
+  uniqueFeatures = [] // <--- НОВОЕ: принимаем живой список удобств
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -605,30 +606,48 @@ export default function SidebarFilters({
           )}
           {/* === КОНЕЦ ВСТАВКИ === */}
 
-          <div className="luxe-group">
+         <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Olanaklar</span>
             <div className={'luxe-tags ' + (isTagsExpanded ? 'expanded' : '')}>
-              {[
-                { label: 'Havuz', value: 'Havuz', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" /></svg> },
-                { label: 'Fitness', value: 'Fitness', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
-                { label: 'Güvenlik', value: 'Güvenlik', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" /></svg> },
-                { label: 'Otopark', value: 'Otopark', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" /></svg> },
-                { label: 'Çocuk Parkı', value: 'Çocuk parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> },
-                { label: 'Site İçerisinde', value: 'Site İçerisinde', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2V7h2v2zm-5 0H8V7h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2zm5 5h-2v-2h2v2zm-5 0H8v-2h2v2z" /></svg> },
-                { label: 'Spor Salonu', value: 'Spor Salonu', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg> },
-                { label: 'Sauna', value: 'Sauna', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
-                { label: 'Hamam', value: 'Hamam', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg> },
-                { label: 'Oyun Parkı', value: 'Oyun Parkı', svg: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2zm9 7h-6v13h-2v-6h-2v-6H9V9H3V7h18v2z" /></svg> }
-              ].map((tag) => (
-                <div 
-                  key={tag.value} 
-                  className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(tag.value) ? 'active' : '')}
-                  onClick={() => handleTagToggle(tag.value)}
-                >
-                  {tag.svg}
-                  <label style={{ cursor: 'pointer', margin: 0 }}>{tag.label}</label>
-                </div>
-              ))}
+              {uniqueFeatures.map((feat) => {
+                // Иконки-заглушки для известных удобств
+                const iconMap = {
+                  havuz: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" /></svg>,
+                  fitness: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg>,
+                  otopark: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" /></svg>,
+                  güvenlik: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" /></svg>
+                };
+
+                // Функция поиска иконки по совпадению текста
+                const getOlanakIcon = (item) => {
+                  const norm = item.toLowerCase()
+                    .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c')
+                    .replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u').trim();
+                  
+                  if (norm.includes('havuz')) return iconMap.havuz;
+                  if (norm.includes('fitness') || norm.includes('spor') || norm.includes('salon')) return iconMap.fitness;
+                  if (norm.includes('otopark') || norm.includes('park yeri')) return iconMap.otopark;
+                  if (norm.includes('guvenlik')) return iconMap.güvenlik;
+                  
+                  // Универсальная иконка-галочка для всех остальных динамических удобств
+                  return (
+                    <svg className="card-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12, marginRight: 5 }}>
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  );
+                };
+
+                return (
+                  <div 
+                    key={feat} 
+                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(feat) ? 'active' : '')}
+                    onClick={() => handleTagToggle(feat)}
+                  >
+                    {getOlanakIcon(feat)}
+                    <label style={{ cursor: 'pointer', margin: 0 }}>{feat}</label>
+                  </div>
+                );
+              })}
             </div>
             <span 
               className="luxe-more-filters-link" 
