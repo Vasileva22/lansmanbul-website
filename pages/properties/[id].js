@@ -56,12 +56,23 @@ export default function PropertyDetail({ property, error }) {
   };
 
   // Состояния для интерактивной галереи и лайтбокса
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+ const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
     photos: [],
     activeIndex: 0,
   });
+
+  // === НОВОЕ: Получаем активную планировку из URL для авто-раскрытия ===
+  const { room: queryRoom } = router.query;
+  const [activeAccordion, setActiveAccordion] = useState('');
+
+  useEffect(() => {
+    if (queryRoom) {
+      setActiveAccordion(String(queryRoom).trim());
+    }
+  }, [queryRoom]);
+  // ===================================================================
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -132,12 +143,27 @@ export default function PropertyDetail({ property, error }) {
     );
   }
 
-  // --- ВЫЧИСЛЕНИЯ ПЕРЕМЕННЫХ ИЗ БАЗЫ ---
+ // --- ВЫЧИСЛЕНИЯ ПЕРЕМЕННЫХ ИЗ БАЗЫ ---
   const images = property.property_images || [];
   const galleryPhotos = images.flatMap(img => parseJsonbPhotos(img?.image_url));
   const planPhotosList = images.flatMap(img => parseJsonbPhotos(img?.planfoto));
   const planPhoto = planPhotosList.length > 0 ? planPhotosList[0] : null;
   const constructionPhotos = images.flatMap(img => parseJsonbPhotos(img?.Construction));
+
+  // === НОВОЕ: Чтение JSON планировок из базы ===
+  const layouts = (() => {
+    if (!property?.layouts) return [];
+    if (Array.isArray(property.layouts)) return property.layouts;
+    if (typeof property.layouts === 'string') {
+      try {
+        return JSON.parse(property.layouts);
+      } catch (e) {
+        console.error("Layouts parsing error inside Detail page:", e);
+      }
+    }
+    return [];
+  })();
+  // ============================================
 
   const formatPrice = (val) => {
     if (!val) return 'Fiyat Belirtilmemiş';
@@ -407,8 +433,95 @@ export default function PropertyDetail({ property, error }) {
                 </div>
               </section>
 
-              {/* Kat ve Daire Planları */}
-              {planPhoto && (
+             {/* === НОВОЕ: Динамический Блок Планировок (Аккордеон) для ЖК === */}
+              {property.is_project && layouts.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <h2 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-3 mb-4">Kullanılabilir Daire Tipleri</h2>
+                  <p className="text-sm text-slate-500 mb-5">Projede sunulan tüm daire seçenekleri и планировки:</p>
+                  
+                  <div className="space-y-3">
+                    {layouts.map((layout, idx) => {
+                      const isExpanded = activeAccordion === String(layout.rooms).trim();
+                      const isSold = layout.status === 'sold';
+                      const planImage = layout.plan_image;
+
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`border rounded-xl transition-all ${
+                            isExpanded 
+                              ? 'border-[#00A4A6] bg-slate-50/50 shadow-sm' 
+                              : 'border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          {/* Заголовок вкладки */}
+                          <div 
+                            onClick={() => !isSold && setActiveAccordion(isExpanded ? '' : String(layout.rooms).trim())}
+                            className={`p-4 flex items-center justify-between select-none ${isSold ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-base font-extrabold text-slate-800">{layout.rooms}</span>
+                              <span className="text-xs text-slate-400 font-semibold">• {layout.area} m²'den</span>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              <span className={`text-sm font-black ${isSold ? 'text-red-500' : 'text-[#00A4A6]'}`}>
+                                {isSold ? 'Satıldı' : formatPrice(layout.price, true)}
+                              </span>
+                              {!isSold && (
+                                <svg 
+                                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#00A4A6]' : ''}`} 
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"
+                                >
+                                  <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Контент вкладки (Схема планировки Kat Planı) */}
+                          {isExpanded && !isSold && (
+                            <div className="p-4 border-t border-dashed border-slate-200 bg-white rounded-b-xl flex flex-col md:flex-row gap-6 items-center">
+                              {planImage ? (
+                                <div className="max-w-[180px] shrink-0">
+                                  <img 
+                                    src={planImage} 
+                                    alt={`${layout.rooms} Planı`}
+                                    onClick={() => openLightbox([planImage], 0)}
+                                    className="w-full h-auto max-h-40 object-contain rounded-lg cursor-zoom-in mix-blend-multiply"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-32 h-24 bg-slate-50 border border-dashed rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                  Plan Görseli Yok
+                                </div>
+                              )}
+                              
+                              <div className="flex-1 space-y-3">
+                                <h4 className="text-sm font-extrabold text-slate-800">{layout.rooms} Daire Plan Detayları</h4>
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                  Bu daire tipi {layout.area} m² kullanım alanına sahiptir. Fiyatlar {formatPrice(layout.price, true)} başlamaktadır. Güncel boş kat listesi için doğrudan müteahhit ile WhatsApp üzerinden iletişime geçebilirsiniz.
+                                </p>
+                                <a 
+                                  href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Merhaba, ${property.testproje || ''} projesindeki ${layout.rooms} tipi daireler hakkında detaylı bilgi alabilir miyim?`)}`}
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] text-white text-xs font-bold rounded-lg hover:bg-[#20ba5a] transition text-decoration-none uppercase tracking-wider shadow-sm"
+                                >
+                                  WhatsApp'tan Kat Sor
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Kat ve Daire Planları (Отображается только для одиночных готовых квартир Tek Daireler) */}
+              {!property.is_project && planPhoto && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Kat ve Daire Planları</h2>
                   <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
