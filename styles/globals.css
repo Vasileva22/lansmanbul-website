@@ -2495,3 +2495,39 @@ body, html, .modern-header, .modern-header * {
     height: 290px !important;
   }
 }
+/* ==========================================================================
+   КОМПАКТИЗАЦИЯ И ИСПРАВЛЕНИЕ ВЫСОТЫ КАРТОЧЕК В СЕТКЕ (LansmanBul)
+   ========================================================================== */
+
+/* 1. Исправляем сжатие фотографии (картинка в сетке всегда будет ровной и красивой) */
+.grid-layout .custom-card .img-container {
+  height: 200px !important;    /* Фиксированная аккуратная высота фото */
+  flex-shrink: 0 !important;   /* Запрещаем флексбоксу сдавливать картинку! */
+}
+
+/* 2. Сжимаем внутренние паддинги карточки, убирая лишний воздух */
+.grid-layout .custom-card .card-content {
+  padding: 16px !important;    /* Уменьшаем внутренний отступ с 20px до 16px */
+  gap: 6px !important;         /* Уменьшаем расстояние между элементами */
+}
+
+/* 3. Делаем список планировок ультра-компактным */
+.mini-layouts-container {
+  margin-top: 8px !important;
+  border-top: 1px dashed #CBD5E1 !important;
+  padding-top: 8px !important;
+  gap: 4px !important;         /* Минимальный зазор между строчками */
+}
+
+.layout-row {
+  padding: 4px 10px !important; /* Компактные тонкие строчки */
+  font-size: 11.5px !important; /* Аккуратный читаемый шрифт поменьше */
+  border-radius: 6px !important;
+}
+
+/* Уменьшаем отступы у характеристик */
+.grid-layout .custom-card .features-row {
+  margin-top: 4px !important;
+  margin-bottom: 2px !important;
+  padding-top: 8px !important;
+}
