@@ -2417,3 +2417,81 @@ body, html, .modern-header, .modern-header * {
         display: flex !important;
     }
 }
+/* ==========================================================================
+   ВАША ИДЕЯ: Стильные построчные планировки в карточках ЖК (LansmanBul)
+   ========================================================================== */
+.mini-layouts-container {
+  margin-top: 15px;
+  border-top: 1px dashed #CBD5E1;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.layout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  padding: 6px 12px;
+  background-color: #F8FAFC;
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.layout-row.sold {
+  opacity: 0.55;
+}
+
+.layout-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layout-rooms {
+  color: #1E293B;
+  font-weight: 800;
+}
+
+.layout-area {
+  color: #64748B;
+  font-size: 11px;
+}
+
+.layout-price {
+  color: #00A4A6;
+  font-weight: 800;
+}
+
+.layout-row.sold .layout-price {
+  color: #EF4444;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+}
+
+/* ИСПРАВЛЕННЫЙ СПИСОК (Растянутые аккуратные полосы планировок) */
+.list-layout .mini-layouts-container {
+  width: 100%;
+  gap: 6px;
+  flex-direction: column; /* Строго вертикально, как в сетке */
+}
+
+.list-layout .layout-row {
+  width: 100%;
+  padding: 8px 16px; /* Просторные отступы для широкого экрана */
+}
+
+/* Слегка увеличиваем высоту карточки в списке, чтобы все полосы планировок вошли идеально */
+@media (min-width: 1025px) {
+  .list-layout .custom-card {
+    height: 290px !important;
+  }
+}
