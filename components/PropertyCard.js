@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function PropertyCard({ property, onImageClick, selectedRooms = [] }) {
-  // 1. Функция парсинга картинок
+  // 1. Функция безопасного парсинга картинок
   const parseJsonbPhotos = (value) => {
     if (!value) return [];
     
@@ -83,7 +83,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
     }
   };
 
-  // === НОВОЕ: Парсинг JSON-массива планировок ===
+  // 4. Парсинг JSON-массива планировок layouts
   const layouts = (() => {
     if (!property?.layouts) return [];
     if (Array.isArray(property.layouts)) return property.layouts;
@@ -99,27 +99,24 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
 
   const isProject = property?.is_project === true;
 
-  // Форматирование цен с гибким контролем приставки "'den"
+  // 5. Вспомогательная функция форматирования цены
   const formatPrice = (val, isStartPrice = false) => {
     if (!val) return "";
-    let numOnly = String(val).replace(/[^0-9]/g, "");
-    if (numOnly === "" || numOnly === "0") return val;
-    const formatted = Number(numOnly).toLocaleString('tr-TR') + " TL";
+    const num = typeof val === 'number' ? val : parseInt(String(val).replace(/\D/g, ''));
+    if (isNaN(num) || num === 0) return val;
+    const formatted = num.toLocaleString('tr-TR') + " TL";
     return isStartPrice ? `${formatted}'den` : formatted;
   };
 
-  // Вычисляем динамические параметры для карточки
+  // 6. Вычисляем динамические параметры для отображения
   let cardRooms = property?.['card odalar'] || '';
   let cardArea = property?.['card-area'] || '';
-  let cardPrice = formatPrice(property?.Fiyat, isProject); // если ЖК - всегда по умолчанию "'den"
+  let cardPrice = formatPrice(property?.Fiyat, isProject);
 
-  // Если это ЖК и у него есть массив планировок
   if (isProject && layouts.length > 0) {
-    // Проверяем, выбран ли в поиске ОДИН конкретный тип комнат
     const activeRoomFilter = selectedRooms.length === 1 ? selectedRooms[0] : null;
 
     if (activeRoomFilter) {
-      // Ищем планировку под этот фильтр
       const matchedLayout = layouts.find(l => String(l.rooms).trim() === activeRoomFilter.trim());
       if (matchedLayout) {
         cardRooms = matchedLayout.rooms;
@@ -127,7 +124,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
         cardPrice = formatPrice(matchedLayout.price, true);
       }
     } else {
-      // Если фильтров нет или выбрано несколько — выводим диапазоны по ТЗ
+      // Расчет диапазонов комнат, площадей и цен для превью
       const validRooms = layouts.map(l => l.rooms).filter(Boolean);
       const minRoom = validRooms[0] || '';
       const maxRoom = validRooms[validRooms.length - 1] || '';
@@ -143,7 +140,12 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
       const prices = layouts.map(l => parseInt(String(l.price).replace(/\D/g, ''))).filter(Boolean);
       if (prices.length > 0) {
         const minPrice = Math.min(...prices);
-        cardPrice = formatPrice(minPrice, true);
+        const maxPrice = Math.max(...prices);
+        
+        // По вашей новой идее выводим диапазон "МИН - МАКС"
+        cardPrice = minPrice !== maxPrice 
+          ? `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}` 
+          : formatPrice(minPrice, true);
       }
     }
   }
@@ -158,6 +160,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
   };
 
   const olanaklarList = parseFeatures(property?.Özellikler);
+
   const iconMap = {
     havuz: (
       <svg className="card-svg-icon" viewBox="0 0 24 24">
@@ -212,7 +215,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
     ? waRaw
     : 'https://wa.me/' + (waRaw ? String(waRaw).replace(/\D/g, '') : "905459418536");
 
-  // Передаем активную планировку в URL, чтобы страница ЖК раскрыла нужную вкладку аккордеона
+  // Передаем активную планировку в URL детальной страницы
   const detailLink = '/properties/' + property?.id + (selectedRooms.length === 1 ? `?room=${encodeURIComponent(selectedRooms[0])}` : '');
   const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
   const isLansman = cleanStatus === "lansman";
@@ -268,14 +271,14 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
         )}
       </div>
 
-     <div className="card-content">
+      <div className="card-content">
         <div className="title-price-row">
           <h3 className="card-title">{property?.testproje || ''}</h3>
-          <div className="card-price">{cardPrice}</div> {/* <--- Динамическая цена */}
+          <div className="card-price">{cardPrice}</div>
         </div>
 
         <p className="card-description">
-          {property?.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimle iletişime geçin."}
+          {property?.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimле iletişime geçin."}
         </p>
 
         <div className="features-row">
@@ -283,21 +286,20 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
             <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
-            {property?.['İlçe/Semt'] || ''}
+            {property?.district || property?.['İlçe/Semt'] || ''}
           </div>
           <div className="feat-badge">
             <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
               <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" />
             </svg>
-            {cardRooms} {/* <--- Динамические комнаты */}
+            {cardRooms}
           </div>
           {cardArea && (
             <div className="feat-badge">
               <svg className="card-svg-icon" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
                 <path d="M10.5 9h3v1.5h-3V9zm0 3h3v1.5h-3V12zm0 3h3v1.5h-3V15zM19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
               </svg>
-              <span>{cardArea}</span> {/* <--- Динамическая площадь */}
-              {/* Показываем m² только если это не кастомная строка, либо рендерим m² по дефолту */}
+              <span>{cardArea}</span>
               {!String(cardArea).includes('m²') && <span className="area-unit-grid" style={{ marginLeft: 2 }}>m²</span>}
               {!String(cardArea).includes('m²') && <span className="area-unit-list" style={{ marginLeft: 2 }}>Metrekare</span>}
             </div>
@@ -313,6 +315,26 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
                   {icon}
                   {item}
                 </span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ВАША ИДЕЯ: Построчные планировки прямо внутри карточки ЖК */}
+        {isProject && layouts.length > 0 && (
+          <div className="mini-layouts-container">
+            {layouts.slice(0, 3).map((layout, idx) => {
+              const isSold = layout.status === 'sold';
+              return (
+                <div key={idx} className={`layout-row ${isSold ? 'sold' : ''}`}>
+                  <div className="layout-meta">
+                    <span className="layout-rooms">{layout.rooms}</span>
+                    <span className="layout-area">{layout.area} m²</span>
+                  </div>
+                  <span className="layout-price">
+                    {isSold ? 'Satıldı' : formatPrice(layout.price, true)}
+                  </span>
+                </div>
               );
             })}
           </div>
