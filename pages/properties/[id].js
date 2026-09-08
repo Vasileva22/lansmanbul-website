@@ -588,30 +588,12 @@ export default function PropertyDetail({ property, error }) {
                     </div>
 
                     {parsedDistances.length > 0 ? (
-                     <div className="space-y-4 justify-center flex flex-col">
-  {/* Отображаем пункты с иконками транспорта */}
-  {parseNewLocation(property?.['Konum Mesafeler']).map((poi, idx) => (
-    <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-2">
-      <div className="flex items-center">
-        {transportIcons[poi.type]}
-        <span className="font-bold text-slate-700 text-sm">{poi.name}</span>
-      </div>
-      <span className="text-[#00A4A6] font-black text-sm">{poi.time}</span>
+                     <div className="space-y-3 justify-center flex flex-col">
+  {parsedDistances.map((item, idx) => (
+    <div key={idx} className="flex items-center justify-between text-sm">
+       ... (весь этот код внутри) ...
     </div>
   ))}
-  
-  {/* Кнопка Яндекс Карт, которая берет координаты из базы */}
-  {property?.latitude && property?.longitude && (
-    <a 
-      href={`https://yandex.com.tr/harita/?ll=${property.longitude},${property.latitude}&z=15&pt=${property.longitude},${property.latitude},pm2rdl`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-2 py-3 px-4 bg-slate-100 rounded-xl text-center text-[#00A4A6] font-black text-[10px] uppercase hover:bg-slate-200 transition"
-      style={{ textDecoration: 'none' }}
-    >
-      📍 Haritada tam konumu göster
-    </a>
-  )}
 </div>
                     ) : (
                       <div className="flex items-center justify-center text-sm text-gray-400">
