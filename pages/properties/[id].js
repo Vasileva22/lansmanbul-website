@@ -5,6 +5,25 @@ import { useRouter } from 'next/router';
 import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+// --- НАЧАЛО ВСТАВКИ: Иконки и парсинг ---
+const transportIcons = {
+  walk: <span style={{fontSize: '18px'}}>🚶</span>,
+  drive: <span style={{fontSize: '18px'}}>🚗</span>
+};
+
+const parseNewLocation = (str) => {
+  if (!str || str === 'EMPTY' || str.includes('::')) return [];
+  return str.split(',').map(item => {
+    const parts = item.split('|');
+    if (parts.length < 2) return null;
+    return {
+      name: parts[0]?.trim(),
+      time: parts[1]?.trim(),
+      type: parts[2]?.trim().toLowerCase() === 'drive' ? 'drive' : 'walk'
+    };
+  }).filter(Boolean);
+};
+// --- КОНЕЦ ВСТАВКИ ---
 
 export default function PropertyDetail({ property, error }) {
   const router = useRouter();
@@ -313,11 +332,12 @@ export default function PropertyDetail({ property, error }) {
                 <section className="space-y-3">
                   <div className="relative w-full h-[500px] rounded-2xl overflow-hidden bg-slate-950 group shadow-sm border border-slate-100">
                     <img 
-                      src={galleryPhotos[activePhotoIndex]} 
-                      className="w-full h-full object-cover cursor-zoom-in" 
-                      alt="Proje Görseli" 
-                      onClick={() => openLightbox(galleryPhotos, activePhotoIndex)}
-                    />
+  src={galleryPhotos[activePhotoIndex]} 
+  referrerPolicy="no-referrer" 
+  className="w-full h-full object-cover cursor-zoom-in" 
+  alt="Proje Görseli" 
+  onClick={() => openLightbox(galleryPhotos, activePhotoIndex)}
+/>
 
                     {/* Кнопка во весь экран */}
                     <button 
@@ -568,17 +588,31 @@ export default function PropertyDetail({ property, error }) {
                     </div>
 
                     {parsedDistances.length > 0 ? (
-                      <div className="space-y-3 justify-center flex flex-col">
-                        {parsedDistances.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600 font-medium flex items-center gap-1.5">
-                              <span className="text-base leading-none">{getEmoji(item.label)}</span>
-                              <span>{item.label}</span>
-                            </span>
-                            <span className="text-[#00A4A6] font-bold">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
+                     <div className="space-y-4 justify-center flex flex-col">
+  {/* Отображаем пункты с иконками транспорта */}
+  {parseNewLocation(property?.['Konum Mesafeler']).map((poi, idx) => (
+    <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-2">
+      <div className="flex items-center">
+        {transportIcons[poi.type]}
+        <span className="font-bold text-slate-700 text-sm">{poi.name}</span>
+      </div>
+      <span className="text-[#00A4A6] font-black text-sm">{poi.time}</span>
+    </div>
+  ))}
+  
+  {/* Кнопка Яндекс Карт, которая берет координаты из базы */}
+  {property?.latitude && property?.longitude && (
+    <a 
+      href={`https://yandex.com.tr/harita/?ll=${property.longitude},${property.latitude}&z=15&pt=${property.longitude},${property.latitude},pm2rdl`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 py-3 px-4 bg-slate-100 rounded-xl text-center text-[#00A4A6] font-black text-[10px] uppercase hover:bg-slate-200 transition"
+      style={{ textDecoration: 'none' }}
+    >
+      📍 Haritada tam konumu göster
+    </a>
+  )}
+</div>
                     ) : (
                       <div className="flex items-center justify-center text-sm text-gray-400">
                         Konum mesafeleri belirtilmemiş.
