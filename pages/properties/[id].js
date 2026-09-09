@@ -573,24 +573,7 @@ export default function PropertyDetail({ property, error }) {
                 </div>
               )}
 
-              {/* Местоположение и Расстояния */}
-              {(parsedDistances.length > 0 || property.latitude || property.Harita_Link) && (
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2>Konum ve Mesafeler</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="w-full h-48 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                      {property.latitude && property.longitude ? (
-                        <div ref={mapRef} className="w-full h-full" />
-                      ) : property.Harita_Link ? (
-                        <iframe src={property.Harita_Link} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">📍 Harita Alanı</div>
-                      )}
-                    </div>
-
-                    {parsedDistances.length > 0 ? (
-                     <div className="space-y-3 justify-center flex flex-col">
-{/* Местоположение и Расстояния */}
+             {/* Местоположение и Расстояния */}
               {(parsedDistances.length > 0 || property.latitude || property.Harita_Link) && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Konum ve Mesafeler</h2>
@@ -627,8 +610,6 @@ export default function PropertyDetail({ property, error }) {
                   </div>
                 </div>
               )}
-
-              {/* Описание */}
 
               {/* Описание */}
               {property.Açıklama && (
