@@ -280,6 +280,7 @@ export default function PropertyDetail({ property, error }) {
   return (
     <>
       <Head>
+    <meta name="referrer" content="no-referrer" />
         <title>{`${property.testproje || 'Proje Detayı'} | lansmanbul.com`}</title>
         <meta name="description" content={seoDesc} />
         <meta property="og:title" content={`${property.testproje || 'Proje Detayı'} | lansmanbul.com`} />
@@ -589,12 +590,17 @@ export default function PropertyDetail({ property, error }) {
 
                     {parsedDistances.length > 0 ? (
                      <div className="space-y-3 justify-center flex flex-col">
-  {parsedDistances.map((item, idx) => (
-    <div key={idx} className="flex items-center justify-between text-sm">
-       ... (весь этот код внутри) ...
+ {parsedDistances.map((item, idx) => (
+  <div key={idx} className="flex items-center justify-between text-sm py-2 border-b border-slate-100 last:border-0">
+    <div className="flex items-center gap-2">
+      <span className="text-lg">{getEmoji(item.label)}</span>
+      <span className="font-semibold text-slate-700">{item.label}</span>
     </div>
-  ))}
-</div>
+    <span className="font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+      {item.value}
+    </span>
+  </div>
+))}
                     ) : (
                       <div className="flex items-center justify-center text-sm text-gray-400">
                         Konum mesafeleri belirtilmemiş.
