@@ -590,17 +590,34 @@ export default function PropertyDetail({ property, error }) {
 
                     {parsedDistances.length > 0 ? (
                       <div className="space-y-3 justify-center flex flex-col">
-                        {parsedDistances.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{getEmoji(item.label)}</span>
-                              <span className="font-semibold text-slate-700">{item.label}</span>
+                        {parsedDistances.map((item, idx) => {
+                          const isWalk = item.value.includes('🚶') || item.value.toLowerCase().includes('walk');
+                          const cleanTime = item.value.replace(/[🚶🚗🚌]/g, '').trim();
+
+                          return (
+                            <div key={idx} className="flex items-center justify-between text-sm py-2 border-b border-slate-100 last:border-0">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-base">{getEmoji(item.label)}</span>
+                                <span className="font-semibold text-slate-700">{item.label}</span>
+                              </div>
+
+                              <span className="inline-flex items-center gap-1.5 font-bold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-xs">
+                                {isWalk ? (
+                                  /* Серый значок пешехода */
+                                  <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
+                                  </svg>
+                                ) : (
+                                  /* Серый значок автомобиля */
+                                  <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                  </svg>
+                                )}
+                                <span>{cleanTime}</span>
+                              </span>
                             </div>
-                            <span className="font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
-                              {item.value}
-                            </span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center text-sm text-gray-400">
