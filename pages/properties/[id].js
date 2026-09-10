@@ -578,7 +578,7 @@ export default function PropertyDetail({ property, error }) {
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2>Konum ve Mesafeler</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="w-full h-48 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                    <div className="w-full h-full min-h-[250px] bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                       {property.latitude && property.longitude ? (
                         <div ref={mapRef} className="w-full h-full" />
                       ) : property.Harita_Link ? (
