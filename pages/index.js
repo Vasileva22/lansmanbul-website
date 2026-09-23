@@ -73,7 +73,7 @@ export default function Home({ initialProperties }) {
   });
 
  const [filters, setFilters] = useState({
-    selectedCity: 'Ankara',
+    selectedCity: 'Tümü',
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
@@ -250,9 +250,10 @@ export default function Home({ initialProperties }) {
     return masterProperties.filter((property) => {
       // Фильтрация по городу (если не выбрано "Tümü")
 if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
-  const propCity = (property.city || 'Ankara').toLowerCase();
+  const propCity = (property.city || '').toLowerCase();
   if (!propCity.includes(filters.selectedCity.toLowerCase())) {
     return false;
+  }
   }
       // === НОВОЕ: Фильтрация по типу объекта (Проект / Квартира) ===
       if (filters.listingType === 'project' && property.is_project !== true) {
