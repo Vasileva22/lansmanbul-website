@@ -248,7 +248,7 @@ export default function Home({ initialProperties }) {
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
    return masterProperties.filter((property) => {
-      / 👇 ДИАГНОСТИКА: почему отсекается Çankaya или Etimesgut
+      // 👇 ДИАГНОСТИКА: почему отсекается Çankaya или Etimesgut
       const isTestTarget = String(property['İlçe/Semt']).includes('Çankaya') || String(property['İlçe/Semt']).includes('Etimesgut');
 
       if (isTestTarget) {
