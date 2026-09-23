@@ -248,13 +248,30 @@ export default function Home({ initialProperties }) {
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
-      // Фильтрация по городу (если не выбрано "Ankara")
-if (filters.selectedCity && filters.selectedCity !== 'Ankara') {
-  const propCity = (property.city || '').toLowerCase();
-  if (!propCity.includes(filters.selectedCity.toLowerCase())) {
+     // 1. Фильтрация по городу (с безопасным fallback на Анкару, если город пустой)
+if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
+  const propCity = String(property.city || 'Ankara').toLowerCase().trim();
+  const targetCity = String(filters.selectedCity).toLowerCase().trim();
+  if (!propCity.includes(targetCity)) {
     return false;
   }
+}
+
+// 2. Фильтрация по району (мягкий поиск: находит даже если в базе "Çankaya Çankaya" или "Çankaya / Ankara")
+if (filters.selectedLocations.length > 0) {
+  const pDistrict = String(property.district || '').toLowerCase();
+  const pSemt = String(property['İlçe/Semt'] || '').toLowerCase();
+  const pMahalle = String(property.mahalle || '').toLowerCase();
+
+  const isMatched = filters.selectedLocations.some((selectedLoc) => {
+    const locLower = String(selectedLoc).toLowerCase().trim();
+    return pDistrict.includes(locLower) || pSemt.includes(locLower) || pMahalle.includes(locLower);
+  });
+
+  if (!isMatched) {
+    return false;
   }
+}
       // === НОВОЕ: Фильтрация по типу объекта (Проект / Квартира) ===
       if (filters.listingType === 'project' && property.is_project !== true) {
         return false;
