@@ -230,13 +230,6 @@ export default function HeroSearch({
                 )}
               </div>
             ))}
-
-            <div
-              className={`city-tab-item ${currentCity === 'Tümü' ? 'active' : ''}`}
-              onClick={() => handleCitySelect('Tümü')}
-            >
-              <span>Tüm Şehirler</span>
-            </div>
           </div>
 
           <div className="search-inputs-row-wrapper">
@@ -368,7 +361,7 @@ export default function HeroSearch({
                               </div>
                               <div className="dropdown-item-content">
                                 <span className="dropdown-item-title">{d.name}</span>
-                                <span className="dropdown-item-subtitle">{currentCity === 'Tümü' ? 'Türkiye' : `${currentCity}, Türkiye`} • {d.count} Proje</span>
+                               <span className="dropdown-item-subtitle">{currentCity}, Türkiye • {d.count} Proje</span>
                               </div>
                             </div>
                           ))
