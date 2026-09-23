@@ -301,11 +301,23 @@ export default function Home({ initialProperties }) {
       }
       // =============================================================
 
-      if (
-        filters.selectedLocations.length > 0 &&
-        !filters.selectedLocations.includes(property['İlçe/Semt'])
-      ) {
-        return false;
+     // 2. Умная фильтрация по району (находит даже если написано "Etimesgut Yukarıyurtçu Mahallesi")
+      if (filters.selectedLocations && filters.selectedLocations.length > 0) {
+        const fullAddressText = (
+          String(property['İlçe/Semt'] || '') + ' ' +
+          String(property.district || '') + ' ' +
+          String(property.mahalle || '') + ' ' +
+          String(property.adress || '')
+        ).toLowerCase();
+
+        const isMatched = filters.selectedLocations.some((selectedLoc) => {
+          const locLower = String(selectedLoc).toLowerCase().trim();
+          return fullAddressText.includes(locLower);
+        });
+
+        if (!isMatched) {
+          return false;
+        }
       }
 
       if (
