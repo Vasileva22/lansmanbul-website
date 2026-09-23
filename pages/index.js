@@ -73,7 +73,7 @@ export default function Home({ initialProperties }) {
   });
 
  const [filters, setFilters] = useState({
-    selectedCity: 'Tümü',
+    selectedCity: 'Ankara',
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
@@ -248,8 +248,8 @@ export default function Home({ initialProperties }) {
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
-      // Фильтрация по городу (если не выбрано "Tümü")
-if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
+      // Фильтрация по городу (если не выбрано "Ankara")
+if (filters.selectedCity && filters.selectedCity !== 'Ankara') {
   const propCity = (property.city || '').toLowerCase();
   if (!propCity.includes(filters.selectedCity.toLowerCase())) {
     return false;
