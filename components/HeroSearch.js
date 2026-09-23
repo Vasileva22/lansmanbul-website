@@ -1,18 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/router';
 
 export default function HeroSearch({
   filters,
   setFilters,
-  uniqueLocations,
-  uniqueRooms,
-  uniqueStatuses,
+  uniqueRooms = [],
+  uniqueStatuses = [],
+  properties = [],
   onSearch,
 }) {
-  const [activeDropdown, setActiveDropdown] = useState(null); // 'location', 'room', 'status', 'city'
+  const router = useRouter();
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'location', 'room', 'status'
   const [searchQuery, setSearchQuery] = useState('');
-  
   const dropdownRef = useRef(null);
 
+  // Текущий выбранный город из фильтра (по умолчанию Ankara)
+  const currentCity = filters.selectedCity || 'Ankara';
+
+  // Закрытие выпадающего окна при клике вне его
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -23,6 +28,7 @@ export default function HeroSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Блокировка фонового скролла на мобильных при открытом меню
   useEffect(() => {
     if (activeDropdown && window.innerWidth <= 1024) {
       document.body.style.overflow = 'hidden';
@@ -34,12 +40,119 @@ export default function HeroSearch({
     };
   }, [activeDropdown]);
 
-  const handleLocationToggle = (loc) => {
-    const isSelected = filters.selectedLocations.includes(loc);
-    const updated = isSelected
-      ? filters.selectedLocations.filter((item) => item !== loc)
-      : [...filters.selectedLocations, loc];
+  // Фильтр от спама и мусорных строк парсера
+  const isCleanString = (str) => {
+    if (!str || typeof str !== 'string') return false;
+    const lower = str.toLowerCase().trim();
+    if (lower.length < 2) return false;
+    const spamWords = ['müşteri', 'hizmet', 'sahibinden', 'emlakjet', 'telefon', 'call', 'center', '054', '055', 'danışman'];
+    return !spamWords.some(w => lower.includes(w));
+  };
+
+  // 1. ДИНАМИЧЕСКИЙ РАСЧЕТ ГОРОДОВ И КОЛИЧЕСТВА ПРОЕКТОВ ИЗ БАЗЫ
+  const availableCities = useMemo(() => {
+    const targetCities = ['Ankara', 'İstanbul', 'Antalya'];
     
+    return targetCities.map((cityName) => {
+      const count = properties.filter((p) => {
+        const c = (p.city || 'Ankara').toLowerCase();
+        return c.includes(cityName.toLowerCase());
+      }).length;
+
+      return {
+        name: cityName,
+        count: count,
+        isAvailable: count > 0,
+      };
+    });
+  }, [properties]);
+
+  // 2. ДИНАМИЧЕСКИЙ СПИСОК РАЙОНОВ ТЕКУЩЕГО ГОРОДА (В АЛФАВИТНОМ ПОРЯДКЕ С ПОДСЧЕТОМ)
+  const cityDistrictsWithCount = useMemo(() => {
+    const map = new Map();
+
+    properties.forEach((p) => {
+      const pCity = (p.city || 'Ankara').toLowerCase();
+      if (currentCity !== 'Tümü' && !pCity.includes(currentCity.toLowerCase())) {
+        return;
+      }
+
+      const rawDistrict = p.district || p['İlçe/Semt'] || '';
+      // Очистка от дублей вида "Polatlı Polatlı" -> "Polatlı"
+      const cleanedDistrict = rawDistrict.split(/\s+/).filter((v, i, a) => a.indexOf(v) === i).join(' ');
+
+      if (isCleanString(cleanedDistrict)) {
+        map.set(cleanedDistrict, (map.get(cleanedDistrict) || 0) + 1);
+      }
+    });
+
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+  }, [properties, currentCity]);
+
+  // 3. УМНЫЙ ПОИСК (OMNIBOX) ПРИ ВВОДЕ ТЕКСТА
+  const searchResults = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
+    if (!q) {
+      return {
+        matchedCities: [],
+        matchedDistricts: cityDistrictsWithCount,
+        matchedMahalles: [],
+        matchedProjects: [],
+      };
+    }
+
+    // Совпадения по городам
+    const matchedCities = availableCities.filter(c => c.name.toLowerCase().includes(q));
+
+    // Совпадения по районам
+    const matchedDistricts = cityDistrictsWithCount.filter(d => d.name.toLowerCase().includes(q));
+
+    // Совпадения по махалле (микрорайонам)
+    const mahalleMap = new Map();
+    properties.forEach(p => {
+      const m = p.mahalle;
+      if (isCleanString(m) && m.toLowerCase().includes(q)) {
+        const districtName = p.district || p['İlçe/Semt'] || '';
+        const cityName = p.city || 'Ankara';
+        const key = `${m} (${districtName} / ${cityName})`;
+        mahalleMap.set(key, { mahalle: m, district: districtName, city: cityName });
+      }
+    });
+    const matchedMahalles = Array.from(mahalleMap.values()).slice(0, 4);
+
+    // Совпадения по названиям конкретных ЖК
+    const matchedProjects = properties
+      .filter(p => (p.testproje || '').toLowerCase().includes(q))
+      .slice(0, 4);
+
+    return {
+      matchedCities,
+      matchedDistricts,
+      matchedMahalles,
+      matchedProjects,
+    };
+  }, [searchQuery, cityDistrictsWithCount, availableCities, properties]);
+
+  // Переключение города
+  const handleCitySelect = (cityName) => {
+    setFilters((prev) => ({
+      ...prev,
+      selectedCity: cityName,
+      selectedLocations: [], // сбрасываем старые районы при смене города
+    }));
+    setSearchQuery('');
+  };
+
+  // Переключение выбора района
+  const handleLocationToggle = (locName) => {
+    const isSelected = filters.selectedLocations.includes(locName);
+    const updated = isSelected
+      ? filters.selectedLocations.filter((item) => item !== locName)
+      : [...filters.selectedLocations, locName];
+
     setFilters((prev) => ({ ...prev, selectedLocations: updated }));
   };
 
@@ -61,180 +174,221 @@ export default function HeroSearch({
     setFilters((prev) => ({ ...prev, selectedStatuses: updated }));
   };
 
+  const formatPriceMini = (val) => {
+    if (!val) return '';
+    const num = parseInt(String(val).replace(/\D/g, ''));
+    if (isNaN(num) || num === 0) return '';
+    return num.toLocaleString('tr-TR') + " TL'den";
+  };
+
   const getDropdownLabel = (type) => {
     if (type === 'location') {
       const count = filters.selectedLocations.length;
       if (count === 0) return 'İlçe / Semt seçiniz';
       if (count === 1) return filters.selectedLocations[0];
-      return count + ' Bölge Seçildi';
+      return `${count} Bölge Seçildi`;
     }
     if (type === 'room') {
       const count = filters.selectedRooms.length;
       if (count === 0) return 'Oda sayısı seçiniz';
       if (count === 1) return filters.selectedRooms[0];
-      return count + ' Oda Tipi Seçildi';
+      return `${count} Oda Tipi Seçildi`;
     }
     if (type === 'status') {
       const count = filters.selectedStatuses.length;
       if (count === 0) return 'Durum seçiniz';
       if (count === 1) return filters.selectedStatuses[0];
-      return count + ' Durum Seçildi';
+      return `${count} Durum Seçildi`;
     }
   };
 
   return (
     <section className="hero-search-container">
       <div className="search-width-limiter">
-        <h1 className="mobile-only-title">Komisyonsuz, doğrudan müteahhitten konut keşfedin!</h1>
-        <h1 className="hero-search-title">Komisyonsuz, doğrudan müteahhitten konut keşfedin!</h1>
+        <h1 className="mobile-only-title">Doğrudan Müteahhitten Komisyonsuz Yeni Konut Projeleri</h1>
+        <h1 className="hero-search-title">Doğrudan Müteahhitten Komisyonsuz Yeni Konut Projeleri</h1>
 
         <div className="search-panel-card" ref={dropdownRef}>
           
+          {/* ДИНАМИЧЕСКИЕ ТАБЫ ГОРОДОВ */}
           <div className="search-tabs-header">
-            {/* Кнопка выбора города (Ankara) с относительным позиционированием */}
-            <div 
-              className={'city-tab-item ' + (activeDropdown === 'city' ? 'active' : '')}
-              onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'city' ? null : 'city'); }}
-              style={{ position: 'relative' }}
+            {availableCities.map((city) => (
+              <div
+                key={city.name}
+                className={`city-tab-item ${currentCity === city.name ? 'active' : ''} ${!city.isAvailable ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (city.isAvailable) {
+                    handleCitySelect(city.name);
+                  }
+                }}
+              >
+                <span>{city.name} Projeleri</span>
+                {!city.isAvailable ? (
+                  <span className="tab-badge" style={{ backgroundColor: '#FF9800', color: '#fff', marginLeft: '6px' }}>Yakında</span>
+                ) : (
+                  <span className="text-[11px] font-bold text-slate-400 ml-1">({city.count})</span>
+                )}
+              </div>
+            ))}
+
+            <div
+              className={`city-tab-item ${currentCity === 'Tümü' ? 'active' : ''}`}
+              onClick={() => handleCitySelect('Tümü')}
             >
-              <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'currentColor' }}>
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              <span>Ankara Projeleri</span>
-              <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: 'none', stroke: 'currentColor', strokeWidth: 3, marginLeft: 4 }}>
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-
-              {/* Выпадающий список городов, вложенный прямо внутрь кнопки */}
-              {activeDropdown === 'city' && (
-                <div 
-                  className="custom-dropdown" 
-                  style={{ position: 'absolute', top: '100%', left: 0, width: '260px', display: 'flex', flexDirection: 'column', marginTop: '12px' }} 
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="dropdown-mobile-header">
-                    <span className="dropdown-mobile-title">Şehir Seçiniz</span>
-                    <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
-                  </div>
-                  
-                  <div className="dropdown-items-scroll">
-                    {/* АКТИВНЫЙ ГОРОД (ANKARA) С ПОЛНОЙ И КРАСИВОЙ ИКОНКОЙ */}
-                    <div className="dropdown-item selected">
-                      <div className="dropdown-item-left">
-                        <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor', color: 'var(--primary)' }}>
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                        </svg>
-                      </div>
-                      <div className="dropdown-item-content">
-                        <span className="dropdown-item-title">Ankara</span>
-                        <span className="dropdown-item-subtitle">Aktif Projeler</span>
-                      </div>
-                    </div>
-
-                    {/* ДРУГИЕ ГОРОДА С ПОЛНЫМИ И КРАСИВЫМИ ИКОНКАМИ */}
-                    {['İstanbul', 'İzmir'].map((city) => (
-                      <div 
-                        key={city} 
-                        className="dropdown-item city-yakinda" 
-                        style={{ opacity: 0.75 }} 
-                        onClick={() => alert(city + ' projelerimiz çok yakında sizlerle!')}
-                      >
-                        <div className="dropdown-item-left">
-                          <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'currentColor', color: '#bdc5d0' }}>
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                          </svg>
-                        </div>
-                        <div className="dropdown-item-content">
-                          <span className="dropdown-item-title">
-                            {city} <span className="tab-badge" style={{ backgroundColor: '#FF9800', color: '#fff', marginLeft: '6px' }}>Yakında</span>
-                          </span>
-                          <span className="dropdown-item-subtitle">Çok yakında hizmetinizde</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="dropdown-mobile-footer">
-                    <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Kapat</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="city-tab-item disabled">
-              <span>İstanbul</span>
-              <span className="tab-badge">Yakında</span>
-            </div>
-            <div className="city-tab-item disabled">
-              <span>İzmir</span>
-              <span className="tab-badge">Yakında</span>
+              <span>Tüm Şehirler</span>
             </div>
           </div>
 
           <div className="search-inputs-row-wrapper">
             <div className="search-inputs-row">
               
-              {/* Район */}
+              {/* ПОЛЕ УМНОГО ПОИСКА: OMNIBOX */}
               <div 
-                className={'search-input-field flex-wide field-trigger-location ' + (filters.selectedLocations.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'location' ? 'active-field' : '')}
-                onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'location' ? null : 'location'); setSearchQuery(''); }}
+                className={`search-input-field flex-wide field-trigger-location ${filters.selectedLocations.length > 0 ? 'has-value' : ''} ${activeDropdown === 'location' ? 'active-field' : ''}`}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setActiveDropdown(activeDropdown === 'location' ? null : 'location'); 
+                }}
                 style={{ position: 'relative' }}
               >
                 <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
                 <div className="input-double-label">
-                  <span className="sub-label">Konum</span>
+                  <span className="sub-label">Konum veya Proje Adı</span>
                   <span className="main-label">{getDropdownLabel('location')}</span>
                 </div>
 
                 {activeDropdown === 'location' && (
-                  <div className="custom-dropdown" style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '340px', marginTop: '6px' }} onClick={(e) => e.stopPropagation()}>
+                  <div 
+                    className="custom-dropdown" 
+                    style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '380px', marginTop: '6px' }} 
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="dropdown-mobile-header">
-                      <span className="dropdown-mobile-title">Konum Seçiniz</span>
+                      <span className="dropdown-mobile-title">İlçe, Mahalle veya Proje Ara</span>
                       <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
                     </div>
+
                     <div className="dropdown-search-wrapper">
                       <input 
                         type="text" 
                         className="dropdown-search-input" 
-                        placeholder="İlçe veya Semt ara..."
+                        placeholder="Örn: Çankaya, BağLife, Hürriyet..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
                       />
                       <svg className="dropdown-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     </div>
+
                     <div className="dropdown-items-scroll">
-                      {uniqueLocations
-                        .filter(loc => loc.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map((loc) => (
-                          <div 
-                            key={loc} 
-                            className={'dropdown-item ' + (filters.selectedLocations.includes(loc) ? 'selected' : '')}
-                            onClick={() => handleLocationToggle(loc)}
-                          >
-                            <div className="dropdown-item-left">
-                              <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}>
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                              </svg>
+                      
+                      {/* СЕКЦИЯ 1: СОВПАДЕНИЕ ПО ГОРОДУ */}
+                      {searchResults.matchedCities.length > 0 && (
+                        <div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Şehirler</span>
+                          {searchResults.matchedCities.map((c) => (
+                            <div
+                              key={c.name}
+                              className="dropdown-item py-2 px-2 hover:bg-white rounded-lg cursor-pointer"
+                              onClick={() => {
+                                handleCitySelect(c.name);
+                                setActiveDropdown(null);
+                              }}
+                            >
+                              <span className="text-base mr-2">🏙️</span>
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{c.name}</span>
+                                <span className="dropdown-item-subtitle">{c.count} Proje listeleniyor</span>
+                              </div>
                             </div>
-                            <div className="dropdown-item-content">
-                              <span className="dropdown-item-title">{loc}</span>
-                              <span className="dropdown-item-subtitle">Ankara, Türkiye</span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* СЕКЦИЯ 2: КОНКРЕТНЫЕ ЖК (ПЕРЕХОД В ПРОЕКТ) */}
+                      {searchResults.matchedProjects.length > 0 && (
+                        <div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#00A4A6]">🏢 Projeler (Doğrudan İncele)</span>
+                          {searchResults.matchedProjects.map((p) => (
+                            <div
+                              key={p.id}
+                              className="dropdown-item py-2 px-2 hover:bg-white rounded-lg cursor-pointer"
+                              onClick={() => router.push(`/properties/${p.id}`)}
+                            >
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title font-extrabold text-slate-800">{p.testproje}</span>
+                                <span className="dropdown-item-subtitle text-[11px] text-slate-500">
+                                  {p.district || p['İlçe/Semt']}, {p.city || 'Ankara'} 
+                                  {formatPriceMini(p.Fiyat) ? ` • ${formatPriceMini(p.Fiyat)}` : ''}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      )}
+
+                      {/* СЕКЦИЯ 3: МИКРОРАЙОНЫ (MAHALLELER) */}
+                      {searchResults.matchedMahalles.length > 0 && (
+                        <div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">🏘️ Mahalleler</span>
+                          {searchResults.matchedMahalles.map((m, idx) => (
+                            <div
+                              key={idx}
+                              className="dropdown-item py-2 px-2 hover:bg-white rounded-lg cursor-pointer"
+                              onClick={() => {
+                                handleLocationToggle(m.district);
+                                setActiveDropdown(null);
+                              }}
+                            >
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{m.mahalle}</span>
+                                <span className="dropdown-item-subtitle">{m.district}, {m.city}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* СЕКЦИЯ 4: РАЙОНЫ (İLCELER) В АЛФАВИТНОМ ПОРЯДКЕ */}
+                      <div className="px-3 py-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">📍 İlçeler ({currentCity})</span>
+                        {searchResults.matchedDistricts.length > 0 ? (
+                          searchResults.matchedDistricts.map((d) => (
+                            <div 
+                              key={d.name} 
+                              className={`dropdown-item ${filters.selectedLocations.includes(d.name) ? 'selected' : ''}`}
+                              onClick={() => handleLocationToggle(d.name)}
+                            >
+                              <div className="dropdown-item-left">
+                                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}>
+                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                              </div>
+                              <div className="dropdown-item-content">
+                                <span className="dropdown-item-title">{d.name}</span>
+                                <span className="dropdown-item-subtitle">{currentCity === 'Tümü' ? 'Türkiye' : `${currentCity}, Türkiye`} • {d.count} Proje</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-xs text-slate-400">Aradığınız kriterde bölge bulunamadı.</div>
+                        )}
+                      </div>
+
                     </div>
+
                     <div className="dropdown-mobile-footer">
-                      <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Seç</button>
+                      <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Tamam</button>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Комнаты */}
+              {/* ПОЛЕ КОМНАТ */}
               <div 
-                className={'search-input-field flex-standard field-trigger-room ' + (filters.selectedRooms.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'room' ? 'active-field' : '')}
+                className={`search-input-field flex-standard field-trigger-room ${filters.selectedRooms.length > 0 ? 'has-value' : ''} ${activeDropdown === 'room' ? 'active-field' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'room' ? null : 'room'); }}
                 style={{ position: 'relative' }}
               >
@@ -256,15 +410,12 @@ export default function HeroSearch({
                       {uniqueRooms.map((room) => (
                         <div 
                           key={room} 
-                          className={'dropdown-item ' + (filters.selectedRooms.includes(room) ? 'selected' : '')}
+                          className={`dropdown-item ${filters.selectedRooms.includes(room) ? 'selected' : ''}`}
                           onClick={() => handleRoomToggle(room)}
                         >
-                          <div className="dropdown-item-left">
-                            <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
-                          </div>
                           <div className="dropdown-item-content">
                             <span className="dropdown-item-title">{room}</span>
-                            <span className="dropdown-item-subtitle">Oda Tipi ve Planı</span>
+                            <span className="dropdown-item-subtitle">Oda Tipi</span>
                           </div>
                         </div>
                       ))}
@@ -276,9 +427,9 @@ export default function HeroSearch({
                 )}
               </div>
 
-              {/* Статус */}
+              {/* ПОЛЕ СТАТУСА ПРОЕКТА */}
               <div 
-                className={'search-input-field flex-standard field-trigger-durum ' + (filters.selectedStatuses.length > 0 ? 'has-value' : '') + ' ' + (activeDropdown === 'status' ? 'active-field' : '')}
+                className={`search-input-field flex-standard field-trigger-durum ${filters.selectedStatuses.length > 0 ? 'has-value' : ''} ${activeDropdown === 'status' ? 'active-field' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'status' ? null : 'status'); }}
                 style={{ position: 'relative' }}
               >
@@ -300,15 +451,12 @@ export default function HeroSearch({
                       {uniqueStatuses.map((status) => (
                         <div 
                           key={status} 
-                          className={'dropdown-item ' + (filters.selectedStatuses.includes(status) ? 'selected' : '')}
+                          className={`dropdown-item ${filters.selectedStatuses.includes(status) ? 'selected' : ''}`}
                           onClick={() => handleStatusToggle(status)}
                         >
-                          <div className="dropdown-item-left">
-                            <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-                          </div>
                           <div className="dropdown-item-content">
                             <span className="dropdown-item-title">{status}</span>
-                            <span className="dropdown-item-subtitle">Proje Yapım Durumu</span>
+                            <span className="dropdown-item-subtitle">Yapım Durumu</span>
                           </div>
                         </div>
                       ))}
