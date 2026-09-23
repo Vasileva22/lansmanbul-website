@@ -247,21 +247,18 @@ export default function Home({ initialProperties }) {
 
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
-    // === ВРЕМЕННАЯ ДИАГНОСТИКА ===
+    // 👇 ВОТ ЭТИ 3 СТРОКИ ВСТАВЛЯЕМ СЮДА:
     console.log("--- СТАРТ ФИЛЬТРАЦИИ ---");
     console.log("Выбранные фильтры:", filters);
     console.log("Первый проект в базе:", masterProperties[0]);
-    // =============================
 
     return masterProperties.filter((property) => {
-      // ДИАГНОСТИКА: почему отсекается первый проект
+       // 👇 И ВОТ ЭТИ 5 СТРОК ВСТАВЛЯЕМ СРАЗУ ПОД RETURN:
       if (property === masterProperties[0]) {
-        console.log("Проверяем проект:", property.testproje);
-        console.log("Город в проекте:", property.city, "Ищем город:", filters.selectedCity);
-        console.log("Район в проекте:", property['İlçe/Semt'] || property.district, "Ищем районы:", filters.selectedLocations);
+        console.log("Имя проекта:", property.testproje);
+        console.log("Город в базе:", property.city, "— Ищем город:", filters.selectedCity);
+        console.log("Район в базе:", property['İlçe/Semt'] || property.district, "— Ищем районы:", filters.selectedLocations);
       }
-      const filteredProperties = useMemo(() => {
-    return masterProperties.filter((property) => {
     // 1. Фильтрация по городу (со страховкой: если city null, проверяем адрес или берем Анкару)
       if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
         const propCity = String(property.city || property.adress || 'Ankara').toLowerCase().trim();
