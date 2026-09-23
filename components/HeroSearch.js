@@ -77,17 +77,32 @@ export default function HeroSearch({
         return;
       }
 
-      const rawDistrict = p.district || p['İlçe/Semt'] || '';
-      // Очистка от дублей вида "Polatlı Polatlı" -> "Polatlı"
-      const cleanedDistrict = rawDistrict.split(/\s+/).filter((v, i, a) => a.indexOf(v) === i).join(' ');
+      const rawDistrict = p.district || (p['İlçe/Semt'] ? p['İlçe/Semt'].split(/\s+/)[0] : '');
+      if (!isCleanString(rawDistrict)) return;
 
-      if (isCleanString(cleanedDistrict)) {
-        map.set(cleanedDistrict, (map.get(cleanedDistrict) || 0) + 1);
+      // Вытаскиваем микрорайон для уточнения
+      let subArea = p.mahalle || '';
+      if (!subArea && p['İlçe/Semt'] && p['İlçe/Semt'].includes(rawDistrict)) {
+        subArea = p['İlçe/Semt'].replace(rawDistrict, '').trim();
+      }
+
+      if (!map.has(rawDistrict)) {
+        map.set(rawDistrict, { name: rawDistrict, count: 0, subAreas: new Set() });
+      }
+
+      const item = map.get(rawDistrict);
+      item.count += 1;
+      if (subArea && isCleanString(subArea)) {
+        item.subAreas.add(subArea);
       }
     });
 
-    return Array.from(map.entries())
-      .map(([name, count]) => ({ name, count }))
+    return Array.from(map.values())
+      .map((item) => ({
+        name: item.name,
+        count: item.count,
+        subText: item.subAreas.size > 0 ? Array.from(item.subAreas).slice(0, 2).join(', ') : '',
+      }))
       .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
   }, [properties, currentCity]);
 
@@ -360,7 +375,9 @@ export default function HeroSearch({
                                 </svg>
                               </div>
                               <div className="dropdown-item-content">
-                                <span className="dropdown-item-title">{d.name}</span>
+                                <span className="dropdown-item-title">
+  {d.name} {d.subText && <span className="text-slate-400 font-normal text-xs">({d.subText})</span>}
+</span>
                                <span className="dropdown-item-subtitle">{currentCity}, Türkiye • {d.count} Proje</span>
                               </div>
                             </div>
