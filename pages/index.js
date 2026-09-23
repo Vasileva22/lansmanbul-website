@@ -248,30 +248,44 @@ export default function Home({ initialProperties }) {
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
     return masterProperties.filter((property) => {
-     // 1. Фильтрация по городу (с безопасным fallback на Анкару, если город пустой)
-if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
-  const propCity = String(property.city || 'Ankara').toLowerCase().trim();
-  const targetCity = String(filters.selectedCity).toLowerCase().trim();
-  if (!propCity.includes(targetCity)) {
-    return false;
-  }
-}
+    // 1. Фильтрация по городу (со страховкой: если city null, проверяем адрес или берем Анкару)
+      if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
+        const propCity = String(property.city || property.adress || 'Ankara').toLowerCase().trim();
+        const targetCity = String(filters.selectedCity).toLowerCase().trim();
+        if (!propCity.includes(targetCity)) {
+          return false;
+        }
+      }
 
-// 2. Фильтрация по району (мягкий поиск: находит даже если в базе "Çankaya Çankaya" или "Çankaya / Ankara")
-if (filters.selectedLocations.length > 0) {
-  const pDistrict = String(property.district || '').toLowerCase();
-  const pSemt = String(property['İlçe/Semt'] || '').toLowerCase();
-  const pMahalle = String(property.mahalle || '').toLowerCase();
+      // 2. Фильтрация по типу объекта (Проект / Квартира)
+      if (filters.listingType === 'project' && property.is_project !== true) {
+        return false;
+      }
+      if (filters.listingType === 'apartment' && property.is_project === true) {
+        return false;
+      }
 
-  const isMatched = filters.selectedLocations.some((selectedLoc) => {
-    const locLower = String(selectedLoc).toLowerCase().trim();
-    return pDistrict.includes(locLower) || pSemt.includes(locLower) || pMahalle.includes(locLower);
-  });
+      // 3. Фильтрация по району (находит даже если в базе "Çankaya Çankaya" или "Çankaya / Ankara")
+      if (filters.selectedLocations && filters.selectedLocations.length > 0) {
+        const pDistrict = String(property.district || '').toLowerCase();
+        const pSemt = String(property['İlçe/Semt'] || property.address_district || '').toLowerCase();
+        const pMahalle = String(property.mahalle || '').toLowerCase();
+        const pAddress = String(property.adress || '').toLowerCase();
 
-  if (!isMatched) {
-    return false;
-  }
-}
+        const isMatched = filters.selectedLocations.some((selectedLoc) => {
+          const locLower = String(selectedLoc).toLowerCase().trim();
+          return (
+            pDistrict.includes(locLower) ||
+            pSemt.includes(locLower) ||
+            pMahalle.includes(locLower) ||
+            pAddress.includes(locLower)
+          );
+        });
+
+        if (!isMatched) {
+          return false;
+        }
+      }
       // === НОВОЕ: Фильтрация по типу объекта (Проект / Квартира) ===
       if (filters.listingType === 'project' && property.is_project !== true) {
         return false;
