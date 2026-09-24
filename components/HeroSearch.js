@@ -49,7 +49,58 @@ export default function HeroSearch({
     const spamWords = ['müşteri', 'hizmet', 'sahibinden', 'emlakjet', 'telefon', 'call', 'center', '054', '055', 'danışman'];
     return !spamWords.some(w => lower.includes(w));
   };
+// Определение типа жилья проекта
+  const getPropertyType = (p) => {
+    const rawType = String(p.property_type || '').toLowerCase();
+    const rawTitle = String(p.testproje || '').toLowerCase();
+    const rawRooms = String(p['card odalar'] || '').toLowerCase();
+    const rawDesc = String(p.Açıklama || '').toLowerCase();
 
+    if (rawType.includes('villa') || rawTitle.includes('villa') || rawRooms.includes('villa')) return 'Villa';
+    if (rawType.includes('penthouse') || rawTitle.includes('penthouse') || rawDesc.includes('penthouse')) return 'Penthouse';
+    return 'Daire';
+  };
+
+  // Сбор только тех комнат, которые РЕАЛЬНО есть в базе для выбранного типа
+  const availableRoomsForType = useMemo(() => {
+    const currentType = filters.selectedPropertyType || 'Daire';
+
+    // 1. Проекты текущего города и текущего типа
+    const matchedProps = properties.filter((p) => {
+      const pCity = (p.city || 'Ankara').toLowerCase();
+      if (currentCity !== 'Tümü' && !pCity.includes(currentCity.toLowerCase())) return false;
+      return getPropertyType(p) === currentType;
+    });
+
+    if (matchedProps.length === 0) {
+      return { hasProjects: false, salons1: [], salons2: [] };
+    }
+
+    // 2. Собираем все строки комнат из карточки и планировок
+    const rawRooms = matchedProps.flatMap((p) => {
+      const list = [p['card odalar']];
+      if (Array.isArray(p.layouts)) {
+        p.layouts.forEach((l) => list.push(l.rooms));
+      }
+      return list.filter(Boolean).map((r) => String(r).toLowerCase());
+    });
+
+    // 3. Проверяем наличие стандартных типов
+    const standard1Salon = ['1+0', '1+1', '2+1', '3+1', '4+1', '5+1 ve üzeri'];
+    const standard2Salon = ['2+2', '3+2', '4+2', '5+2 ve üzeri'];
+
+    const salons1 = standard1Salon.filter((std) => {
+      const clean = std.replace(' ve üzeri', '').trim().toLowerCase();
+      return rawRooms.some((r) => r.includes(clean));
+    });
+
+    const salons2 = standard2Salon.filter((std) => {
+      const clean = std.replace(' ve üzeri', '').trim().toLowerCase();
+      return rawRooms.some((r) => r.includes(clean));
+    });
+
+    return { hasProjects: true, salons1, salons2 };
+  }, [properties, currentCity, filters.selectedPropertyType]);
   // 1. ДИНАМИЧЕСКИЙ РАСЧЕТ ГОРОДОВ И КОЛИЧЕСТВА ПРОЕКТОВ ИЗ БАЗЫ
   const availableCities = useMemo(() => {
     const targetCities = ['Ankara', 'İstanbul', 'Antalya'];
@@ -472,11 +523,22 @@ export default function HeroSearch({
 
                 {activeDropdown === 'room' && (
                   <div 
-                    className="custom-dropdown p-6 bg-white shadow-2xl border border-slate-200/80 rounded-3xl" 
-                    style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '420px', minWidth: '380px', marginTop: '10px', zIndex: 100 }} 
+                    className="room-dropdown-wide p-6 bg-white shadow-2xl border border-slate-200/90 rounded-3xl" 
+                    style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      position: 'absolute', 
+                      top: '100%', 
+                      left: 0, 
+                      width: '480px !important', 
+                      minWidth: '460px !important', 
+                      maxWidth: '90vw', 
+                      marginTop: '12px', 
+                      zIndex: 1000 
+                    }} 
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* ШАПКА ОКНА (СВОБОДНЫЕ ОТСТУПЫ, НИЧЕГО НЕ РЕЖЕТСЯ) */}
+                    {/* ШАПКА */}
                     <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-5">
                       <span className="text-xs font-black tracking-wider text-slate-800 uppercase">Konut ve Oda Seçimi</span>
                       <span 
@@ -487,10 +549,10 @@ export default function HeroSearch({
                       </span>
                     </div>
 
-                    {/* 1. СТИЛЬНЫЙ СЕГМЕНТИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ТИПА (БЕЗ ДЕТСКИХ СМАЙЛИКОВ) */}
+                    {/* 1. ПЕРЕКЛЮЧАТЕЛЬ ТИПОВ ЖИЛЬЯ (БЕЗ ЭМОДЗИ, С АВТО-ОБНУЛЕНИЕМ КОМНАТ) */}
                     <div className="mb-5">
                       <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Konut Tipi</span>
-                      <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 border border-slate-200/50">
+                      <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1 border border-slate-200/50">
                         {[
                           { id: 'Daire', label: 'Daire & Rezidans' },
                           { id: 'Villa', label: 'Villa & Townhouse' },
@@ -511,9 +573,7 @@ export default function HeroSearch({
                                 setFilters(prev => ({
                                   ...prev,
                                   selectedPropertyType: t.id,
-                                  selectedRooms: t.id === 'Villa' 
-                                    ? prev.selectedRooms.filter(r => !['1+0', '1+1', '2+1', '2+2'].includes(r))
-                                    : prev.selectedRooms
+                                  selectedRooms: [] // <--- ПРИ СМЕНЕ ТИПА ОБНУЛЯЕМ СПИСОК ПЛАНИРОВОК!
                                 }));
                               }}
                             >
@@ -524,72 +584,76 @@ export default function HeroSearch({
                       </div>
                     </div>
 
-                    {/* 2. БЛОК 1 САЛОН: АККУРАТНЫЕ ПИЛЮЛИ В РОВНОЙ СЕТКЕ */}
-                    <div className="mb-4">
-                      <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">1 Salonlu Planlar</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {(() => {
-                          const currentType = filters.selectedPropertyType || 'Daire';
-                          const allRooms = ['1+0', '1+1', '2+1', '3+1', '4+1', '5+1 ve üzeri'];
-                          const roomsToShow = currentType === 'Villa' ? ['3+1', '4+1', '5+1 ve üzeri'] : allRooms;
-
-                          return roomsToShow.map((room) => {
-                            const isSelected = (filters.selectedRooms || []).includes(room);
-                            return (
-                              <button
-                                key={room}
-                                type="button"
-                                className={`py-2 px-2 text-xs font-black rounded-xl border transition-all ${
-                                  isSelected 
-                                    ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
-                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
-                                }`}
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => handleRoomToggle(room)}
-                              >
-                                {room}
-                              </button>
-                            );
-                          });
-                        })()}
+                    {/* ЕСЛИ ПРОЕКТОВ ЭТОГО ТИПА НЕТ В БАЗЕ */}
+                    {!availableRoomsForType.hasProjects ? (
+                      <div className="py-8 px-4 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 my-2">
+                        <span className="text-sm font-bold text-slate-600 block mb-1">Henüz Aktif İlan Bulunmuyor</span>
+                        <p className="text-xs text-slate-400 m-0">
+                          {currentCity} bölgesinde şu an kayıtlı {filters.selectedPropertyType === 'Villa' ? 'villa' : 'penthouse'} projesi yer almamaktadır.
+                        </p>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {/* 2. БЛОК 1 САЛОН (ТОЛЬКО РЕАЛЬНО СУЩЕСТВУЮЩИЕ КОМНАТЫ) */}
+                        {availableRoomsForType.salons1.length > 0 && (
+                          <div className="mb-4">
+                            <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">1 Salonlu Planlar</span>
+                            <div className="grid grid-cols-3 gap-2">
+                              {availableRoomsForType.salons1.map((room) => {
+                                const isSelected = (filters.selectedRooms || []).includes(room);
+                                return (
+                                  <button
+                                    key={room}
+                                    type="button"
+                                    className={`py-2 px-2 text-xs font-black rounded-xl border transition-all ${
+                                      isSelected 
+                                        ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
+                                        : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
+                                    }`}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleRoomToggle(room)}
+                                  >
+                                    {room}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
-                    {/* 3. БЛОК 2 САЛОНА: РОВНЫЙ РЯД БЕЗ ДЫР И ПУСТОТ */}
-                    <div className="mb-6">
-                      <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">2 Salonlu Geniş Planlar</span>
-                      <div className="flex flex-wrap gap-2">
-                        {(() => {
-                          const currentType = filters.selectedPropertyType || 'Daire';
-                          const all2Salons = ['2+2', '3+2', '4+2', '5+2 ve üzeri'];
-                          const roomsToShow = currentType === 'Villa' ? ['3+2', '4+2', '5+2 ve üzeri'] : all2Salons;
+                        {/* 3. БЛОК 2 САЛОНА (ТОЛЬКО РЕАЛЬНО СУЩЕСТВУЮЩИЕ КОМНАТЫ) */}
+                        {availableRoomsForType.salons2.length > 0 && (
+                          <div className="mb-5">
+                            <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">2 Salonlu Geniş Planlar</span>
+                            <div className="grid grid-cols-3 gap-2">
+                              {availableRoomsForType.salons2.map((room) => {
+                                const isSelected = (filters.selectedRooms || []).includes(room);
+                                return (
+                                  <button
+                                    key={room}
+                                    type="button"
+                                    className={`py-2 px-2 text-xs font-black rounded-xl border transition-all text-center ${
+                                      isSelected 
+                                        ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
+                                        : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
+                                    }`}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleRoomToggle(room)}
+                                  >
+                                    {room}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
 
-                          return roomsToShow.map((room) => {
-                            const isSelected = (filters.selectedRooms || []).includes(room);
-                            return (
-                              <button
-                                key={room}
-                                type="button"
-                                className={`flex-1 min-w-[75px] py-2 px-2 text-xs font-black rounded-xl border transition-all text-center ${
-                                  isSelected 
-                                    ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
-                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
-                                }`}
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => handleRoomToggle(room)}
-                              >
-                                {room}
-                              </button>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* КНОПКА ПРИМЕНИТЬ: СОЛИДНАЯ ВЫСОТА И ЧЕТКИЙ АКЦЕНТ */}
+                    {/* КНОПКА ПРИМЕНИТЬ */}
                     <button
                       type="button"
-                      className="w-full py-3 bg-[#00A4A6] hover:bg-[#00898B] text-white text-xs font-black rounded-xl transition shadow-md tracking-wider uppercase"
+                      className="w-full py-3 bg-[#00A4A6] hover:bg-[#00898B] text-white text-xs font-black rounded-xl transition shadow-md tracking-wider uppercase mt-2"
                       style={{ border: 'none', cursor: 'pointer' }}
                       onClick={() => setActiveDropdown(null)}
                     >
