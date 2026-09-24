@@ -448,9 +448,9 @@ export default function HeroSearch({
                 )}
               </div>
 
-              {/* ПОЛЕ КОМНАТ */}
+             {/* ПОЛЕ: ТИП ЖИЛЬЯ И КОМНАТНОСТЬ */}
               <div 
-                className={`search-input-field flex-standard field-trigger-room ${filters.selectedRooms.length > 0 ? 'has-value' : ''} ${activeDropdown === 'room' ? 'active-field' : ''}`}
+                className={`search-input-field flex-standard field-trigger-room ${(filters.selectedRooms?.length > 0 || filters.selectedPropertyType) ? 'has-value' : ''} ${activeDropdown === 'room' ? 'active-field' : ''}`}
                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'room' ? null : 'room'); }}
                 style={{ position: 'relative' }}
               >
@@ -458,33 +458,144 @@ export default function HeroSearch({
                   <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
                 </svg>
                 <div className="input-double-label">
-                  <span className="sub-label">Oda sayısı</span>
-                  <span className="main-label">{getDropdownLabel('room')}</span>
+                  <span className="sub-label">Konut ve Oda Tipi</span>
+                  <span className="main-label">
+                    {(() => {
+                      const typeName = filters.selectedPropertyType === 'Villa' ? 'Villa' : filters.selectedPropertyType === 'Penthouse' ? 'Penthouse' : 'Daire';
+                      const count = filters.selectedRooms?.length || 0;
+                      if (count === 0) return `${typeName}`;
+                      if (count === 1) return `${filters.selectedRooms[0]} ${typeName}`;
+                      return `${count} Plan • ${typeName}`;
+                    })()}
+                  </span>
                 </div>
 
                 {activeDropdown === 'room' && (
-                  <div className="custom-dropdown" style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '100%', minWidth: '280px', marginTop: '6px' }} onClick={(e) => e.stopPropagation()}>
-                    <div className="dropdown-mobile-header">
-                      <span className="dropdown-mobile-title">Oda Sayısı</span>
-                      <span className="dropdown-mobile-close" onClick={() => setActiveDropdown(null)}>&times;</span>
+                  <div 
+                    className="custom-dropdown p-4" 
+                    style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '380px', minWidth: '340px', marginTop: '6px', borderRadius: '20px' }} 
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                      <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Konut ve Oda Seçimi</span>
+                      <span 
+                        className="text-[11px] font-bold text-[#00A4A6] hover:underline cursor-pointer"
+                        onClick={() => setFilters(prev => ({ ...prev, selectedRooms: [], selectedPropertyType: 'Daire' }))}
+                      >
+                        Sıfırla
+                      </span>
                     </div>
-                    <div className="dropdown-items-scroll">
-                      {uniqueRooms.map((room) => (
-                        <div 
-                          key={room} 
-                          className={`dropdown-item ${filters.selectedRooms.includes(room) ? 'selected' : ''}`}
-                          onClick={() => handleRoomToggle(room)}
-                        >
-                          <div className="dropdown-item-content">
-                            <span className="dropdown-item-title">{room}</span>
-                            <span className="dropdown-item-subtitle">Oda Tipi</span>
-                          </div>
-                        </div>
-                      ))}
+
+                    {/* 1. БЛОК: ТИП НЕДВИЖИМОСТИ */}
+                    <div className="mb-3">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">1. Konut Tipi</span>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: 'Daire', label: '🏢 Daire & Rezidans' },
+                          { id: 'Villa', label: '🏰 Villa & Townhouse' },
+                          { id: 'Penthouse', label: '🏙️ Penthouse' }
+                        ].map((t) => {
+                          const isSelected = (filters.selectedPropertyType || 'Daire') === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              className={`py-2 px-1 text-[11px] font-extrabold rounded-xl border transition-all text-center leading-tight ${
+                                isSelected 
+                                  ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
+                                  : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100'
+                              }`}
+                              onClick={() => {
+                                setFilters(prev => ({
+                                  ...prev,
+                                  selectedPropertyType: t.id,
+                                  // Если переключили на виллу, убираем неактуальные мелкие комнаты
+                                  selectedRooms: t.id === 'Villa' 
+                                    ? prev.selectedRooms.filter(r => !['1+0', '1+1', '2+1', '2+2'].includes(r))
+                                    : prev.selectedRooms
+                                }));
+                              }}
+                            >
+                              {t.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="dropdown-mobile-footer">
-                      <button className="dropdown-sec-btn" onClick={() => setActiveDropdown(null)}>Seç</button>
+
+                    {/* 2. БЛОК: 1 SALONLU PLANLAR (ДИНАМИЧЕСКИ СКРЫВАЕТ МЕЛКИЕ ДЛЯ ВИЛЛ) */}
+                    <div className="mb-3">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">2. Standart Planlar (1 Salon)</span>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {(() => {
+                          const currentType = filters.selectedPropertyType || 'Daire';
+                          const allRooms = ['1+0', '1+1', '2+1', '3+1', '4+1', '5+1 ve üzeri'];
+                          // Для вилл убираем студии и однушки
+                          const roomsToShow = currentType === 'Villa' 
+                            ? ['3+1', '4+1', '5+1 ve üzeri'] 
+                            : allRooms;
+
+                          return roomsToShow.map((room) => {
+                            const isSelected = (filters.selectedRooms || []).includes(room);
+                            return (
+                              <button
+                                key={room}
+                                type="button"
+                                className={`py-1.5 px-2 text-xs font-bold rounded-lg border transition-all ${
+                                  isSelected 
+                                    ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
+                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100'
+                                }`}
+                                onClick={() => handleRoomToggle(room)}
+                              >
+                                {room}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
                     </div>
+
+                    {/* 3. БЛОК: 2 SALONLU GENİŞ PLANLAR */}
+                    <div className="mb-4">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">3. Geniş Planlar (2 Salon)</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {(() => {
+                          const currentType = filters.selectedPropertyType || 'Daire';
+                          const all2Salons = ['2+2', '3+2', '4+2', '5+2 ve üzeri'];
+                          const roomsToShow = currentType === 'Villa' 
+                            ? ['3+2', '4+2', '5+2 ve üzeri'] 
+                            : all2Salons;
+
+                          return roomsToShow.map((room) => {
+                            const isSelected = (filters.selectedRooms || []).includes(room);
+                            return (
+                              <button
+                                key={room}
+                                type="button"
+                                className={`py-1.5 px-2 text-xs font-bold rounded-lg border transition-all ${
+                                  isSelected 
+                                    ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
+                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100'
+                                }`}
+                                onClick={() => handleRoomToggle(room)}
+                              >
+                                {room}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* КНОПКА ПРИМЕНИТЬ */}
+                    <button
+                      type="button"
+                      className="w-full py-2.5 bg-[#00A4A6] hover:bg-[#00898B] text-white text-xs font-black rounded-xl transition shadow-md"
+                      onClick={() => setActiveDropdown(null)}
+                    >
+                      Uygula (✓)
+                    </button>
                   </div>
                 )}
               </div>
