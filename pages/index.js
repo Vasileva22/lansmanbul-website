@@ -74,6 +74,7 @@ export default function Home({ initialProperties }) {
 
  const [filters, setFilters] = useState({
     selectedCity: 'Ankara',
+    selectedPropertyType: 'Daire', // <--- По умолчанию всегда стоят квартиры
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
@@ -320,11 +321,49 @@ export default function Home({ initialProperties }) {
         }
       }
 
-      if (
-        filters.selectedRooms.length > 0 &&
-        !filters.selectedRooms.includes(property['card odalar'])
-      ) {
-        return false;
+// 4.1 Фильтрация по типу жилья (Daire, Villa, Penthouse)
+      if (filters.selectedPropertyType && filters.selectedPropertyType !== 'all') {
+        const pTypeRaw = String(property.property_type || '').toLowerCase();
+        const pTitle = String(property.testproje || '').toLowerCase();
+        const pRooms = String(property['card odalar'] || '').toLowerCase();
+        const pDesc = String(property.Açıklama || '').toLowerCase();
+
+        let realType = 'daire';
+        if (pTypeRaw.includes('villa') || pTitle.includes('villa') || pRooms.includes('villa')) {
+          realType = 'villa';
+        } else if (pTypeRaw.includes('penthouse') || pTitle.includes('penthouse') || pDesc.includes('penthouse')) {
+          realType = 'penthouse';
+        }
+
+        if (realType !== filters.selectedPropertyType.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // 4.2 Умная фильтрация по комнатам (находит и в строке, и в массиве планировок)
+      if (filters.selectedRooms && filters.selectedRooms.length > 0) {
+        const pRooms = String(property['card odalar'] || '').toLowerCase();
+        
+        // Читаем массив layouts, если он есть
+        let layouts = [];
+        if (Array.isArray(property.layouts)) layouts = property.layouts;
+        else if (typeof property.layouts === 'string') {
+          try { layouts = JSON.parse(property.layouts); } catch (e) {}
+        }
+
+        const isRoomMatched = filters.selectedRooms.some((selectedRoom) => {
+          const cleanRoom = selectedRoom.replace(' ve üzeri', '').trim().toLowerCase();
+          
+          // Проверяем строку комнат
+          if (pRooms.includes(cleanRoom)) return true;
+
+          // Проверяем каждую планировку в layouts
+          return layouts.some((l) => String(l.rooms || '').toLowerCase().includes(cleanRoom));
+        });
+
+        if (!isRoomMatched) {
+          return false;
+        }
       }
 
       // Фильтрация по динамическим годам сдачи (Teslim_Yili)
