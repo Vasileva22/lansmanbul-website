@@ -12,6 +12,7 @@ export default function HeroSearch({
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState(null); // 'location', 'room', 'status'
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedDistricts, setExpandedDistricts] = useState([]); // <--- ДОБАВИТЬ ЭТУ СТРОЧКУ
   const dropdownRef = useRef(null);
 
   // Текущий выбранный город из фильтра (по умолчанию Ankara)
@@ -68,7 +69,7 @@ export default function HeroSearch({
   }, [properties]);
 
   // 2. ДИНАМИЧЕСКИЙ СПИСОК РАЙОНОВ ТЕКУЩЕГО ГОРОДА (В АЛФАВИТНОМ ПОРЯДКЕ С ПОДСЧЕТОМ)
-  const cityDistrictsWithCount = useMemo(() => {
+ const cityDistrictsWithCount = useMemo(() => {
     const map = new Map();
 
     properties.forEach((p) => {
@@ -80,20 +81,25 @@ export default function HeroSearch({
       const rawDistrict = p.district || (p['İlçe/Semt'] ? p['İlçe/Semt'].split(/\s+/)[0] : '');
       if (!isCleanString(rawDistrict)) return;
 
-      // Вытаскиваем микрорайон для уточнения
+      // Извлекаем микрорайон
       let subArea = p.mahalle || '';
       if (!subArea && p['İlçe/Semt'] && p['İlçe/Semt'].includes(rawDistrict)) {
         subArea = p['İlçe/Semt'].replace(rawDistrict, '').trim();
       }
 
+      // Отсекаем дубли (если микрорайон называется так же, как и район)
+      if (subArea.toLowerCase() === rawDistrict.toLowerCase()) {
+        subArea = '';
+      }
+
       if (!map.has(rawDistrict)) {
-        map.set(rawDistrict, { name: rawDistrict, count: 0, subAreas: new Set() });
+        map.set(rawDistrict, { name: rawDistrict, count: 0, subMap: new Map() });
       }
 
       const item = map.get(rawDistrict);
       item.count += 1;
       if (subArea && isCleanString(subArea)) {
-        item.subAreas.add(subArea);
+        item.subMap.set(subArea, (item.subMap.get(subArea) || 0) + 1);
       }
     });
 
@@ -101,7 +107,7 @@ export default function HeroSearch({
       .map((item) => ({
         name: item.name,
         count: item.count,
-        subText: item.subAreas.size > 0 ? Array.from(item.subAreas).slice(0, 2).join(', ') : '',
+        subAreas: Array.from(item.subMap.entries()).map(([subName, subCount]) => ({ name: subName, count: subCount })),
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
   }, [properties, currentCity]);
@@ -363,25 +369,71 @@ export default function HeroSearch({
                       <div className="px-3 py-1.5">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">📍 İlçeler ({currentCity})</span>
                         {searchResults.matchedDistricts.length > 0 ? (
-                          searchResults.matchedDistricts.map((d) => (
-                            <div 
-                              key={d.name} 
-                              className={`dropdown-item ${filters.selectedLocations.includes(d.name) ? 'selected' : ''}`}
-                              onClick={() => handleLocationToggle(d.name)}
-                            >
-                              <div className="dropdown-item-left">
-                                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'none', stroke: 'currentColor', strokeWidth: 2 }}>
-                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                                </svg>
+                          searchResults.matchedDistricts.map((d) => {
+                            const isExpanded = expandedDistricts.includes(d.name);
+                            const hasSubAreas = d.subAreas && d.subAreas.length > 0;
+                            const isDistrictSelected = filters.selectedLocations.includes(d.name);
+
+                            return (
+                              <div key={d.name} className="border-b border-slate-50 last:border-0">
+                                {/* Основная строка района */}
+                                <div 
+                                  className={`dropdown-item flex items-center justify-between py-2 px-3 hover:bg-slate-50 cursor-pointer ${isDistrictSelected ? 'bg-teal-50/50' : ''}`}
+                                  onClick={() => handleLocationToggle(d.name)}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'none', stroke: isDistrictSelected ? '#00A4A6' : 'currentColor', strokeWidth: 2 }}>
+                                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                    <div className="flex flex-col text-left">
+                                      <span className={`text-sm font-bold ${isDistrictSelected ? 'text-[#00A4A6]' : 'text-slate-700'}`}>{d.name}</span>
+                                      <span className="text-[11px] text-slate-400">{d.count} Proje</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Стрелочка раскрытия микрорайонов */}
+                                  {hasSubAreas && (
+                                    <button
+                                      type="button"
+                                      className="p-1.5 hover:bg-slate-200/60 rounded-md transition text-slate-400 hover:text-slate-700"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setExpandedDistricts(prev => 
+                                          prev.includes(d.name) ? prev.filter(x => x !== d.name) : [...prev, d.name]
+                                        );
+                                      }}
+                                    >
+                                      <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                      </svg>
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Раскрывающийся микро-список махалле */}
+                                {hasSubAreas && isExpanded && (
+                                  <div className="pl-8 pr-3 py-1 bg-slate-50/60 space-y-1">
+                                    {d.subAreas.map((sub) => {
+                                      const isSubSelected = filters.selectedLocations.includes(sub.name);
+                                      return (
+                                        <div
+                                          key={sub.name}
+                                          className={`flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs cursor-pointer transition ${isSubSelected ? 'bg-[#00A4A6] text-white font-bold' : 'text-slate-600 hover:bg-white'}`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleLocationToggle(sub.name);
+                                          }}
+                                        >
+                                          <span>🏘️ {sub.name}</span>
+                                          <span className={isSubSelected ? 'text-white/80' : 'text-slate-400'}>{sub.count} Proje</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                              <div className="dropdown-item-content">
-                                <span className="dropdown-item-title">
-  {d.name} {d.subText && <span className="text-slate-400 font-normal text-xs">({d.subText})</span>}
-</span>
-                               <span className="dropdown-item-subtitle">{currentCity}, Türkiye • {d.count} Proje</span>
-                              </div>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
                           <div className="p-4 text-center text-xs text-slate-400">Aradığınız kriterde bölge bulunamadı.</div>
                         )}
