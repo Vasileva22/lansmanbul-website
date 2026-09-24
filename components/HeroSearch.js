@@ -472,44 +472,45 @@ export default function HeroSearch({
 
                 {activeDropdown === 'room' && (
                   <div 
-                    className="custom-dropdown p-4" 
-                    style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '380px', minWidth: '340px', marginTop: '6px', borderRadius: '20px' }} 
+                    className="custom-dropdown p-6 bg-white shadow-2xl border border-slate-200/80 rounded-3xl" 
+                    style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: '100%', left: 0, width: '420px', minWidth: '380px', marginTop: '10px', zIndex: 100 }} 
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
-                      <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Konut ve Oda Seçimi</span>
+                    {/* ШАПКА ОКНА (СВОБОДНЫЕ ОТСТУПЫ, НИЧЕГО НЕ РЕЖЕТСЯ) */}
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-5">
+                      <span className="text-xs font-black tracking-wider text-slate-800 uppercase">Konut ve Oda Seçimi</span>
                       <span 
-                        className="text-[11px] font-bold text-[#00A4A6] hover:underline cursor-pointer"
+                        className="text-xs font-bold text-slate-400 hover:text-slate-800 transition cursor-pointer"
                         onClick={() => setFilters(prev => ({ ...prev, selectedRooms: [], selectedPropertyType: 'Daire' }))}
                       >
                         Sıfırla
                       </span>
                     </div>
 
-                    {/* 1. БЛОК: ТИП НЕДВИЖИМОСТИ */}
-                    <div className="mb-3">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">1. Konut Tipi</span>
-                      <div className="grid grid-cols-3 gap-1.5">
+                    {/* 1. СТИЛЬНЫЙ СЕГМЕНТИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ТИПА (БЕЗ ДЕТСКИХ СМАЙЛИКОВ) */}
+                    <div className="mb-5">
+                      <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Konut Tipi</span>
+                      <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 border border-slate-200/50">
                         {[
-                          { id: 'Daire', label: '🏢 Daire & Rezidans' },
-                          { id: 'Villa', label: '🏰 Villa & Townhouse' },
-                          { id: 'Penthouse', label: '🏙️ Penthouse' }
+                          { id: 'Daire', label: 'Daire & Rezidans' },
+                          { id: 'Villa', label: 'Villa & Townhouse' },
+                          { id: 'Penthouse', label: 'Penthouse' }
                         ].map((t) => {
                           const isSelected = (filters.selectedPropertyType || 'Daire') === t.id;
                           return (
                             <button
                               key={t.id}
                               type="button"
-                              className={`py-2 px-1 text-[11px] font-extrabold rounded-xl border transition-all text-center leading-tight ${
+                              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all text-center ${
                                 isSelected 
-                                  ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
-                                  : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100'
+                                  ? 'bg-white text-slate-900 shadow-sm' 
+                                  : 'text-slate-500 hover:text-slate-800'
                               }`}
+                              style={{ border: 'none', cursor: 'pointer' }}
                               onClick={() => {
                                 setFilters(prev => ({
                                   ...prev,
                                   selectedPropertyType: t.id,
-                                  // Если переключили на виллу, убираем неактуальные мелкие комнаты
                                   selectedRooms: t.id === 'Villa' 
                                     ? prev.selectedRooms.filter(r => !['1+0', '1+1', '2+1', '2+2'].includes(r))
                                     : prev.selectedRooms
@@ -523,17 +524,14 @@ export default function HeroSearch({
                       </div>
                     </div>
 
-                    {/* 2. БЛОК: 1 SALONLU PLANLAR (ДИНАМИЧЕСКИ СКРЫВАЕТ МЕЛКИЕ ДЛЯ ВИЛЛ) */}
-                    <div className="mb-3">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">2. Standart Planlar (1 Salon)</span>
-                      <div className="grid grid-cols-3 gap-1.5">
+                    {/* 2. БЛОК 1 САЛОН: АККУРАТНЫЕ ПИЛЮЛИ В РОВНОЙ СЕТКЕ */}
+                    <div className="mb-4">
+                      <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">1 Salonlu Planlar</span>
+                      <div className="grid grid-cols-3 gap-2">
                         {(() => {
                           const currentType = filters.selectedPropertyType || 'Daire';
                           const allRooms = ['1+0', '1+1', '2+1', '3+1', '4+1', '5+1 ve üzeri'];
-                          // Для вилл убираем студии и однушки
-                          const roomsToShow = currentType === 'Villa' 
-                            ? ['3+1', '4+1', '5+1 ve üzeri'] 
-                            : allRooms;
+                          const roomsToShow = currentType === 'Villa' ? ['3+1', '4+1', '5+1 ve üzeri'] : allRooms;
 
                           return roomsToShow.map((room) => {
                             const isSelected = (filters.selectedRooms || []).includes(room);
@@ -541,11 +539,12 @@ export default function HeroSearch({
                               <button
                                 key={room}
                                 type="button"
-                                className={`py-1.5 px-2 text-xs font-bold rounded-lg border transition-all ${
+                                className={`py-2 px-2 text-xs font-black rounded-xl border transition-all ${
                                   isSelected 
                                     ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
-                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
                                 }`}
+                                style={{ cursor: 'pointer' }}
                                 onClick={() => handleRoomToggle(room)}
                               >
                                 {room}
@@ -556,16 +555,14 @@ export default function HeroSearch({
                       </div>
                     </div>
 
-                    {/* 3. БЛОК: 2 SALONLU GENİŞ PLANLAR */}
-                    <div className="mb-4">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">3. Geniş Planlar (2 Salon)</span>
-                      <div className="grid grid-cols-2 gap-1.5">
+                    {/* 3. БЛОК 2 САЛОНА: РОВНЫЙ РЯД БЕЗ ДЫР И ПУСТОТ */}
+                    <div className="mb-6">
+                      <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">2 Salonlu Geniş Planlar</span>
+                      <div className="flex flex-wrap gap-2">
                         {(() => {
                           const currentType = filters.selectedPropertyType || 'Daire';
                           const all2Salons = ['2+2', '3+2', '4+2', '5+2 ve üzeri'];
-                          const roomsToShow = currentType === 'Villa' 
-                            ? ['3+2', '4+2', '5+2 ve üzeri'] 
-                            : all2Salons;
+                          const roomsToShow = currentType === 'Villa' ? ['3+2', '4+2', '5+2 ve üzeri'] : all2Salons;
 
                           return roomsToShow.map((room) => {
                             const isSelected = (filters.selectedRooms || []).includes(room);
@@ -573,11 +570,12 @@ export default function HeroSearch({
                               <button
                                 key={room}
                                 type="button"
-                                className={`py-1.5 px-2 text-xs font-bold rounded-lg border transition-all ${
+                                className={`flex-1 min-w-[75px] py-2 px-2 text-xs font-black rounded-xl border transition-all text-center ${
                                   isSelected 
                                     ? 'bg-[#00A4A6] text-white border-[#00A4A6] shadow-sm' 
-                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-slate-100 hover:border-slate-300'
                                 }`}
+                                style={{ cursor: 'pointer' }}
                                 onClick={() => handleRoomToggle(room)}
                               >
                                 {room}
@@ -588,13 +586,14 @@ export default function HeroSearch({
                       </div>
                     </div>
 
-                    {/* КНОПКА ПРИМЕНИТЬ */}
+                    {/* КНОПКА ПРИМЕНИТЬ: СОЛИДНАЯ ВЫСОТА И ЧЕТКИЙ АКЦЕНТ */}
                     <button
                       type="button"
-                      className="w-full py-2.5 bg-[#00A4A6] hover:bg-[#00898B] text-white text-xs font-black rounded-xl transition shadow-md"
+                      className="w-full py-3 bg-[#00A4A6] hover:bg-[#00898B] text-white text-xs font-black rounded-xl transition shadow-md tracking-wider uppercase"
+                      style={{ border: 'none', cursor: 'pointer' }}
                       onClick={() => setActiveDropdown(null)}
                     >
-                      Uygula (✓)
+                      Uygula
                     </button>
                   </div>
                 )}
