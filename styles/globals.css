@@ -2531,3 +2531,9 @@ body, html, .modern-header, .modern-header * {
   margin-bottom: 2px !important;
   padding-top: 8px !important;
 }
+/* РАСШИРЕНИЕ ОКНА ПЛАНИРОВОК */
+.room-dropdown-wide {
+    width: 480px !important;
+    min-width: 460px !important;
+    max-width: 90vw !important;
+}
