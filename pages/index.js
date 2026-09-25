@@ -400,23 +400,45 @@ export default function Home({ initialProperties }) {
         return false;
       }
 
-      if (filters.activeFeatureFilters.length > 0) {
-        const physicalFeatures = filters.activeFeatureFilters.filter(
-          (feat) => feat !== 'Vatandaşlığa Uygun' && feat !== 'İkamete Uygun'
+    // 10. Умная фильтрация по эталонным удобствам через матрицу синонимов
+      if (filters.activeFeatureFilters && filters.activeFeatureFilters.length > 0) {
+        const featureStemsMap = {
+          'Kapalı Otopark': ['kapalı otopark', 'yeraltı otopark', 'otopark'],
+          '24 Saat Güvenlik': ['güvenlik', 'kamera', '7/24'],
+          'Yüzme Havuzu': ['havuz', 'yüzme'],
+          'Çocuk Oyun Alanı': ['çocuk oyun', 'çocuk park', 'oyun park'],
+          'Spor Salonu': ['fitness', 'spor salonu', 'gym', 'spor alanı'],
+          'Sauna': ['sauna', 'hamam', 'buhar', 'spa'],
+          'Jeneratör': ['jeneratör', 'kesintisiz jeneratör'],
+          'Peyzaj': ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'],
+          'Deprem': ['deprem', 'radye', 'zemin etüd'],
+          'Şarj İstasyonu': ['şarj', 'elektrikli araç'],
+          'Yerden Isıtma': ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'],
+          'Ankastre Mutfak': ['ankastre', 'beyaz eşya', 'fırın', 'ocak'],
+          'Manzara': ['deniz', 'doğa', 'manzara', 'göl', 'orman'],
+          'Akıllı Ev': ['akıllı ev', 'smart home', 'otomasyon']
+        };
+
+        const activePhysical = filters.activeFeatureFilters.filter(
+          (f) => f !== 'Vatandaşlığa Uygun' && f !== 'İkamete Uygun'
         );
 
-        if (physicalFeatures.length > 0) {
-          const propFeatures = property.Özellikler
-            ? String(property.Özellikler).toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's')
-            : '';
-          const allMatched = physicalFeatures.every((feat) => {
-            const normFeat = feat.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
-            return propFeatures.includes(normFeat);
+        if (activePhysical.length > 0) {
+          const fullText = (
+            String(property.Özellikler || '') + ' ' +
+            String(property.Açıklama || '')
+          ).toLowerCase();
+
+          const allMatched = activePhysical.every((featKey) => {
+            const stems = featureStemsMap[featKey] || [featKey.toLowerCase()];
+            return stems.some((stem) => fullText.includes(stem));
           });
-          if (!allMatched) return false;
+
+          if (!allMatched) {
+            return false;
+          }
         }
       }
-
       if (filters.activePaymentFilters.length > 0) {
         const matchesAny = filters.activePaymentFilters.some((pay) => {
           const normPay = pay.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
