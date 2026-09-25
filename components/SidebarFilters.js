@@ -28,6 +28,37 @@ export default function SidebarFilters({
   const priceSliderInst = useRef(null);
 
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+  // СВЕРХБЫСТРЫЙ КЭШ ПОДСЧЕТА УДОБСТВ (РАБОТАЕТ МГНОВЕННО)
+  const featureCounts = useMemo(() => {
+    const featureStems = {
+      'Kapalı Otopark': ['kapalı otopark', 'yeraltı otopark', 'otopark'],
+      '24 Saat Güvenlik': ['güvenlik', 'kamera', '7/24'],
+      'Yüzme Havuzu': ['havuz', 'yüzme'],
+      'Çocuk Oyun Alanı': ['çocuk oyun', 'çocuk park', 'oyun park'],
+      'Spor Salonu': ['fitness', 'spor salonu', 'gym', 'spor alanı'],
+      'Sauna': ['sauna', 'hamam', 'buhar', 'spa'],
+      'Jeneratör': ['jeneratör', 'kesintisiz jeneratör'],
+      'Peyzaj': ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'],
+      'Deprem': ['deprem', 'radye', 'zemin etüd'],
+      'Şarj İstasyonu': ['şarj', 'elektrikli araç'],
+      'Yerden Isıtma': ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'],
+      'Ankastre Mutfak': ['ankastre', 'beyaz eşya', 'fırın', 'ocak'],
+      'Manzara': ['deniz', 'doğa', 'manzara', 'göl', 'orman'],
+      'Akıllı Ev': ['akıllı ev', 'smart home', 'otomasyon']
+    };
+
+    // Подготавливаем облегченный текст один раз
+    const preparedTexts = (filteredProperties || []).map(p => 
+      (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase()
+    );
+
+    const counts = {};
+    Object.entries(featureStems).forEach(([id, stems]) => {
+      counts[id] = preparedTexts.filter(text => stems.some(s => text.includes(s))).length;
+    });
+
+    return counts;
+  }, [filteredProperties]);
 
   // Локальные состояния для Цены
   const [minPriceInput, setMinPriceInput] = useState(filters.priceRange[0]);
@@ -628,12 +659,7 @@ export default function SidebarFilters({
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
                 
-                // Считаем реальное количество проектов с этим удобством
-                const matchCount = filteredProperties.filter(p => {
-                  const text = (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase();
-                  return item.stems.some(s => text.includes(s));
-                }).length;
-
+                const matchCount = featureCounts[item.id] || 0;
                 return (
                   <div
                     key={item.id}
