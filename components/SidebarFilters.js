@@ -606,57 +606,106 @@ export default function SidebarFilters({
           )}
           {/* === КОНЕЦ ВСТАВКИ === */}
 
-         <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Olanaklar</span>
-            <div className={'luxe-tags ' + (isTagsExpanded ? 'expanded' : '')}>
-              {uniqueFeatures.map((feat) => {
-                // Иконки-заглушки для известных удобств
-                const iconMap = {
-                  havuz: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M2 19a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2zM2 13a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 2 0v-2a3 3 0 0 1-2 0a3 3 0 0 1-6 0a3 3 0 0 1-6 0a3 3 0 0 1-2 0v2z" /></svg>,
-                  fitness: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43l-1.43-1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L15.57 7L14.14 8.43l-1.43-1.43l-2.14 2.14l1.43 1.43l-1.43 1.43l-3.57-3.57l1.43-1.43L5 5.57L3.57 7l1.43 1.43l-2.14 2.14L4.29 12l1.43-1.43l3.57 3.57l-1.43 1.43L9.29 17l1.43-1.43l1.43 1.43l2.14-2.14l-1.43-1.43l1.43-1.43l3.57 3.57l-1.43 1.43L18.29 20l1.43-1.43z" /></svg>,
-                  otopark: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 11h-3v4H8V6h5c1.66 0 3 1.34 3 3s-1.34 3-3 3zm0-5h-3v2h3c.55 0 1-.45 1-1s-.45-1-1-1z" /></svg>,
-                  güvenlik: <svg className="card-svg-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-12 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" /></svg>
-                };
-
-                // Функция поиска иконки по совпадению текста
-                const getOlanakIcon = (item) => {
-                  const norm = item.toLowerCase()
-                    .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c')
-                    .replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u').trim();
-                  
-                  if (norm.includes('havuz')) return iconMap.havuz;
-                  if (norm.includes('fitness') || norm.includes('spor') || norm.includes('salon')) return iconMap.fitness;
-                  if (norm.includes('otopark') || norm.includes('park yeri')) return iconMap.otopark;
-                  if (norm.includes('guvenlik')) return iconMap.güvenlik;
-                  
-                  // Универсальная иконка-галочка для всех остальных динамических удобств
-                  return (
-                    <svg className="card-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12, marginRight: 5 }}>
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  );
-                };
+         {/* СЕКЦИЯ 1: SITE & SOSYAL ÖZELLİKLER */}
+          <div className="luxe-group">
+            <span className="luxe-group-label c-filter__title fs-14 fw-600">Site & Sosyal Özellikler</span>
+            
+            <div className="space-y-2 mt-2">
+              {[
+                { id: 'Kapalı Otopark', label: 'Kapalı Otopark', stems: ['kapalı otopark', 'yeraltı otopark', 'otopark'] },
+                { id: '24 Saat Güvenlik', label: '24 Saat Güvenlik', stems: ['güvenlik', 'kamera', '7/24'] },
+                { id: 'Yüzme Havuzu', label: 'Yüzme Havuzu', stems: ['havuz', 'yüzme'] },
+                { id: 'Çocuk Oyun Alanı', label: 'Çocuk Oyun Parkı', stems: ['çocuk oyun', 'çocuk park', 'oyun park'] },
+                { id: 'Spor Salonu', label: 'Fitness & Spor Salonu', stems: ['fitness', 'spor salonu', 'gym', 'spor alanı'] },
+                // Элементы, раскрывающиеся по кнопке "Daha fazla"
+                ...(isTagsExpanded ? [
+                  { id: 'Sauna', label: 'Sauna & Hamam', stems: ['sauna', 'hamam', 'buhar', 'spa'] },
+                  { id: 'Jeneratör', label: 'Jeneratör', stems: ['jeneratör', 'kesintisiz jeneratör'] },
+                  { id: 'Peyzaj', label: 'Peyzaj & Yürüyüş Parkuru', stems: ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'] },
+                  { id: 'Deprem', label: 'Deprem Yönetmeliğine Uygun', stems: ['deprem', 'radye', 'zemin etüd'] },
+                  { id: 'Şarj İstasyonu', label: 'Araç Şarj İstasyonu', stems: ['şarj', 'elektrikli araç'] }
+                ] : [])
+              ].map((item) => {
+                const isChecked = filters.activeFeatureFilters.includes(item.id);
+                
+                // Считаем реальное количество проектов с этим удобством
+                const matchCount = filteredProperties.filter(p => {
+                  const text = (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase();
+                  return item.stems.some(s => text.includes(s));
+                }).length;
 
                 return (
-                  <div 
-                    key={feat} 
-                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes(feat) ? 'active' : '')}
-                    onClick={() => handleTagToggle(feat)}
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between py-1 px-1 cursor-pointer select-none hover:bg-slate-50 rounded-lg transition"
+                    onClick={() => handleTagToggle(item.id)}
                   >
-                    {getOlanakIcon(feat)}
-                    <label style={{ cursor: 'pointer', margin: 0 }}>{feat}</label>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-300 bg-white'}`}>
+                        {isChecked && (
+                          <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold ${isChecked ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">({matchCount})</span>
                   </div>
                 );
               })}
             </div>
+
             <span 
-              className="luxe-more-filters-link" 
+              className="luxe-more-filters-link text-xs font-bold text-[#00A4A6] hover:underline cursor-pointer inline-block mt-2" 
               onClick={() => setIsTagsExpanded(!isTagsExpanded)}
             >
-              {isTagsExpanded ? 'Daha az göster' : 'Daha fazla göster'}
+              {isTagsExpanded ? 'Daha az göster ▴' : 'Daha fazla göster (5) ▾'}
             </span>
           </div>
 
+          <div className="luxe-divider"></div>
+
+          {/* СЕКЦИЯ 2: DAİRE ÖZELLİKLERİ */}
+          <div className="luxe-group">
+            <span className="luxe-group-label c-filter__title fs-14 fw-600">Daire İçi Özellikler</span>
+            
+            <div className="space-y-2 mt-2">
+              {[
+                { id: 'Yerden Isıtma', label: 'Yerden Isıtma', stems: ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'] },
+                { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak Seti', stems: ['ankastre', 'beyaz eşya', 'fırın', 'ocak'] },
+                { id: 'Manzara', label: 'Deniz / Doğa Manzarası', stems: ['deniz', 'doğa', 'manzara', 'göl', 'orman'] },
+                { id: 'Akıllı Ev', label: 'Akıllı Ev Sistemi', stems: ['akıllı ev', 'smart home', 'otomasyon'] }
+              ].map((item) => {
+                const isChecked = filters.activeFeatureFilters.includes(item.id);
+
+                const matchCount = filteredProperties.filter(p => {
+                  const text = (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase();
+                  return item.stems.some(s => text.includes(s));
+                }).length;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between py-1 px-1 cursor-pointer select-none hover:bg-slate-50 rounded-lg transition"
+                    onClick={() => handleTagToggle(item.id)}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-300 bg-white'}`}>
+                        {isChecked && (
+                          <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold ${isChecked ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">({matchCount})</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <div className="luxe-divider"></div>
 
           <div className="luxe-group">
