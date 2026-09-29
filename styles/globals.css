@@ -615,33 +615,66 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   4. БОКОВОЙ ФИЛЬТР И КАРТА
+   4. БОКОВОЙ ФИЛЬТР И КАРТА (ПЛАВНЫЙ СТИКИ СЛАЙДИНГ)
    ========================================================================== */
-.luxe-sidebar {
-    position: absolute !important;
-    top: 15px !important;
-    left: 20px !important;
-    width: 310px;
-    background: #fff;
-    border: 1.5px solid #CBD5E1;
-    border-radius: 24px;
-    padding: 24px;
-    z-index: 9999 !important;
-    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06);
-    box-sizing: border-box;
-    transition: transform 0.3s ease, opacity 0.3s ease !important;
+#custom-catalog-search {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-start !important;
 }
-.luxe-sidebar.sidebar-sticky-fixed {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 20px !important;
+
+.luxe-sidebar {
+    position: sticky !important;
+    top: 110px !important;
+    left: 0 !important;
+    width: 310px !important;
+    max-height: calc(100vh - 130px) !important;
+    background: #fff !important;
+    border: 1.5px solid #E2E8F0 !important;
+    border-radius: 24px !important;
+    padding: 20px !important;
+    z-index: 90 !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.luxe-sidebar-scrollable-body {
+    overflow-y: auto !important;
+    padding-right: 4px;
+    margin-right: -4px;
+}
+.luxe-sidebar-scrollable-body::-webkit-scrollbar {
+    width: 4px;
+}
+.luxe-sidebar-scrollable-body::-webkit-scrollbar-thumb {
+    background-color: #E2E8F0;
+    border-radius: 4px;
 }
 
 /* ПЛАВНОЕ СКРЫТИЕ ДЕСКТОП СЛАЙДЕРА */
 .luxe-sidebar.sidebar-hidden {
-    transform: translateX(-350px) !important;
+    transform: translateX(-330px) !important;
     opacity: 0 !important;
     pointer-events: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+#catalog-content-wrapper {
+    margin-left: 24px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    transition: margin-left 0.3s ease !important;
+}
+#catalog-content-wrapper.full-width {
+    margin-left: 0 !important;
 }
 
 #sidebar-toggle-btn {
