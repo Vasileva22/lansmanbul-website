@@ -645,18 +645,18 @@ export default function SidebarFilters({
           )}
           {/* === КОНЕЦ ВСТАВКИ === */}
 
-         {/* СЕКЦИЯ 1: SITE & SOSYAL ÖZELLİKLER */}
+        {/* СЕКЦИЯ 1: SITE & SOSYAL ÖZELLİKLER (В СТИЛЕ EMLAKJET) */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Site & Sosyal Özellikler</span>
             
-            <div className="space-y-2 mt-2">
+            <div className={`space-y-1.5 mt-2 ${isTagsExpanded ? 'emlakjet-features-scroll' : ''}`}>
               {[
                 { id: 'Kapalı Otopark', label: 'Kapalı Otopark', stems: ['kapalı otopark', 'yeraltı otopark', 'otopark'] },
                 { id: '24 Saat Güvenlik', label: '24 Saat Güvenlik', stems: ['güvenlik', 'kamera', '7/24'] },
                 { id: 'Yüzme Havuzu', label: 'Yüzme Havuzu', stems: ['havuz', 'yüzme'] },
                 { id: 'Çocuk Oyun Alanı', label: 'Çocuk Oyun Parkı', stems: ['çocuk oyun', 'çocuk park', 'oyun park'] },
                 { id: 'Spor Salonu', label: 'Fitness & Spor Salonu', stems: ['fitness', 'spor salonu', 'gym', 'spor alanı'] },
-                // Элементы, раскрывающиеся по кнопке "Daha fazla"
+                // Раскрывающиеся элементы по кнопке Daha fazla
                 ...(isTagsExpanded ? [
                   { id: 'Sauna', label: 'Sauna & Hamam', stems: ['sauna', 'hamam', 'buhar', 'spa'] },
                   { id: 'Jeneratör', label: 'Jeneratör', stems: ['jeneratör', 'kesintisiz jeneratör'] },
