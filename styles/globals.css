@@ -638,39 +638,51 @@ body, html, .modern-header, .modern-header * {
     box-sizing: border-box !important;
     gap: 30px !important;
 }
-
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    /* Убираем жесткий верх и привязываем к нижнему краю экрана! */
-    top: auto !important;
-    bottom: 24px !important;
+    top: 100px; /* Начальная точка под шапкой (динамически управляется JS-контроллером) */
     align-self: flex-start !important;
     width: 315px !important;
     min-width: 315px !important;
     max-width: 315px !important;
-    height: auto !important;
-    min-height: min-content !important;
-    max-height: none !important; /* УБИРАЕМ ОГРАНИЧЕНИЕ: Сайдбар раскрывается на всю длину! */
+    height: auto !important; /* На старте раскрыт во всю длину */
+    max-height: calc(100vh - 120px) !important; /* Но не вылезает за пределы экрана при фиксации */
     background: #ffffff !important;
-    border: 1.5px solid #CBD5E1 !important;
+    border: 1.5px solid #E2E8F0 !important;
     border-radius: 24px !important;
-    padding: 24px !important;
+    padding: 20px 8px 20px 20px !important;
     z-index: 30 !important;
-    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
     flex-shrink: 0 !important;
-    overflow: visible !important; /* Контент дышит свободно */
+    overflow: hidden !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
+/* Внутреннее тело со свободным скроллом, когда мышка внутри */
 .luxe-sidebar-scrollable-body {
-    overflow: visible !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+}
+
+.luxe-sidebar-scrollable-body::-webkit-scrollbar {
+    width: 4px !important;
+}
+.luxe-sidebar-scrollable-body::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+.luxe-sidebar-scrollable-body::-webkit-scrollbar-thumb {
+    background: #CBD5E1 !important;
+    border-radius: 10px !important;
+}
+.luxe-sidebar-scrollable-body::-webkit-scrollbar-thumb:hover {
+    background: #00A4A6 !important;
 }
 /* Деликатный, почти незаметный европейский скроллбар (как на macOS) */
 .luxe-sidebar-scrollable-body::-webkit-scrollbar {
