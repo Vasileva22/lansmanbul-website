@@ -625,18 +625,19 @@ body, html, .modern-header, .modern-header * {
 
 .luxe-sidebar {
     position: sticky !important;
-    top: 105px !important; /* Идет рядом с карточками ровно под шапкой */
+    /* Умный расчет: залипает по нижнему краю экрана с отступом 24px */
+    top: calc(100vh - 100% - 24px) !important;
+    align-self: flex-start !important;
     width: 310px !important;
     min-width: 310px !important;
     max-width: 310px !important;
-    height: auto !important; /* Свободная естественная высота на весь контент! */
-    max-height: none !important; /* Никаких обрезаний высоты */
+    height: fit-content !important;
     background: #ffffff !important;
-    border: 1px solid #E2E8F0 !important; /* Благородная тонкая платиновая рамка */
+    border: 1px solid #E2E8F0 !important;
     border-radius: 24px !important;
     padding: 22px !important;
     z-index: 40 !important;
-    box-shadow: 0 4px 25px rgba(15, 23, 42, 0.04) !important; /* Дорогая мягкая тень */
+    box-shadow: 0 4px 25px rgba(15, 23, 42, 0.04) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
