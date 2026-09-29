@@ -13,8 +13,9 @@ export default function SidebarFilters({
   setIsForeigner,
   usdRate,
   uniqueYears = [],
-  uniqueFeatures = [] // <--- НОВОЕ: принимаем живой список удобств
+  uniqueFeatures = []
 }) {
+  const sidebarContainerRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const mapLoaded = useRef(false);
@@ -23,6 +24,42 @@ export default function SidebarFilters({
   const katSliderRef = useRef(null);
   const priceSliderRef = useRef(null);
 
+  // === ДВУХФАЗНЫЙ УМНЫЙ СТИКИ-КОНТРОЛЛЕР ===
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const el = sidebarContainerRef.current;
+      if (!el || window.innerWidth <= 1024) return;
+
+      const windowHeight = window.innerHeight;
+      const sidebarRect = el.getBoundingClientRect();
+      const sidebarHeight = sidebarRect.height;
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY;
+
+      // Если сайдбар выше экрана ноутбука — включаем двухфазное сопровождение
+      if (sidebarHeight > windowHeight - 110) {
+        if (isScrollingDown) {
+          // Скроллим вниз: залипаем, когда показался нижний край
+          el.style.top = `calc(100vh - ${sidebarHeight + 25}px)`;
+        } else {
+          // Скроллим вверх: залипаем ровно под шапкой
+          el.style.top = '100px';
+        }
+      } else {
+        el.style.top = '100px';
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  // ===========================================
   const areaSliderInst = useRef(null);
   const katSliderInst = useRef(null);
   const priceSliderInst = useRef(null);
@@ -343,7 +380,11 @@ export default function SidebarFilters({
         onClick={() => setIsMobileSidebarOpen(false)}
       ></div>
 
-      <aside className={'luxe-sidebar ' + (isSidebarHidden ? 'sidebar-hidden' : '') + ' ' + (isMobileSidebarOpen ? 'sidebar-mobile-show' : '')} id="custom-sidebar">
+      <aside 
+        ref={sidebarContainerRef}
+        className={'luxe-sidebar ' + (isSidebarHidden ? 'sidebar-hidden' : '') + ' ' + (isMobileSidebarOpen ? 'sidebar-mobile-show' : '')} 
+        id="custom-sidebar"
+      >
         <span className="sidebar-mobile-close-btn" onClick={() => setIsMobileSidebarOpen(false)}>
           &times;
         </span>
