@@ -110,36 +110,39 @@ export default function SidebarFilters({
     setFilters((prev) => ({ ...prev, selectedYears: updated }));
   };
 
-  // Яндекс.Карты (выполняется строго на клиенте)
+// Яндекс.Карты (отложенная мягкая загрузка, освобождающая главный поток)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const initMapInstance = () => {
-      if (window.ymaps && !mapInstance.current && mapRef.current) {
-        window.ymaps.ready(() => {
-          mapInstance.current = new window.ymaps.Map(mapRef.current, {
-            center: [39.9334, 32.8597],
-            zoom: 10,
-            controls: [],
+    const timer = setTimeout(() => {
+      const initMapInstance = () => {
+        if (window.ymaps && !mapInstance.current && mapRef.current) {
+          window.ymaps.ready(() => {
+            mapInstance.current = new window.ymaps.Map(mapRef.current, {
+              center: [39.9334, 32.8597],
+              zoom: 10,
+              controls: [],
+            });
+            mapLoaded.current = true;
+            drawMapPlacemarks();
           });
-          mapLoaded.current = true;
-          drawMapPlacemarks();
-        });
-      }
-    };
+        }
+      };
 
-    if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
-      const script = document.createElement('script');
-      script.id = 'yandex-maps-script';
-      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
-      script.type = 'text/javascript';
-      script.onload = initMapInstance;
-      document.head.appendChild(script);
-    } else {
-      initMapInstance();
-    }
+      if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
+        const script = document.createElement('script');
+        script.id = 'yandex-maps-script';
+        script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
+        script.type = 'text/javascript';
+        script.onload = initMapInstance;
+        document.head.appendChild(script);
+      } else {
+        initMapInstance();
+      }
+    }, 400); // 400ms задержка дает странице мгновенно отрисоваться без фризов!
 
     return () => {
+      clearTimeout(timer);
       if (mapInstance.current) {
         mapInstance.current.destroy();
         mapInstance.current = null;
