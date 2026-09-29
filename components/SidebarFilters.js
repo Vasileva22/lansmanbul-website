@@ -20,6 +20,29 @@ export default function SidebarFilters({
   const mapInstance = useRef(null);
   const mapLoaded = useRef(false);
 
+  // === Emlakjet Smart Sticky: прокрутка в полную длину + прилипание к низу ===
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateStickyPosition = () => {
+      if (!sidebarContainerRef.current || window.innerWidth <= 1024) return;
+      const windowHeight = window.innerHeight;
+      const sidebarHeight = sidebarContainerRef.current.offsetHeight;
+
+      // Если сайдбар длиннее экрана — прилипаем нижним краем, иначе верхним
+      if (sidebarHeight > windowHeight - 110) {
+        const bottomStickyTop = windowHeight - sidebarHeight - 15;
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', `${bottomStickyTop}px`);
+      } else {
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', '100px');
+      }
+    };
+
+    updateStickyPosition();
+    window.addEventListener('resize', updateStickyPosition);
+    return () => window.removeEventListener('resize', updateStickyPosition);
+  }, [filteredProperties, isTagsExpanded]);
+
   const areaSliderRef = useRef(null);
   const katSliderRef = useRef(null);
   const priceSliderRef = useRef(null);
