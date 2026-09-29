@@ -642,20 +642,21 @@ body, html, .modern-header, .modern-header * {
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 100px !important; /* Начинается ровно под шапкой (90px) */
+    /* ФАЗА 2: Залипает строго тогда, когда докрутили до нижнего края фильтра! */
+    top: calc(100vh - 100% - 25px) !important;
     align-self: flex-start !important;
     width: 315px !important;
     min-width: 315px !important;
     max-width: 315px !important;
-    /* РАСКРЫВАЕМ НА ВСЮ ВЫСОТУ ЭКРАНА ДО САМОГО НИЗА БРАУЗЕРА */
-    height: calc(100vh - 115px) !important;
+    /* ФАЗА 1: Естественная полная высота контента без искусственных рамок */
+    height: fit-content !important;
     max-height: calc(100vh - 115px) !important;
     background: #ffffff !important;
-    border: 1.5px solid #E2E8F0 !important; /* Благородная тонкая платиновая рамка */
+    border: 1.5px solid #CBD5E1 !important;
     border-radius: 24px !important;
-    padding: 20px 8px 20px 20px !important; /* Просторные отступы */
+    padding: 20px 8px 20px 20px !important;
     z-index: 30 !important;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -664,13 +665,13 @@ body, html, .modern-header, .modern-header * {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
-/* Внутреннее тело: прокручивается на всю глубину фильтров */
+/* ФАЗА 3: Внутренний скролл доступен всегда, когда мышка внутри сайдбара */
 .luxe-sidebar-scrollable-body {
     flex: 1 1 auto !important;
-    height: 100% !important;
+    max-height: calc(100vh - 155px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-right: 10px !important; /* Зазор, чтобы контент не лип к скроллу */
+    padding-right: 8px !important;
     box-sizing: border-box !important;
 }
 
