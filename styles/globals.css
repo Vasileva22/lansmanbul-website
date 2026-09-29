@@ -639,24 +639,24 @@ body, html, .modern-header, .modern-header * {
     gap: 30px !important;
 }
 /* ==========================================================================
-   4. БОКОВОЙ ФИЛЬТР (АРХИТЕКТУРА EMLAKJET: ОТКРЫТАЯ ВЫСОКАЯ КОЛОНКА)
+   4. БОКОВОЙ ФИЛЬТР (АРХИТЕКТУРА EMLAKJET: BOTTOM-STICKY + ПОЛНЫЙ СКРОЛЛ)
    ========================================================================== */
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    /* Начинает мягко скользить ровно под шапкой (100px) */
-    top: 100px !important;
+    /* Динамический top: в начале листается со страницей, затем липнет низом к экрану */
+    top: var(--sidebar-sticky-top, 100px) !important;
     align-self: flex-start !important;
     width: 315px !important;
     min-width: 315px !important;
     max-width: 315px !important;
-    /* Высота ровно по экрану от шапки до низа (без обрубленной короткой коробки) */
-    height: calc(100vh - 115px) !important;
+    height: auto !important;
     max-height: calc(100vh - 115px) !important;
     background: #ffffff !important;
     border: 1.5px solid #E2E8F0 !important;
-    border-radius: 24px !important;
-    padding: 20px 8px 20px 20px !important;
+    border-bottom: none !important; /* Убираем нижний закругленный обрубок */
+    border-radius: 24px 24px 0 0 !important; /* Верх закруглен, низ уходит в край экрана */
+    padding: 20px 6px 0px 20px !important;
     z-index: 30 !important;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
     box-sizing: border-box !important;
@@ -667,15 +667,18 @@ body, html, .modern-header, .modern-header * {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
-/* ВОЗВРАЩАЕМ ВНУТРЕННИЙ ПЛАВНЫЙ СКРОЛЛ */
+/* ВНУТРЕННИЙ ПЛАВНЫЙ СКРОЛЛ (ДОСТУПЕН ВСЕГДА В ЛЮБОЙ ТОЧКЕ СТРАНИЦЫ) */
 .luxe-sidebar-scrollable-body {
     flex: 1 1 auto !important;
     height: 100% !important;
+    max-height: calc(100vh - 120px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     padding-right: 8px !important;
+    padding-bottom: 25px !important;
     box-sizing: border-box !important;
     scroll-behavior: smooth !important;
+    overscroll-behavior: contain !important; /* Защита от дергания страницы при скролле внутри */
 }
 
 /* Элегантный незаметный скроллбар */
