@@ -20,28 +20,6 @@ export default function SidebarFilters({
   const mapInstance = useRef(null);
   const mapLoaded = useRef(false);
 
-  // === Emlakjet Smart Sticky: прокрутка в полную длину + прилипание к низу ===
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const updateStickyPosition = () => {
-      if (!sidebarContainerRef.current || window.innerWidth <= 1024) return;
-      const windowHeight = window.innerHeight;
-      const sidebarHeight = sidebarContainerRef.current.offsetHeight;
-
-      // Если сайдбар длиннее экрана — прилипаем нижним краем, иначе верхним
-      if (sidebarHeight > windowHeight - 110) {
-        const bottomStickyTop = windowHeight - sidebarHeight - 15;
-        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', `${bottomStickyTop}px`);
-      } else {
-        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', '100px');
-      }
-    };
-
-    updateStickyPosition();
-    window.addEventListener('resize', updateStickyPosition);
-    return () => window.removeEventListener('resize', updateStickyPosition);
-  }, [filteredProperties, isTagsExpanded]);
 
   const areaSliderRef = useRef(null);
   const katSliderRef = useRef(null);
@@ -53,6 +31,34 @@ export default function SidebarFilters({
   const priceSliderInst = useRef(null);
 
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+  const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+
+  // === Безопасный Emlakjet Smart Sticky (после объявления всех useState) ===
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateStickyPosition = () => {
+      if (!sidebarContainerRef.current || window.innerWidth <= 1024) return;
+      const windowHeight = window.innerHeight;
+      const sidebarHeight = sidebarContainerRef.current.offsetHeight || 0;
+
+      if (sidebarHeight > windowHeight - 110) {
+        const bottomStickyTop = windowHeight - sidebarHeight - 15;
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', `${bottomStickyTop}px`);
+      } else {
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', '100px');
+      }
+    };
+
+    // Запускаем через requestAnimationFrame, чтобы DOM успел полностью отрисоваться
+    const rafId = requestAnimationFrame(updateStickyPosition);
+    window.addEventListener('resize', updateStickyPosition);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updateStickyPosition);
+    };
+  }, [filteredProperties?.length, isTagsExpanded]);
   // СВЕРХБЫСТРЫЙ КЭШ ПОДСЧЕТА ВСЕХ УДОБСТВ ЗА ОДИН ПРОХОД
   const featureCounts = useMemo(() => {
     const featureStems = {
