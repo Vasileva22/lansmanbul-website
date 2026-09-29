@@ -543,8 +543,29 @@ export default function Home({ initialProperties }) {
         }}
       />
 
-      <section id="custom-catalog-search">
-       <SidebarFilters 
+     <section id="custom-catalog-search">
+        {/* Кнопка скрытия/раскрытия сайдбара */}
+        <div 
+          id="sidebar-toggle-btn"
+          onClick={() => setIsSidebarHidden(!isSidebarHidden)}
+          style={{ left: isSidebarHidden ? '0px' : '315px', transition: 'left 0.3s ease', position: 'fixed' }}
+        >
+          {isSidebarHidden ? '❯' : '❮'}
+        </div>
+
+        {/* Мобильная плавающая кнопка */}
+        <button 
+          className="mobile-filter-floating-btn show-btn" 
+          onClick={() => setIsMobileSidebarOpen(true)}
+        >
+          <svg style={{ width: 16, height: 16, fill: 'currentColor' }} viewBox="0 0 24 24">
+            <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+          </svg>
+          <span>Filtreleme</span>
+        </button>
+
+        {/* Колонка 1: Сайдбар */}
+        <SidebarFilters 
           filteredProperties={filteredProperties}
           totalCount={filteredProperties.length}
           filters={filters}
@@ -557,27 +578,10 @@ export default function Home({ initialProperties }) {
           setIsForeigner={setIsForeigner}
           usdRate={usdRate}
           uniqueYears={uniqueYears}
-          uniqueFeatures={uniqueFeatures} // <--- НОВОЕ: передаем живой список удобств
+          uniqueFeatures={uniqueFeatures}
         />
 
-        <button 
-          className="mobile-filter-floating-btn show-btn" 
-          onClick={() => setIsMobileSidebarOpen(true)}
-        >
-          <svg style={{ width: 16, height: 16, fill: 'currentColor' }} viewBox="0 0 24 24">
-            <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
-          </svg>
-          <span>Filtreleme</span>
-        </button>
-
-        <div 
-          id="sidebar-toggle-btn"
-          onClick={() => setIsSidebarHidden(!isSidebarHidden)}
-          style={{ left: isSidebarHidden ? '0px' : '310px', transition: 'left 0.3s ease' }}
-        >
-          {isSidebarHidden ? '❯' : '❮'}
-        </div>
-
+        {/* Колонка 2: Каталог */}
         <div id="catalog-content-wrapper" className={isSidebarHidden ? 'full-width' : ''}>
           
           <div className="catalog-control-bar">
