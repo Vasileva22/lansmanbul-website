@@ -14,24 +14,44 @@ export default function SidebarFilters({
   usdRate,
   uniqueYears = [],
   uniqueFeatures = []
-}) {
-  const sidebarContainerRef = useRef(null);
+}) {const sidebarContainerRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const mapLoaded = useRef(false);
-
 
   const areaSliderRef = useRef(null);
   const katSliderRef = useRef(null);
   const priceSliderRef = useRef(null);
 
-  
   const areaSliderInst = useRef(null);
   const katSliderInst = useRef(null);
   const priceSliderInst = useRef(null);
 
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
-  const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+
+  // Автоматический расчет прилипания низа сайдбара к низу экрана
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    function calcSticky() {
+      if (!sidebarContainerRef.current || window.innerWidth <= 1024) return;
+      const wH = window.innerHeight;
+      const sH = sidebarContainerRef.current.offsetHeight || 0;
+
+      if (sH > wH - 110) {
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', `${wH - sH - 20}px`);
+      } else {
+        sidebarContainerRef.current.style.setProperty('--sidebar-sticky-top', '100px');
+      }
+    }
+
+    const timer = setTimeout(calcSticky, 100);
+    window.addEventListener('resize', calcSticky);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calcSticky);
+    };
+  }, [isTagsExpanded]);
 
   // === Безопасный Emlakjet Smart Sticky (после объявления всех useState) ===
   useEffect(() => {
