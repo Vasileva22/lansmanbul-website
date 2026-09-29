@@ -638,50 +638,61 @@ body, html, .modern-header, .modern-header * {
     box-sizing: border-box !important;
     gap: 30px !important;
 }
+/* ==========================================================================
+   4. БОКОВОЙ ФИЛЬТР (АРХИТЕКТУРА EMLAKJET: ОТКРЫТАЯ ВЫСОКАЯ КОЛОНКА)
+   ========================================================================== */
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 100px; /* Начальная точка под шапкой (динамически управляется JS-контроллером) */
+    top: 100px !important; /* Стоит ровно под шапкой */
     align-self: flex-start !important;
     width: 315px !important;
     min-width: 315px !important;
     max-width: 315px !important;
-    height: auto !important; /* На старте раскрыт во всю длину */
-    max-height: calc(100vh - 120px) !important; /* Но не вылезает за пределы экрана при фиксации */
+    /* РАСКРЫВАЕМ СНАРУЖИ НА ВСЮ ДЛИНУ БЕЗ КОРОТКОЙ РАМКИ */
+    height: auto !important;
+    min-height: min-content !important;
+    max-height: none !important; /* Убираем ограничение 100vh! */
     background: #ffffff !important;
     border: 1.5px solid #E2E8F0 !important;
-    border-radius: 24px !important;
-    padding: 20px 8px 20px 20px !important;
+    border-radius: 20px !important;
+    padding: 22px 20px 30px 20px !important;
     z-index: 30 !important;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
     flex-shrink: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important; /* Контент полностью выходит наружу */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
-/* Внутреннее тело со свободным скроллом, когда мышка внутри */
+/* Все тело сайдбара раскрыто снаружи, без зажатого внутреннего окна */
 .luxe-sidebar-scrollable-body {
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding-right: 10px !important;
-    box-sizing: border-box !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
 }
 
-.luxe-sidebar-scrollable-body::-webkit-scrollbar {
+/* Скроллбар строго по стилю Emlakjet — только для длинных списков чекбоксов */
+.emlakjet-features-scroll {
+    max-height: 240px !important;
+    overflow-y: auto !important;
+    padding-right: 6px !important;
+    margin-right: -4px !important;
+}
+.emlakjet-features-scroll::-webkit-scrollbar {
     width: 4px !important;
 }
-.luxe-sidebar-scrollable-body::-webkit-scrollbar-track {
+.emlakjet-features-scroll::-webkit-scrollbar-track {
     background: transparent !important;
 }
-.luxe-sidebar-scrollable-body::-webkit-scrollbar-thumb {
+.emlakjet-features-scroll::-webkit-scrollbar-thumb {
     background: #CBD5E1 !important;
     border-radius: 10px !important;
 }
-.luxe-sidebar-scrollable-body::-webkit-scrollbar-thumb:hover {
+.emlakjet-features-scroll::-webkit-scrollbar-thumb:hover {
     background: #00A4A6 !important;
 }
 /* Деликатный, почти незаметный европейский скроллбар (как на macOS) */
