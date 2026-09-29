@@ -28,7 +28,7 @@ export default function SidebarFilters({
   const priceSliderInst = useRef(null);
 
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
-  // СВЕРХБЫСТРЫЙ КЭШ ПОДСЧЕТА УДОБСТВ (РАБОТАЕТ МГНОВЕННО)
+  // СВЕРХБЫСТРЫЙ КЭШ ПОДСЧЕТА ВСЕХ УДОБСТВ ЗА ОДИН ПРОХОД
   const featureCounts = useMemo(() => {
     const featureStems = {
       'Kapalı Otopark': ['kapalı otopark', 'yeraltı otopark', 'otopark'],
@@ -47,19 +47,27 @@ export default function SidebarFilters({
       'Akıllı Ev': ['akıllı ev', 'smart home', 'otomasyon']
     };
 
-    // Подготавливаем облегченный текст один раз
-    const preparedTexts = (filteredProperties || []).map(p => 
-      (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase()
-    );
-
     const counts = {};
-    Object.entries(featureStems).forEach(([id, stems]) => {
-      counts[id] = preparedTexts.filter(text => stems.some(s => text.includes(s))).length;
-    });
+    Object.keys(featureStems).forEach(k => counts[k] = 0);
+
+    if (!filteredProperties || filteredProperties.length === 0) return counts;
+
+    for (let i = 0; i < filteredProperties.length; i++) {
+      const p = filteredProperties[i];
+      const text = ((p.Özellikler || '') + ' ' + (p.Açıklama || '')).toLowerCase();
+
+      for (const [id, stems] of Object.entries(featureStems)) {
+        for (let s = 0; s < stems.length; s++) {
+          if (text.includes(stems[s])) {
+            counts[id]++;
+            break;
+          }
+        }
+      }
+    }
 
     return counts;
   }, [filteredProperties]);
-
   // Локальные состояния для Цены
   const [minPriceInput, setMinPriceInput] = useState(filters.priceRange[0]);
   const [maxPriceInput, setMaxPriceInput] = useState(filters.priceRange[1]);
@@ -692,23 +700,19 @@ export default function SidebarFilters({
 
           <div className="luxe-divider"></div>
 
-          {/* СЕКЦИЯ 2: DAİRE ÖZELLİKLERİ */}
+         {/* СЕКЦИЯ 2: DAİRE ÖZELLİKLERİ */}
           <div className="luxe-group">
             <span className="luxe-group-label c-filter__title fs-14 fw-600">Daire İçi Özellikler</span>
             
             <div className="space-y-2 mt-2">
               {[
-                { id: 'Yerden Isıtma', label: 'Yerden Isıtma', stems: ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'] },
-                { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak Seti', stems: ['ankastre', 'beyaz eşya', 'fırın', 'ocak'] },
-                { id: 'Manzara', label: 'Deniz / Doğa Manzarası', stems: ['deniz', 'doğa', 'manzara', 'göl', 'orman'] },
-                { id: 'Akıllı Ev', label: 'Akıllı Ev Sistemi', stems: ['akıllı ev', 'smart home', 'otomasyon'] }
+                { id: 'Yerden Isıtma', label: 'Yerden Isıtma' },
+                { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak Seti' },
+                { id: 'Manzara', label: 'Deniz / Doğa Manzarası' },
+                { id: 'Akıllı Ev', label: 'Akıllı Ev Sistemi' }
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
-
-                const matchCount = filteredProperties.filter(p => {
-                  const text = (String(p.Özellikler || '') + ' ' + String(p.Açıklama || '')).toLowerCase();
-                  return item.stems.some(s => text.includes(s));
-                }).length;
+                const matchCount = featureCounts[item.id] || 0;
 
                 return (
                   <div
