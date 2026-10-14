@@ -1188,63 +1188,161 @@ body, html, .modern-header, .modern-header * {
     color: #00A4A6 !important;
 }
 
-/* Изменения для сеток (Grid vs List) */
+/* ==========================================================================
+   СЕТКА И КАРТОЧКА ОБЪЕКТА (Quiet Luxury из прототипа Клода)
+   ========================================================================== */
 .grid-layout {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 24px;
     width: 100%;
+    align-items: start;
 }
-.grid-layout .custom-card {
-    background: #fff;
-    border-radius: 16px;
-    border: 1.5px solid #CBD5E1;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06);
-    display: flex;
-    flex-direction: column;
-    transition: transform .3s ease,box-shadow .3s ease;
+.custom-card {
+    background: var(--surface) !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--border) !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 18px rgba(10, 46, 42, 0.05) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
     height: 100%;
     position: relative !important;
-    z-index: 10 !important;
-    pointer-events: auto !important;
 }
-.grid-layout .custom-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,164,166,.45) !important;
+.custom-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 32px rgba(10, 46, 42, 0.12) !important;
+    border-color: #D6CEBE !important;
 }
 
-/* КАРТИНКА ТЕПЕРЬ ЗАНИМАЕТ ПРЯМО 60% ВЫСОТЫ НА ДЕСКТОПЕ */
-.grid-layout .custom-card .img-container {
-    height: 250px !important; 
+.custom-card .img-container {
+    height: 220px !important; 
     position: relative;
     overflow: hidden;
     width: 100%;
+    background-color: #E2E8F0;
     cursor: zoom-in;
 }
 
-/* Бейджи статусов */
-.grid-layout .custom-card .badge, .list-layout .custom-card .badge {
+/* Бейджи статусов из прототипа */
+.bdg-pill {
     position: absolute;
-    top: 15px;
-    left: 15px;
-    color: #fff !important;
-    padding: 6px 12px;
-    border-radius: 20px !important;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
+    top: 12px;
+    left: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
     z-index: 10;
-    box-shadow: 0 4px 10px rgba(0,0,0,.15) !important;
-    border: none !important;
+    letter-spacing: 0.2px;
 }
-.badge.status-lansman {
-    background-color: #FF9800 !important;
-    border: none !important;
+.bdg-active {
+    background-color: var(--c4) !important;
+    color: var(--e8) !important;
 }
-.badge.status-other {
-    background-color: #00A4A6 !important;
-    border: none !important;
+.bdg-completed {
+    background-color: #1F6B61 !important;
+    color: #FFFFFF !important;
+}
+
+/* Тело карточки */
+.card-content-modern {
+    padding: 16px 18px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+}
+.card-title-modern {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text);
+    min-height: 44px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.card-price-modern {
+    margin-top: 6px;
+    margin-bottom: 2px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--e8);
+    letter-spacing: -0.3px;
+}
+.card-line-meta {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.card-line-sub {
+    font-size: 14px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.dot-sep {
+    color: #A0AEC0;
+    font-weight: 700;
+}
+
+/* Кнопки в карточке */
+.card-actions-modern {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    width: 100%;
+}
+.btn-modern-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-modern-details:hover {
+    border-color: var(--e8);
+    color: var(--e8);
+    background-color: var(--bg);
+}
+.btn-modern-wa {
+    flex: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    border-radius: 10px;
+    background-color: var(--e8) !important;
+    color: #FFFFFF !important;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(10, 46, 42, 0.15);
+}
+.btn-modern-wa:hover {
+    background-color: var(--e6) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(10, 46, 42, 0.25);
 }
 
 .grid-layout .custom-card .card-content {
