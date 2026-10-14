@@ -75,30 +75,47 @@
 }
 
 /* ==========================================================================
-   1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ
+   1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ (Палитра Quiet Luxury из прототипа)
    ========================================================================== */
 :root {
-    --primary: #00A4A6;
-    --primary-hover: #00898B;
-    --dark-slate: #1E293B;   
-    --border-soft: #E2E8F0;  
-    --shadow-dropdown: 0 12px 30px rgba(15, 23, 42, 0.15); 
-    --text-muted: #64748B;   
+    --e9: #0A2E2A;
+    --e8: #0D3B36;          /* Основной благородный изумруд */
+    --e6: #1F6B61;          /* Мягкий изумрудный ховер/ссылки */
+    --c4: #D9BF8F;          /* Золото / Шампань для акцентов и кнопки */
+    --c1: #F3EAD7;          /* Светлый оттенок золота для плашек */
+    --bg: #F6F4EF;          /* Мягкий алебастровый фон страниц */
+    --surface: #FFFFFF;     /* Чистый белый цвет для карточек */
+    --border: #E6E1D6;      /* Теплая мягкая рамка */
+    --text: #1B2B29;        /* Глубокий премиальный цвет текста */
+    --muted: #5B6B68;       /* Вторичный приглушенный текст */
+    --chip: #EFEBE0;        /* Фоновые плашки фильтров */
+    --row: #FAF8F3;         /* Фон строк мини-планировок */
+
+    /* Мост к существующим переменным сайта для сохранения совместимости */
+    --primary: #0D3B36;
+    --primary-hover: #1F6B61;
+    --dark-slate: #1B2B29;   
+    --border-soft: #E6E1D6;  
+    --shadow-dropdown: 0 12px 32px rgba(10, 46, 42, 0.14); 
+    --text-muted: #5B6B68;   
 }
 
 html {
     margin: 0;
     padding: 0;
+    background-color: var(--bg);
 }
 
 body {
     margin: 0;
     padding: 0;
+    background-color: var(--bg);
+    color: var(--text);
     overflow-x: clip; /* clip обрезает горизонтальные хвосты и НЕ ломает sticky! */
 }
 
 body, html, .modern-header, .modern-header * {
-    font-family: 'Mulish', sans-serif !important;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 
 /* ==========================================================================
