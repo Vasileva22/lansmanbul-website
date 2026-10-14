@@ -584,23 +584,124 @@ export default function Home({ initialProperties }) {
         {/* Колонка 2: Каталог */}
         <div id="catalog-content-wrapper" className={isSidebarHidden ? 'full-width' : ''}>
           
-          <div className="catalog-control-bar">
-            <div className="layout-toggle">
+          {/* СОВРЕМЕННЫЙ ТУЛБАР В СТИЛЕ КЛОДА */}
+          <div className="catalog-toolbar-modern">
+            <div className="tb-left">
               <button 
-                className={'toggle-btn ' + (layout === 'grid' ? 'active' : '')}
-                onClick={() => setLayout('grid')}
-                title="Izgara Görünümü"
+                className="fbtn-modern"
+                onClick={() => setIsSidebarHidden(!isSidebarHidden)}
               >
-                <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M4 6h16M7 12h10M10 18h4"/>
+                </svg>
+                <span>{isSidebarHidden ? 'Filtreleri Göster' : 'Filtreleri Gizle'}</span>
               </button>
-              <button 
-                className={'toggle-btn ' + (layout === 'list' ? 'active' : '')}
-                onClick={() => setLayout('list')}
-                title="Liste Görünümü"
-              >
-                <svg className="toggle-icon" viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5s1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5S5.5 6.83 5.5 6S4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5s1.5-.68 1.5-1.5s-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>
-              </button>
+
+              {/* Переключатель типов: Tüm | Projeler | Tek Daireler */}
+              <div className="type-toggle-group">
+                <button 
+                  className={filters.listingType === 'all' ? 'active' : ''}
+                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'all' }))}
+                >
+                  Tüm İlanlar
+                </button>
+                <button 
+                  className={filters.listingType === 'project' ? 'active' : ''}
+                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'project' }))}
+                >
+                  Projeler
+                </button>
+                <button 
+                  className={filters.listingType === 'apartment' ? 'active' : ''}
+                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'apartment' }))}
+                >
+                  Tek Daireler
+                </button>
+              </div>
             </div>
+
+            <div className="tb-right">
+              {/* Переключатель вида Grid / List */}
+              <div className="view-toggle-modern">
+                <button 
+                  className={layout === 'grid' ? 'active' : ''}
+                  onClick={() => setLayout('grid')}
+                  title="Plitka"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/>
+                    <rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>
+                  </svg>
+                  <span>Plitka</span>
+                </button>
+                <button 
+                  className={layout === 'list' ? 'active' : ''}
+                  onClick={() => setLayout('list')}
+                  title="Liste"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3.5" y="4.5" width="17" height="6" rx="1.5"/><rect x="3.5" y="13.5" width="17" height="6" rx="1.5"/>
+                  </svg>
+                  <span>Liste</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Строка количества и активные чипсы-фильтры */}
+          <div className="catalog-meta-row">
+            <h2 className="catalog-count-text">
+              {filteredProperties.length} proje listeleniyor
+            </h2>
+
+            {/* Активные чипсы фильтров с возможностью удаления нажатием на × */}
+            {(filters.selectedLocations.length > 0 || filters.selectedRooms.length > 0 || filters.selectedStatuses.length > 0 || filters.activeFeatureFilters.length > 0) && (
+              <div className="active-chips-container">
+                {filters.selectedLocations.map((loc) => (
+                  <button 
+                    key={loc} 
+                    className="active-filter-chip"
+                    onClick={() => setFilters(prev => ({ ...prev, selectedLocations: prev.selectedLocations.filter(x => x !== loc) }))}
+                  >
+                    <span>{loc}</span>
+                    <i>×</i>
+                  </button>
+                ))}
+                {filters.selectedRooms.map((room) => (
+                  <button 
+                    key={room} 
+                    className="active-filter-chip"
+                    onClick={() => setFilters(prev => ({ ...prev, selectedRooms: prev.selectedRooms.filter(x => x !== room) }))}
+                  >
+                    <span>{room}</span>
+                    <i>×</i>
+                  </button>
+                ))}
+                {filters.selectedStatuses.map((st) => (
+                  <button 
+                    key={st} 
+                    className="active-filter-chip"
+                    onClick={() => setFilters(prev => ({ ...prev, selectedStatuses: prev.selectedStatuses.filter(x => x !== st) }))}
+                  >
+                    <span>{st}</span>
+                    <i>×</i>
+                  </button>
+                ))}
+                {filters.activeFeatureFilters.map((feat) => (
+                  <button 
+                    key={feat} 
+                    className="active-filter-chip"
+                    onClick={() => setFilters(prev => ({ ...prev, activeFeatureFilters: prev.activeFeatureFilters.filter(x => x !== feat) }))}
+                  >
+                    <span>{feat}</span>
+                    <i>×</i>
+                  </button>
+                ))}
+                <button className="clear-all-chips-btn" onClick={handleClearFilters}>
+                  Tümünü Temizle
+                </button>
+              </div>
+            )}
           </div>
 
           {paginatedProperties.length > 0 ? (
