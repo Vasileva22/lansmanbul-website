@@ -257,8 +257,8 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
           </div>
         )}
 
-        {property?.konutcesit && (
-          <span className={'badge ' + (isLansman ? 'status-lansman' : 'status-other')}>
+{property?.konutcesit && (
+          <span className={`bdg-pill ${cleanStatus === 'tamamlandı' ? 'bdg-completed' : 'bdg-active'}`}>
             {property.konutcesit}
           </span>
         )}
@@ -271,91 +271,53 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
         )}
       </div>
 
-      <div className="card-content">
-        <div className="title-price-row">
-          <h3 className="card-title">{property?.testproje || ''}</h3>
-          <div className="card-price">{cardPrice}</div>
+      <div className="card-content-modern">
+        {/* Заголовок проекта */}
+        <h3 className="card-title-modern">
+          <Link href={detailLink} className="hover:underline">
+            {property?.testproje || 'Yeni Konut Projesi'}
+          </Link>
+        </h3>
+
+        {/* Цена */}
+        <div className="card-price-modern">
+          {cardPrice}
         </div>
 
-        <p className="card-description">
-          {property?.Açıklama || "Detaylı bilgi ve randevu için lütfen bizimле iletişime geçin."}
-        </p>
-
-        <div className="features-row">
-          <div className="feat-badge">
-            <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
-            {(() => {
-              const district = property?.district || property?.['İlçe/Semt'] || '';
-              const mahalle = property?.mahalle || '';
-              if (mahalle && district && !mahalle.toLowerCase().includes(district.toLowerCase())) {
-                return `${mahalle}, ${district}`;
-              }
-              return district || property?.city || 'Ankara';
-            })()}
-          </div>
-          <div className="feat-badge">
-            <svg className="input-icon-svg icon-fill" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
-              <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z" />
-            </svg>
-            {cardRooms}
-          </div>
+        {/* Характеристики: Планировки и Метраж через точку */}
+        <div className="card-line-meta">
+          <span>{cardRooms}</span>
           {cardArea && (
-            <div className="feat-badge">
-              <svg className="card-svg-icon" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: '#64748B' }}>
-                <path d="M10.5 9h3v1.5h-3V9zm0 3h3v1.5h-3V12zm0 3h3v1.5h-3V15zM19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
-              </svg>
-              <span>{cardArea}</span>
-              {!String(cardArea).includes('m²') && <span className="area-unit-grid" style={{ marginLeft: 2 }}>m²</span>}
-              {!String(cardArea).includes('m²') && <span className="area-unit-list" style={{ marginLeft: 2 }}>Metrekare</span>}
-            </div>
+            <>
+              <span className="dot-sep">·</span>
+              <span>{cardArea}{!String(cardArea).includes('m²') ? ' m²' : ''}</span>
+            </>
           )}
         </div>
 
-        {olanaklarList.length > 0 && (
-          <div className="olanaklar-row">
-            {olanaklarList.map((item, idx) => {
-              const icon = getOlanakIcon(item);
-              return (
-                <span key={idx} className="olanak-tag">
-                  {icon}
-                  {item}
-                </span>
-              );
-            })}
-          </div>
-        )}
+        {/* Локация и Срок сдачи */}
+        <div className="card-line-sub">
+          <span>
+            {property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'}
+          </span>
+          <span className="dot-sep">·</span>
+          <span>
+            {cleanStatus === 'tamamlandı'
+              ? 'Teslim hazır'
+              : (property?.Teslim_Yili ? `Teslim ${property.Teslim_Yili}` : 'Devam ediyor')}
+          </span>
+        </div>
 
-        {/* ВАША ИДЕЯ: Построчные планировки прямо внутри карточки ЖК */}
-        {isProject && layouts.length > 0 && (
-          <div className="mini-layouts-container">
-            {layouts.slice(0, 3).map((layout, idx) => {
-              const isSold = layout.status === 'sold';
-              return (
-                <div key={idx} className={`layout-row ${isSold ? 'sold' : ''}`}>
-                  <div className="layout-meta">
-                    <span className="layout-rooms">{layout.rooms}</span>
-                    <span className="layout-area">{layout.area} m²</span>
-                  </div>
-                  <span className="layout-price">
-                    {isSold ? 'Satıldı' : formatPrice(layout.price, true)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="actions">
-          <Link href={detailLink} className="btn btn-outline detay-btn">
+        {/* Кнопки действий: Detaylar + Солидный изумрудный WhatsApp */}
+        <div className="card-actions-modern">
+          <Link href={detailLink} className="btn-modern-details">
             Detaylar
           </Link>
-          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary wa-btn">
-            <svg className="wa-icon-svg" viewBox="0 0 24 24" style={{ width: 14, height: 14, fill: 'currentColor', marginRight: 5 }}>
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.488 1.977 14.02 1.953 12.01 1.953c-5.439 0-9.865 4.371-9.87 9.8-.002 1.714.453 3.39 1.317 4.883l-.994 3.634 3.791-.983z" />
+          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="btn-modern-wa">
+            <svg viewBox="0 0 24 24" className="wa-icon-svg" style={{ width: 17, height: 17, fill: 'currentColor' }}>
+              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            WhatsApp
+            <span>WhatsApp</span>
           </a>
         </div>
       </div>
