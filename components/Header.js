@@ -116,46 +116,45 @@ export default function Header({ setFilters }) {
               Hakkımızda
             </Link>
 
-           {/* КНОПКА PROJE EKLE В МЕНЮ (СТИЛЬ ПИЛЮЛИ С РАМКОЙ) */}
+           {/* КНОПКА PROJE EKLE В МЕНЮ (Премиальная золотая пилюля) */}
             <button 
               onClick={() => setIsAddProjectOpen(true)}
               className="btn-reset"
               style={{ 
-                color: '#00A4A6', 
-                border: '2px solid #00A4A6', 
+                color: 'var(--c4)', 
+                border: '1.5px solid var(--c4)', 
                 borderRadius: '9999px', 
-                padding: '8px 20px', 
-                fontWeight: '800',
-                fontSize: '14px',
+                padding: '7px 20px', 
+                fontWeight: '700',
+                fontSize: '14.5px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
                 backgroundColor: 'transparent',
-                transition: 'all 0.2s ease-in-out',
-                fontFamily: "'Mulish', sans-serif"
+                transition: 'all 0.2s ease-in-out'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#00A4A6';
-                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'var(--c4)';
+                e.currentTarget.style.color = 'var(--e8)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#00A4A6';
+                e.currentTarget.style.color = 'var(--c4)';
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: '900' }}>+</span> 0 TL'ye İlan Ver
+              <span style={{ fontSize: '16px', fontWeight: '800' }}>+</span> 0 TL'ye İlan Ver
             </button>
           </nav>
 
           {/* КОНТАКТЫ И ИКОНКА ИЗБРАННОГО */}
           <div className="header-contact flex items-center">
             
-            {/* ИКОНКА ИЗБРАННОГО В ШАПКЕ */}
+            {/* ИКОНКА ИЗБРАННОГО В ШАПКЕ (Адаптирована под темный изумруд) */}
             <Link 
               href="/favorites" 
-              className="header-favorites-link relative flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-red-500 transition-all duration-200"
+              className="header-favorites-link relative flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:text-red-400 hover:bg-white/20 transition-all duration-200"
               style={{ width: 38, height: 38, marginRight: 12 }}
               title="Favorilerim"
             >
