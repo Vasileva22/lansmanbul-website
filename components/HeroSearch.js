@@ -706,12 +706,10 @@ export default function HeroSearch({
 
             </div>
 
-            <button className="search-submit-btn" onClick={onSearch}>
+           <button className="search-submit-btn" onClick={onSearch}>
               Ara
             </button>
           </div>
-
-          <div className="panel-bottom-gradient"></div>
         </div>
       </div>
     </section>
