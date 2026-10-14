@@ -248,9 +248,9 @@ body, html, .modern-header, .modern-header * {
    ========================================================================== */
 #custom-hero-search {
     height: auto !important;
-    min-height: 380px !important;
+    min-height: 360px !important;
     display: block !important;
-    background-color: #fff !important;
+    background-color: var(--e8) !important;
     position: relative !important;
     z-index: 99 !important;
     width: 100% !important;
@@ -262,32 +262,34 @@ body, html, .modern-header, .modern-header * {
     position: relative !important;
     z-index: 99 !important;
     width: 100% !important;
-    padding: 15px 20px 80px 20px !important;
+    padding: 20px 24px 80px 24px !important;
     box-sizing: border-box !important;
 }
 .hero-search-container {
     width: 100%;
-    padding: 125px 20px 25px 20px;
-    background-color: #F1F5F9;
+    padding: 110px 24px 44px 24px;
+    background-color: var(--e8);
     display: flex;
     justify-content: center;
     box-sizing: border-box;
 }
 .search-width-limiter {
     width: 100%;
-    max-width: 1140px;
+    max-width: 1180px;
     display: flex;
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
 }
 .hero-search-title {
-    font-size: 36px;
-    font-weight: 900;
-    color: #3F536C;
-    margin: 0 0 25px 0;
+    font-size: clamp(24px, 2.7vw, 34px);
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0 auto 30px auto;
     line-height: 1.3;
     text-align: center;
+    max-width: 34ch;
+    letter-spacing: -0.3px;
 }
 
 /* Скрываем мобильный заголовок по умолчанию */
@@ -297,32 +299,25 @@ body, html, .modern-header, .modern-header * {
 
 .search-panel-card {
     width: 100%;
-    background-color: #fff;
-    border-radius: 20px;
-    border: 1px solid #CBD5E1;
-    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
-    padding: 24px 30px 32px 30px;
+    background-color: var(--surface);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 36px rgba(10, 46, 42, 0.16);
+    padding: 20px 24px 24px 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     position: relative;
     box-sizing: border-box;
 }
 .panel-bottom-gradient {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(to right,#7b1fa2,#00A4A6,#ffb300);
-    overflow: hidden;
-    border-radius: 0 0 20px 20px;
+    display: none !important;
 }
 .search-tabs-header {
     display: flex;
-    gap: 24px;
-    border-bottom: 1px solid #CBD5E1;
-    padding-bottom: 12px;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
     margin-bottom: 4px;
     box-sizing: border-box;
 }
@@ -330,32 +325,33 @@ body, html, .modern-header, .modern-header * {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 16px;
-    font-weight: 800;
-    color: #64748B;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
     cursor: pointer;
     position: relative;
-    padding-bottom: 12px;
-    margin-bottom: -13px;
-    transition: color .2s ease;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: all .2s ease;
     user-select: none;
 }
+.city-tab-item:hover {
+    color: var(--e8);
+    background-color: var(--chip);
+}
 .city-tab-item.active {
-    color: #00A4A6;
+    color: var(--e8);
+    background-color: var(--chip);
+    font-weight: 700;
 }
 .city-tab-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #00A4A6;
-    border-radius: 3px 3px 0 0;
+    display: none !important;
 }
 .city-tab-item.disabled {
-    color: #9CA3AF;
-    cursor: pointer;
+    color: #A0AEC0;
+    cursor: default;
+    opacity: 0.6;
+}
 }
 .tab-icon-svg {
     width: 16px;
@@ -390,20 +386,20 @@ body, html, .modern-header, .modern-header * {
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1.5px solid #CBD5E1;
-    border-radius: 10px;
-    height: 60px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    height: 56px;
     padding: 0 16px;
-    background-color: #F8FAFC;
-    transition: border-color .2s,background-color .2s,box-shadow .2s;
+    background-color: var(--bg);
+    transition: border-color .2s, background-color .2s, box-shadow .2s;
     cursor: pointer;
     user-select: none;
     box-sizing: border-box;
 }
 .search-input-field:hover, .search-input-field.active-field {
-    border-color: #00A4A6 !important;
-    background-color: #fff !important;
-    box-shadow: 0 10px 25px rgba(0, 164, 166, 0.08) !important;
+    border-color: var(--e8) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 6px 20px rgba(10, 46, 42, 0.08) !important;
 }
 .search-input-field.flex-wide {
     flex: 1.5 !important;
@@ -415,21 +411,21 @@ body, html, .modern-header, .modern-header * {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    transition: stroke .2s,fill .2s;
+    transition: stroke .2s, fill .2s;
 }
 .input-icon-svg.icon-stroke {
     fill: none;
-    stroke: #64748B;
+    stroke: var(--muted);
     stroke-width: 2;
 }
 .search-input-field:hover .input-icon-svg.icon-stroke, .search-input-field.active-field .input-icon-svg.icon-stroke {
-    stroke: #00A4A6 !important;
+    stroke: var(--e8) !important;
 }
 .input-icon-svg.icon-fill {
-    fill: #64748B;
+    fill: var(--muted);
 }
 .search-input-field:hover .input-icon-svg.icon-fill, .search-input-field.active-field .input-icon-svg.icon-fill {
-    fill: #00A4A6 !important;
+    fill: var(--e8) !important;
 }
 .input-double-label {
     display: flex;
@@ -440,40 +436,40 @@ body, html, .modern-header, .modern-header * {
     width: 100%;
 }
 .input-double-label .sub-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: #64748B;
-    text-transform: uppercase;
-    letter-spacing: .5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0;
 }
 .input-double-label .main-label {
-    font-size: 16px;
-    font-weight: 800;
-    color: #3F536C;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .search-submit-btn {
-    background-color: #00A4A6;
-    color: #fff;
+    background-color: var(--e8);
+    color: #FFFFFF;
     border: none;
-    height: 60px;
-    padding: 0 40px;
-    border-radius: 30px;
-    font-size: 18px;
-    font-weight: 800;
+    height: 56px;
+    padding: 0 36px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color .2s,transform .1s,box-shadow .2s;
+    transition: background-color .2s, transform .1s, box-shadow .2s;
     flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(0, 164, 166, 0.2);
+    box-shadow: 0 4px 14px rgba(10, 46, 42, 0.2);
 }
 .search-submit-btn:hover {
-    background-color: #00898B;
-    box-shadow: 0 6px 20px rgba(0, 164, 166, 0.35);
+    background-color: var(--e6);
+    box-shadow: 0 6px 20px rgba(10, 46, 42, 0.3);
 }
 .search-submit-btn:active {
-    transform: scale(.97);
+    transform: scale(.98);
 }
 
 /* ДЕСКТОПНЫЕ ВЫПАДАЮЩИЕ СПИСКИ ИЗ ПОИСКА */
