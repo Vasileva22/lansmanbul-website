@@ -1108,52 +1108,140 @@ body, html, .modern-header, .modern-header * {
    ========================================================================== */
 /* Стили #catalog-content-wrapper теперь централизованно описаны выше в блоке 4 */
 
-.catalog-control-bar {
+/* ==========================================================================
+   ТУЛБАР КАТАЛОГА И АКТИВНЫЕ ЧИПСЫ (Quiet Luxury)
+   ========================================================================== */
+.catalog-toolbar-modern {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    margin-bottom: 25px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
     width: 100%;
-    box-sizing: border-box;
-    position: relative !important;
-    z-index: 10 !important;
-    pointer-events: auto !important;
-    border-bottom: 1px solid #CBD5E1;
-    padding-bottom: 12px;
 }
-.layout-toggle {
+.tb-left, .tb-right {
     display: flex;
-    background-color: #f3f4f6;
-    padding: 4px;
-    border-radius: 8px;
-    gap: 2px;
-    pointer-events: auto !important;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
-.layout-toggle .toggle-btn {
-    background: none !important;
-    border: none !important;
-    padding: 6px 12px !important;
-    border-radius: 6px !important;
-    cursor: pointer !important;
-    color: #9ca3af !important;
-    transition: all .2s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    pointer-events: auto !important;
+
+.fbtn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--e8);
+    background: var(--surface);
+    color: var(--e8);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
-.layout-toggle .toggle-btn:hover {
-    color: #00A4A6 !important;
+.fbtn-modern:hover {
+    background-color: var(--chip);
 }
-.layout-toggle .toggle-btn.active {
-    background-color: #fff !important;
-    color: #00A4A6 !important;
-    box-shadow: 0 1px 3px rgba(45,55,72,.1) !important;
+
+.type-toggle-group, .view-toggle-modern {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
 }
-.toggle-icon {
+.type-toggle-group button, .view-toggle-modern button {
+    border: 0;
+    background: transparent;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+.type-toggle-group button:hover, .view-toggle-modern button:hover {
+    color: var(--text);
+}
+.type-toggle-group button.active {
+    background: var(--chip);
+    color: var(--e8);
+    font-weight: 700;
+}
+.view-toggle-modern button.active {
+    background: var(--e8);
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.catalog-meta-row {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.catalog-count-text {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+}
+
+/* Активные чипсы-фильтры */
+.active-chips-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--c1);
+    color: var(--e8);
+    border: 0;
+    border-radius: 999px;
+    padding: 5px 8px 5px 14px;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.active-filter-chip:hover {
+    opacity: 0.85;
+}
+.active-filter-chip i {
+    font-style: normal;
     width: 18px;
     height: 18px;
-    fill: currentColor;
+    border-radius: 50%;
+    background: var(--e8);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+}
+.clear-all-chips-btn {
+    background: transparent;
+    border: 0;
+    color: var(--e6);
+    font-weight: 600;
+    font-size: 13.5px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 6px;
+}
+.clear-all-chips-btn:hover {
+    color: var(--e8);
 }
 
 .btn {
