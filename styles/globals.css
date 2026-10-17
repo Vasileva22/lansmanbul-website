@@ -321,11 +321,10 @@ body, html, .modern-header, .modern-header * {
     transform: translateY(-1px) !important;
 }
 
-/* trust из прототипа */
+/* НА СВЕТЛОМ ФОНЕ: ваше усовершенствование */
 .trust {
-    background: #E3EEE9 !important; /* На светлом фоне цветная плашка */
-    border-bottom: 1px solid var(--border);
-    width: 100%;
+    background: #E3EEE9;
+    border-bottom: 1px solid rgba(13, 59, 54, 0.12);
 }
 .trust .w {
     display: grid;
@@ -355,22 +354,28 @@ body, html, .modern-header, .modern-header * {
     font-weight: 600;
     font-size: 15px;
     color: #0D3B36;
-    line-height: 1.2;
+}
+.tr span {
+    font-size: 14px;
+    color: #3F6B63;
 }
 
-/* НА ТЕМНОМ ФОНЕ: плашка как карточки var(--surface), слова ЖЕЛЕЗНО БЕЛЫЕ */
+/* НА ТЕМНОМ ФОНЕ: 1 в 1 как в коде прототипа */
 :root[data-theme="dark"] .trust,
 @media (prefers-color-scheme: dark) {
-    .trust {
-        background: var(--surface) !important;
-        border-bottom: 1px solid var(--border) !important;
+    :root:not([data-theme="light"]) .trust {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
     }
-    .tr i {
-        background: var(--c1) !important;
-        color: var(--e8) !important;
+    :root:not([data-theme="light"]) .tr i {
+        background: var(--c1);
+        color: var(--e8);
     }
-    .tr b {
-        color: #FFFFFF !important; /* Белые слова на темном фоне */
+    :root:not([data-theme="light"]) .tr b {
+        color: var(--text);
+    }
+    :root:not([data-theme="light"]) .tr span {
+        color: var(--muted);
     }
 }
 
