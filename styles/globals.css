@@ -308,63 +308,64 @@ body, html, .modern-header, .modern-header * {
 }
 
 /* ==========================================================================
-   ОБОСОБЛЕННАЯ СЕКЦИЯ ПРЕИМУЩЕСТВ (TRUST) ИЗ ПРОТОТИПА
+   ТОНКАЯ ПОЛОСА ДОВЕРИЯ (38px, #E3EEE9, #0D3B36 14px/600)
    ========================================================================== */
-.trust {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+.trust-strip-slim {
+    background-color: #E3EEE9;
+    border-bottom: 1px solid rgba(13, 59, 54, 0.08);
+    min-height: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
     width: 100%;
     box-sizing: border-box;
 }
-.trust .w {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-}
-.tr {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-.tr i {
-    flex: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--c1);
-    color: var(--e8);
+.trust-slim-row {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 36px;
+    width: 100%;
+    box-sizing: border-box;
 }
-.tr i svg {
-    width: 20px;
-    height: 20px;
-}
-.tr b {
-    display: block;
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.3;
-}
-.tr span {
+.trust-slim-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #0D3B36;
     font-size: 14px;
-    color: var(--muted);
-    line-height: 1.3;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+}
+.trust-check-svg {
+    width: 15px;
+    height: 15px;
+    stroke: #0D3B36;
+    flex-shrink: 0;
 }
 
-@media (max-width: 980px) {
-    .trust .w {
-        grid-template-columns: 1fr;
-        gap: 14px;
-        padding-top: 14px;
-        padding-bottom: 14px;
+@media (max-width: 768px) {
+    .trust-strip-slim {
+        height: 36px;
+        min-height: 36px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .trust-strip-slim::-webkit-scrollbar {
+        display: none;
+    }
+    .trust-slim-row {
+        justify-content: flex-start;
+        gap: 20px;
+        padding: 0 4px;
+        width: max-content;
+    }
+    .trust-slim-item {
+        font-size: 13px;
     }
 }
-
 .panel {
     background: var(--surface);
     color: var(--text);
