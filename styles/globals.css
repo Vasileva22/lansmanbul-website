@@ -291,27 +291,78 @@ body, html, .modern-header, .modern-header * {
     letter-spacing: -0.2px;
 }
 
-/* Прилипающая плавающая панель с наплывом -36px */
+/* Прилипающая плавающая панель к самому верху экрана */
 .pinwrap {
     position: sticky;
-    top: 72px; /* Фиксируется прямо под шапкой */
-    z-index: 40;
+    top: 0; /* Прилипает к самому верху экрана */
+    z-index: 99999;
     margin-top: -36px;
-    padding: 8px 0;
+    padding: 8px 0 20px 0;
     width: 100%;
     box-sizing: border-box;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .pinwrap.stuck {
     background: var(--bg);
     border-bottom: 1px solid var(--border);
-    box-shadow: 0 6px 18px rgba(10, 46, 42, 0.10);
+    box-shadow: 0 6px 20px rgba(10, 46, 42, 0.12);
     margin-top: 0;
+    padding: 8px 0;
 }
-.pinwrap.stuck .fld small {
-    display: none;
+
+/* СТИЛИ ТРЕХ ПЛЮСОВ (УТП) ИЗ СКРИНШОТА */
+.usp-banner-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 24px;
+    width: 100%;
+    box-sizing: border-box;
 }
-.pinwrap.stuck .fld {
-    padding: 8px 12px;
+.usp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.usp-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    color: var(--e8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.usp-icon-box svg {
+    width: 18px;
+    height: 18px;
+}
+.usp-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.usp-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.25;
+}
+.usp-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.3;
+}
+
+@media (max-width: 980px) {
+    .usp-banner-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 }
 
 .panel {
