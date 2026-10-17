@@ -321,10 +321,10 @@ body, html, .modern-header, .modern-header * {
     transform: translateY(-1px) !important;
 }
 
-/* НА СВЕТЛОМ ФОНЕ: ваше усовершенствование */
+/* НА СВЕТЛОМ ФОНЕ */
 .trust {
-    background: #E3EEE9;
-    border-bottom: 1px solid rgba(13, 59, 54, 0.12);
+    background: #E3EEE9 !important;
+    border-bottom: 1px solid rgba(13, 59, 54, 0.12) !important;
 }
 .trust .w {
     display: grid;
@@ -343,8 +343,8 @@ body, html, .modern-header, .modern-header * {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #0D3B36;
-    color: #D9BF8F;
+    background: #0D3B36 !important;
+    color: #D9BF8F !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -353,29 +353,28 @@ body, html, .modern-header, .modern-header * {
     display: block;
     font-weight: 600;
     font-size: 15px;
-    color: #0D3B36;
+    color: #0D3B36 !important;
 }
 .tr span {
     font-size: 14px;
-    color: #3F6B63;
+    color: #3F6B63 !important;
 }
 
-/* НА ТЕМНОМ ФОНЕ: 1 в 1 как в коде прототипа */
-:root[data-theme="dark"] .trust,
+/* НА ТЕМНОМ ФОНЕ: СТРОГО ИЗ ПРОТОТИПА */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .trust {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
+    .trust {
+        background: var(--surface) !important;
+        border-bottom: 1px solid var(--border) !important;
     }
-    :root:not([data-theme="light"]) .tr i {
-        background: var(--c1);
-        color: var(--e8);
+    .tr i {
+        background: var(--c1) !important;
+        color: var(--e8) !important;
     }
-    :root:not([data-theme="light"]) .tr b {
-        color: var(--text);
+    .tr b {
+        color: var(--text) !important;
     }
-    :root:not([data-theme="light"]) .tr span {
-        color: var(--muted);
+    .tr span {
+        color: var(--muted) !important;
     }
 }
 
