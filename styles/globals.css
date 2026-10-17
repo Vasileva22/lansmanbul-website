@@ -374,7 +374,6 @@ body, html, .modern-header, .modern-header * {
         color: #EEF3F1 !important; /* Молочно-белый благородный текст прототипа */
     }
 }
-
 @media (max-width: 980px) {
     .search {
         grid-template-columns: 1fr !important;
