@@ -307,12 +307,19 @@ body, html, .modern-header, .modern-header * {
     padding: 8px 0;
 }
 
-/* СТИЛИ ТРЕХ ПЛЮСОВ (УТП) ИЗ СКРИНШОТА */
+/* Полоса 3 плюсов под строкой поиска на изумрудном фоне */
+.hero-usp-strip {
+    background: var(--e8);
+    padding: 16px 0 32px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* СТИЛИ ТРЕХ ПЛЮСОВ (УТП) */
 .usp-banner-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    margin-top: 24px;
     width: 100%;
     box-sizing: border-box;
 }
