@@ -321,18 +321,11 @@ body, html, .modern-header, .modern-header * {
     transform: translateY(-1px) !important;
 }
 
-/* trust строго по коду прототипа */
+/* trust строго по коду прототипа с идеальной видимостью текста */
 .trust {
     background: #E3EEE9 !important;
-    border-bottom: 1px solid var(--border) !important;
+    border-bottom: 1px solid rgba(13, 59, 54, 0.12) !important;
     width: 100% !important;
-}
-:root[data-theme="dark"] .trust,
-@media (prefers-color-scheme: dark) {
-    .trust {
-        background: var(--surface) !important;
-        border-bottom: 1px solid var(--border) !important;
-    }
 }
 .trust .w {
     display: grid !important;
@@ -363,9 +356,21 @@ body, html, .modern-header, .modern-header * {
     display: block !important;
     font-weight: 600 !important;
     font-size: 15px !important;
-    color: var(--text) !important;
+    color: #0D3B36 !important; /* На светлом фоне текст всегда темно-изумрудный */
     line-height: 1.2 !important;
     white-space: nowrap !important;
+}
+
+/* В ТЕМНОМ РЕЖИМЕ: фон становится темно-изумрудным, а текст белым */
+:root[data-theme="dark"] .trust,
+@media (prefers-color-scheme: dark) {
+    .trust {
+        background: #13302C !important;
+        border-bottom: 1px solid #25443F !important;
+    }
+    .tr b {
+        color: #EEF3F1 !important; /* На темном фоне текст белый */
+    }
 }
 @media (max-width: 980px) {
     .search {
