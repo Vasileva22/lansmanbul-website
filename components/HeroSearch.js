@@ -276,55 +276,14 @@ export default function HeroSearch({
 
 return (
     <>
-      {/* 1. БАННЕР С ЗАГОЛОВКОМ И 3 ПЛЮСАМИ (СКРОЛЛЯТСЯ ВМЕСТЕ С ШАПКОЙ) */}
+      {/* 1. БАННЕР ТОЛЬКО С ЗАГОЛОВКОМ (плюсы отсюда убраны) */}
       <section className="hero">
         <div className="w">
           <h1>Doğrudan müteahhitten komisyonsuz yeni konut projeleri</h1>
-
-          {/* ТРИ ПЛЮСА (УТП) ВНУТРИ БАННЕРА */}
-          <div className="usp-banner-row">
-            <div className="usp-item">
-              <div className="usp-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="9"/>
-                  <path d="M8.5 12.5l2.5 2.5 4.5-5"/>
-                </svg>
-              </div>
-              <div className="usp-text">
-                <span className="usp-title">Komisyon yok</span>
-                <span className="usp-sub">Müteahhitle doğrudan görüşün</span>
-              </div>
-            </div>
-
-            <div className="usp-item">
-              <div className="usp-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M3 10.5L12 3l9 7.5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10z"/>
-                  <path d="M9 21v-7h6v7"/>
-                </svg>
-              </div>
-              <div className="usp-text">
-                <span className="usp-title">Yeni projeler</span>
-                <span className="usp-sub">{currentCity}'da {properties.filter(p => (p.city || 'Ankara').toLowerCase().includes(currentCity.toLowerCase())).length || properties.length} proje listeleniyor</span>
-              </div>
-            </div>
-
-            <div className="usp-item">
-              <div className="usp-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
-                </svg>
-              </div>
-              <div className="usp-text">
-                <span className="usp-title">WhatsApp ile hızlı yanıt</span>
-                <span className="usp-sub">Fiyat ve planları hemen öğrenin</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* 2. ЗАКРЕПЛЯЕТСЯ ТОЛЬКО ПОИСКОВАЯ ПАНЕЛЬ (БЕЗ ШАПКИ) */}
+      {/* 2. ПОИСКОВАЯ ПАНЕЛЬ */}
       <div className="pinwrap" ref={dropdownRef}>
         <div className="w">
           <div className="panel" role="search">
@@ -560,6 +519,53 @@ return (
           </div>
         </div>
       </div>
+
+      {/* 3. ТРИ ПЛЮСА (УТП) ТЕПЕРЬ СТРОГО ПОД ПОИСКОВОЙ ПАНЕЛЬЮ! */}
+      <div className="hero-usp-strip">
+        <div className="w">
+          <div className="usp-banner-row">
+            <div className="usp-item">
+              <div className="usp-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M8.5 12.5l2.5 2.5 4.5-5"/>
+                </svg>
+              </div>
+              <div className="usp-text">
+                <span className="usp-title">Komisyon yok</span>
+                <span className="usp-sub">Müteahhitle doğrudan görüşün</span>
+              </div>
+            </div>
+
+            <div className="usp-item">
+              <div className="usp-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M3 10.5L12 3l9 7.5v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10z"/>
+                  <path d="M9 21v-7h6v7"/>
+                </svg>
+              </div>
+              <div className="usp-text">
+                <span className="usp-title">Yeni projeler</span>
+                <span className="usp-sub">{currentCity}'da {properties.filter(p => (p.city || 'Ankara').toLowerCase().includes(currentCity.toLowerCase())).length || properties.length} proje listeleniyor</span>
+              </div>
+            </div>
+
+            <div className="usp-item">
+              <div className="usp-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+                </svg>
+              </div>
+              <div className="usp-text">
+                <span className="usp-title">WhatsApp ile hızlı yanıt</span>
+                <span className="usp-sub">Fiyat ve planları hemen öğrenin</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
+  );
+      
   );
 }
