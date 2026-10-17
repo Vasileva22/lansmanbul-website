@@ -520,47 +520,33 @@ return (
         </div>
       </div>
 
-      {/* 3. ОБОСОБЛЕННАЯ СЕКЦИЯ ПРЕИМУЩЕСТВ В ТОЧНОМ ДИЗАЙНЕ ПРОТОТИПА */}
-      <section className="trust">
+      {/* 3. ТОНКАЯ ПОЛОСА ДОВЕРИЯ (38px, #E3EEE9, #0D3B36 14px/600) */}
+      <div className="trust-strip-slim">
         <div className="w">
-          <div className="tr">
-            <i>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="m8 12 3 3 5-6"/>
+          <div className="trust-slim-row">
+            <div className="trust-slim-item">
+              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
               </svg>
-            </i>
-            <div>
-              <b>Komisyon yok</b>
-              <span>Müteahhitle doğrudan görüşün</span>
+              <span>Komisyon yok</span>
             </div>
-          </div>
 
-          <div className="tr">
-            <i>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
+            <div className="trust-slim-item">
+              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
               </svg>
-            </i>
-            <div>
-              <b>Yeni projeler</b>
-              <span>{currentCity}'da {properties.filter(p => (p.city || 'Ankara').toLowerCase().includes(currentCity.toLowerCase())).length || properties.length} proje listeleniyor</span>
+              <span>Doğrudan müteahhit</span>
             </div>
-          </div>
 
-          <div className="tr">
-            <i>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+            <div className="trust-slim-item">
+              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
               </svg>
-            </i>
-            <div>
-              <b>WhatsApp ile hızlı yanıt</b>
-              <span>Fiyat ve planları hemen öğrenin</span>
+              <span>WhatsApp ile hızlı yanıt</span>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </>
   );
 }
