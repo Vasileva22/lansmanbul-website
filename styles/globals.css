@@ -319,10 +319,11 @@ body, html, .modern-header, .modern-header * {
 .go:hover {
     background: var(--c5, #C8A96A) !important;
     transform: translateY(-1px) !important;
-}/* trust из прототипа */
+/* trust: глубокий темно-изумрудный цвет и на светлом, и на темном фоне */
 .trust {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: #13302C !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid #25443F !important;
 }
 .trust .w {
     display: grid;
@@ -341,8 +342,8 @@ body, html, .modern-header, .modern-header * {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: var(--c1);
-    color: var(--e8);
+    background: #F3EAD7 !important;
+    color: #0D3B36 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -351,7 +352,7 @@ body, html, .modern-header, .modern-header * {
     display: block;
     font-weight: 600;
     font-size: 15px;
-    color: var(--text);
+    color: #EEF3F1 !important;
 }
 
 @media (max-width: 980px) {
