@@ -122,19 +122,16 @@ body, html, .modern-header, .modern-header * {
    2. СТИЛИ ШАПКИ (Премиум изумрудный фон var(--e8) из прототипа)
    ========================================================================== */
 .modern-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
+    position: relative !important; /* Больше не фиксирована! Скроллится вместе с контентом */
     width: 100% !important;
-    height: 72px !important;
+    height: 64px !important;
     background-color: var(--e8) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    z-index: 999999 !important;
+    z-index: 10 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    box-shadow: 0 4px 20px rgba(10, 46, 42, 0.15) !important;
 }
 .header-container {
     width: 100% !important;
@@ -278,7 +275,7 @@ body, html, .modern-header, .modern-header * {
 .hero {
     background: var(--e8);
     color: #fff;
-    padding: 95px 0 52px; /* Отступ сверху под шапку 72px */
+    padding: 24px 0 60px 0; /* Аккуратный отступ, шапка уезжает наверх */
     width: 100%;
     box-sizing: border-box;
 }
@@ -291,13 +288,13 @@ body, html, .modern-header, .modern-header * {
     letter-spacing: -0.2px;
 }
 
-/* Прилипающая плавающая панель к самому верху экрана */
+/* Прилипает ТОЛЬКО поисковая панель к верху экрана */
 .pinwrap {
     position: sticky;
-    top: 0; /* Прилипает к самому верху экрана */
-    z-index: 99999;
+    top: 0;
+    z-index: 9999;
     margin-top: -36px;
-    padding: 8px 0 20px 0;
+    padding: 8px 0;
     width: 100%;
     box-sizing: border-box;
     transition: background 0.2s ease, box-shadow 0.2s ease;
