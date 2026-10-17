@@ -319,11 +319,12 @@ body, html, .modern-header, .modern-header * {
 .go:hover {
     background: var(--c5, #C8A96A) !important;
     transform: translateY(-1px) !important;
-}   
-/* НА СВЕТЛОМ ФОНЕ: фон #E3EEE9, кружок #0D3B36, иконка #D9BF8F, текст #0D3B36 */
+}
+
+/* trust из прототипа */
 .trust {
-    background: #E3EEE9 !important;
-    border-bottom: 1px solid rgba(13, 59, 54, 0.12) !important;
+    background: #E3EEE9 !important; /* На светлом фоне цветная плашка */
+    border-bottom: 1px solid var(--border);
     width: 100%;
 }
 .trust .w {
@@ -343,8 +344,8 @@ body, html, .modern-header, .modern-header * {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #0D3B36 !important;
-    color: #D9BF8F !important;
+    background: #0D3B36;
+    color: #D9BF8F;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -353,22 +354,23 @@ body, html, .modern-header, .modern-header * {
     display: block;
     font-weight: 600;
     font-size: 15px;
-    color: #0D3B36 !important;
+    color: #0D3B36;
+    line-height: 1.2;
 }
 
-/* НА ТЕМНОМ ФОНЕ: всё остаётся темным и красивым */
+/* НА ТЕМНОМ ФОНЕ: плашка как карточки var(--surface), слова ЖЕЛЕЗНО БЕЛЫЕ */
 :root[data-theme="dark"] .trust,
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .trust {
-        background: #13302C !important;
-        border-bottom: 1px solid #25443F !important;
+    .trust {
+        background: var(--surface) !important;
+        border-bottom: 1px solid var(--border) !important;
     }
-    :root:not([data-theme="light"]) .tr i {
-        background: #F3EAD7 !important;
-        color: #0D3B36 !important;
+    .tr i {
+        background: var(--c1) !important;
+        color: var(--e8) !important;
     }
-    :root:not([data-theme="light"]) .tr b {
-        color: #EEF3F1 !important;
+    .tr b {
+        color: #FFFFFF !important; /* Белые слова на темном фоне */
     }
 }
 
