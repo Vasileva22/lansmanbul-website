@@ -319,66 +319,44 @@ body, html, .modern-header, .modern-header * {
 .go:hover {
     background: var(--c5, #C8A96A) !important;
     transform: translateY(-1px) !important;
-}
-
-/* trust строго по коду прототипа с идеальной видимостью текста */
+}/* trust из прототипа */
 .trust {
-    background: #E3EEE9 !important;
-    border-bottom: 1px solid rgba(13, 59, 54, 0.12) !important;
-    width: 100% !important;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
 }
 .trust .w {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 20px !important;
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
-    align-items: center !important;
-    box-sizing: border-box !important;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding-top: 18px;
+    padding-bottom: 18px;
 }
 .tr {
-    display: flex !important;
-    gap: 12px !important;
-    align-items: center !important;
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 .tr i {
-    flex: none !important;
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    background: var(--c1) !important;
-    color: var(--e8) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--c1);
+    color: var(--e8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .tr b {
-    display: block !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    color: #0D3B36 !important; /* На светлом фоне текст всегда темно-изумрудный */
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
+    display: block;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
 }
 
-/* В ТЕМНОМ РЕЖИМЕ: фон становится темно-изумрудным, а текст белым */
-:root[data-theme="dark"] .trust,
-@media (prefers-color-scheme: dark) {
-    .trust {
-        background: #13302C !important;
-        border-bottom: 1px solid #25443F !important;
-    }
-    .tr b {
-        color: #EEF3F1 !important; /* На темном фоне текст белый */
-    }
-}
 @media (max-width: 980px) {
-    .search {
-        grid-template-columns: 1fr !important;
-    }
     .trust .w {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
+        grid-template-columns: 1fr;
     }
 }
 .fld {
