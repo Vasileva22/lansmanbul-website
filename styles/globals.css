@@ -319,6 +319,7 @@ body, html, .modern-header, .modern-header * {
 .go:hover {
     background: var(--c5, #C8A96A) !important;
     transform: translateY(-1px) !important;
+}   
 /* НА СВЕТЛОМ ФОНЕ: фон #E3EEE9, кружок #0D3B36, иконка #D9BF8F, текст #0D3B36 */
 .trust {
     background: #E3EEE9 !important;
