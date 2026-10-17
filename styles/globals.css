@@ -307,65 +307,61 @@ body, html, .modern-header, .modern-header * {
     padding: 8px 0;
 }
 
-/* Полоса 3 плюсов под строкой поиска на изумрудном фоне */
-.hero-usp-strip {
-    background: var(--e8);
-    padding: 16px 0 32px 0;
+/* ==========================================================================
+   ОБОСОБЛЕННАЯ СЕКЦИЯ ПРЕИМУЩЕСТВ (TRUST) ИЗ ПРОТОТИПА
+   ========================================================================== */
+.trust {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     width: 100%;
     box-sizing: border-box;
 }
-
-/* СТИЛИ ТРЕХ ПЛЮСОВ (УТП) */
-.usp-banner-row {
+.trust .w {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    width: 100%;
-    box-sizing: border-box;
+    padding-top: 18px;
+    padding-bottom: 18px;
 }
-.usp-item {
+.tr {
     display: flex;
-    align-items: center;
     gap: 12px;
+    align-items: center;
 }
-.usp-icon-box {
-    width: 38px;
-    height: 38px;
+.tr i {
+    flex: none;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background-color: #FFFFFF;
+    background: var(--c1);
     color: var(--e8);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
-.usp-icon-box svg {
-    width: 18px;
-    height: 18px;
+.tr i svg {
+    width: 20px;
+    height: 20px;
 }
-.usp-text {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
+.tr b {
+    display: block;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.3;
 }
-.usp-title {
+.tr span {
     font-size: 14px;
-    font-weight: 700;
-    color: #FFFFFF;
-    line-height: 1.25;
-}
-.usp-sub {
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--muted);
     line-height: 1.3;
 }
 
 @media (max-width: 980px) {
-    .usp-banner-row {
+    .trust .w {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 14px;
+        padding-top: 14px;
+        padding-bottom: 14px;
     }
 }
 
