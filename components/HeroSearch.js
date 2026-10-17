@@ -276,17 +276,12 @@ export default function HeroSearch({
 
 return (
     <>
-      {/* 1. БАННЕР ТОЛЬКО С ЗАГОЛОВКОМ (плюсы отсюда убраны) */}
-      <section className="hero">
+      {/* 1. ИЗУМРУДНЫЙ БЛОК HERO: ЗАГОЛОВОК И ПОИСКОВАЯ ПАНЕЛЬ ПОЛНОСТЬЮ ВНУТРИ */}
+      <section className="hero" ref={dropdownRef}>
         <div className="w">
           <h1>Doğrudan müteahhitten komisyonsuz yeni konut projeleri</h1>
-        </div>
-      </section>
 
-      {/* 2. ПОИСКОВАЯ ПАНЕЛЬ */}
-      <div className="pinwrap" ref={dropdownRef}>
-        <div className="w">
-          <div className="panel" role="search">
+          <div className="search" role="search">
             
             {/* ОТСЕК 1: ЛОКАЦИЯ (ВСПЛЫВАЮЩЕЕ ОКНО .pop) */}
             <div 
@@ -481,7 +476,7 @@ return (
               )}
             </div>
 
-            {/* ОТСЕК 3: БЮДЖЕТ (ВЫПАДАЮЩИЙ СПИСОК С РЕАЛЬНЫМИ ШАГАМИ ЦЕН ОТ 2 МЛН) */}
+            {/* ОТСЕК 3: БЮДЖЕТ */}
             <div className="fld">
               <small>Bütçe</small>
               <select
@@ -516,37 +511,45 @@ return (
               </select>
             </div>
 
+            {/* КНОПКА ПОИСКА ИЗ ПРОТОТИПА */}
+            <button className="go" onClick={onSearch}>Ara</button>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 3. ТОНКАЯ ПОЛОСА ДОВЕРИЯ (38px, #E3EEE9, #0D3B36 14px/600) */}
-      <div className="trust-strip-slim">
+      {/* 2. ЦВЕТНАЯ ПЛАШКА ПРЕИМУЩЕСТВ СТРОГО ПО ПРОТОТИПУ (ТОЛЬКО ЗАГОЛОВКИ В ОДИН РЯД) */}
+      <section className="trust">
         <div className="w">
-          <div className="trust-slim-row">
-            <div className="trust-slim-item">
-              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+          <div className="tr">
+            <i>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="m8 12 3 3 5-6"/>
               </svg>
-              <span>Komisyon yok</span>
-            </div>
+            </i>
+            <b>Komisyon yok</b>
+          </div>
 
-            <div className="trust-slim-item">
-              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+          <div className="tr">
+            <i>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
-              <span>Doğrudan müteahhit</span>
-            </div>
+            </i>
+            <b>Doğrudan müteahhit</b>
+          </div>
 
-            <div className="trust-slim-item">
-              <svg className="trust-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+          <div className="tr">
+            <i>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
               </svg>
-              <span>WhatsApp ile hızlı yanıt</span>
-            </div>
+            </i>
+            <b>WhatsApp ile hızlı yanıt</b>
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }
