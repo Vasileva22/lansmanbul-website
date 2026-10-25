@@ -548,7 +548,7 @@ export default function Home({ initialProperties }) {
         <div 
           id="sidebar-toggle-btn"
           onClick={() => setIsSidebarHidden(!isSidebarHidden)}
-          style={{ left: isSidebarHidden ? '0px' : '315px', transition: 'left 0.3s ease', position: 'fixed' }}
+         style={{ left: isSidebarHidden ? '0px' : '290px', transition: 'left 0.3s ease', position: 'fixed' }}
         >
           {isSidebarHidden ? '❯' : '❮'}
         </div>
