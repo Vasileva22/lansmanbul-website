@@ -389,8 +389,7 @@ export default function SidebarFilters({
       priceRange: [minPriceInput, maxPriceInput],
     }));
   };
-
-  return (
+return (
     <>
       <div 
         className={'sidebar-mobile-overlay ' + (isMobileSidebarOpen ? 'show' : '')}
@@ -399,34 +398,37 @@ export default function SidebarFilters({
 
       <aside 
         ref={sidebarContainerRef}
-        className={'luxe-sidebar ' + (isSidebarHidden ? 'sidebar-hidden' : '') + ' ' + (isMobileSidebarOpen ? 'sidebar-mobile-show' : '')} 
-        id="custom-sidebar"
+        className={'sb ' + (isSidebarHidden ? 'sidebar-hidden' : '') + ' ' + (isMobileSidebarOpen ? 'sidebar-mobile-show' : '')} 
+        id="sb"
+        aria-label="Detaylı filtreler"
       >
-        <span className="sidebar-mobile-close-btn" onClick={() => setIsMobileSidebarOpen(false)}>
-          &times;
-        </span>
-
-       <div className="luxe-sidebar-scrollable-body">
-
-          {/* ШАПКА ФИЛЬТРА СТРОГО ПО ВАШЕМУ СКРИНШОТУ */}
-          <div className="sb-header-clean">
-            <h2 className="sb-title">Detaylı filtreler</h2>
-            <div className="sb-subtitle-row">
-              <span className="sb-count-info">
-                <strong>{totalCount}</strong> proje listeleniyor
-              </span>
-              <span className="sb-sep">·</span>
-              <button type="button" className="sb-clear-link" onClick={onClearFilters}>
-                Temizle
-              </button>
-            </div>
+        {/* ШАПКА ФИЛЬТРА СТРОГО ПО ПРОТОТИПУ */}
+        <div className="sbh">
+          <div className="t">
+            <h2>Detaylı filtreler</h2>
+            <button 
+              type="button" 
+              className="sbx" 
+              onClick={() => setIsMobileSidebarOpen(false)} 
+              aria-label="Kapat"
+            >
+              ×
+            </button>
           </div>
+          <p>
+            <b>{totalCount}</b> proje listeleniyor ·{' '}
+            <button type="button" className="clr" onClick={onClearFilters}>
+              Temizle
+            </button>
+          </p>
+        </div>
 
-          <div className="sb-emerald-divider"></div>
-
-          {/* 1. СТАТУС ПРОЕКТА (PROJE DURUMU) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Proje durumu</span>
+        {/* ТЕЛО САЙДБАРА С АККОРДЕОНАМИ DETAILS/SUMMARY */}
+        <div className="sbb">
+          
+          {/* 1. СТАТУС ПРОЕКТА */}
+          <details open>
+            <summary>Proje durumu</summary>
             <div className="chips">
               {['Lansman', 'Devam ediyor', 'Tamamlandı'].map((st) => {
                 const isSelected = (filters.selectedStatuses || []).includes(st);
@@ -448,43 +450,40 @@ export default function SidebarFilters({
                 );
               })}
             </div>
-          </div>
+          </details>
 
-          <div className="sb-divider"></div>
-
-          {/* 2. ГОД СДАЧИ (TESLİM YILI) */}
+          {/* 2. ГОД СДАЧИ */}
           {uniqueYears.length > 0 && (
-            <>
-              <div className="sb-section">
-                <span className="sb-section-title">Teslim Yılı</span>
-                <div className="chips">
-                  {uniqueYears.map((year) => {
-                    const isActive = (filters.selectedYears || []).includes(year);
-                    return (
-                      <button
-                        key={year}
-                        type="button"
-                        className="chip"
-                        aria-pressed={isActive}
-                        onClick={() => handleYearToggle(year)}
-                      >
-                        {year}
-                      </button>
-                    );
-                  })}
-                </div>
+            <details open>
+              <summary>Teslim yılı</summary>
+              <div className="chips">
+                {uniqueYears.map((year) => {
+                  const isActive = (filters.selectedYears || []).includes(year);
+                  return (
+                    <button
+                      key={year}
+                      type="button"
+                      className="chip"
+                      aria-pressed={isActive}
+                      onClick={() => handleYearToggle(year)}
+                    >
+                      {year}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="sb-divider"></div>
-            </>
+            </details>
           )}
 
-          {/* 3. МЕТРАЖ (METREKARE) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Metrekare (m²)</span>
+          {/* 3. МЕТРАЖ */}
+          <details open>
+            <summary>Metrekare (m²)</summary>
             <div className="rng">
               <input 
-                type="text" 
-                value={minAreaInput}
+                type="text"
+                inputMode="numeric"
+                placeholder="En az"
+                value={minAreaInput === 0 ? '' : minAreaInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMinAreaInput(val);
@@ -501,7 +500,9 @@ export default function SidebarFilters({
               <span>–</span>
               <input 
                 type="text" 
-                value={maxAreaInput}
+                inputMode="numeric"
+                placeholder="En çok"
+                value={maxAreaInput === 500 ? '' : maxAreaInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMaxAreaInput(val);
@@ -517,17 +518,17 @@ export default function SidebarFilters({
               />
             </div>
             <div ref={areaSliderRef} className="luxe-slider-track"></div>
-          </div>
+          </details>
 
-          <div className="sb-divider"></div>
-
-          {/* 4. ЭТАЖНОСТЬ (KAT SAYISI) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Kat sayısı</span>
+          {/* 4. ЭТАЖНОСТЬ */}
+          <details>
+            <summary>Kat sayısı</summary>
             <div className="rng">
               <input 
                 type="text" 
-                value={minKatInput}
+                inputMode="numeric"
+                placeholder="En az"
+                value={minKatInput === 0 ? '' : minKatInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMinKatInput(val);
@@ -544,7 +545,9 @@ export default function SidebarFilters({
               <span>–</span>
               <input 
                 type="text" 
-                value={maxKatInput}
+                inputMode="numeric"
+                placeholder="En çok"
+                value={maxKatInput === 40 ? '' : maxKatInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMaxKatInput(val);
@@ -560,188 +563,118 @@ export default function SidebarFilters({
               />
             </div>
             <div ref={katSliderRef} className="luxe-slider-track"></div>
-          </div>
+          </details>
 
-          <div className="sb-divider"></div>
-
-          {/* 5. ЦЕНА (FİYAT) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Fiyat</span>
-            <div className="price-live-display">
-              <span>{filters.priceRange[0].toLocaleString('tr-TR')} TL</span> — <span>{filters.priceRange[1].toLocaleString('tr-TR')} TL</span>
+          {/* 5. ЦЕНА */}
+          <details open>
+            <summary>Fiyat aralığı</summary>
+            <div className="rng">
+              <input 
+                type="text"
+                placeholder="En az TL"
+                value={minPriceInput ? minPriceInput.toLocaleString('tr-TR') : ''}
+                onChange={(e) => {
+                  const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                  setMinPriceInput(num);
+                }}
+                onBlur={handleManualPriceApply}
+              />
+              <span>–</span>
+              <input 
+                type="text"
+                placeholder="En çok TL"
+                value={maxPriceInput ? maxPriceInput.toLocaleString('tr-TR') : ''}
+                onChange={(e) => {
+                  const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                  setMaxPriceInput(num);
+                }}
+                onBlur={handleManualPriceApply}
+              />
             </div>
             <div ref={priceSliderRef} className="luxe-slider-track"></div>
+          </details>
 
-            <div className="price-inputs-container">
-              <div className="price-input-box">
-                <span className="price-box-label">En Düşük</span>
-                <div className="price-box-input-wrap">
-                  <input 
-                    type="text" 
-                    className="price-box-input min priceInput py-0" 
-                    value={minPriceInput.toLocaleString('tr-TR')}
-                    onChange={(e) => {
-                      const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
-                      setMinPriceInput(num);
-                    }}
-                  />
-                  <span className="price-currency">TL</span>
-                </div>
-              </div>
-              <div className="price-input-box">
-                <span className="price-box-label">En Yüksek</span>
-                <div className="price-box-input-wrap">
-                  <input 
-                    type="text" 
-                    className="price-box-input max priceInput py-0" 
-                    value={maxPriceInput.toLocaleString('tr-TR')}
-                    onChange={(e) => {
-                      const num = parseInt(e.target.value.replace(/\D/g, '')) || 0;
-                      setMaxPriceInput(num);
-                    }}
-                  />
-                  <span className="price-currency">TL</span>
-                </div>
-              </div>
-              <button className="price-go-btn" title="Filtrele" onClick={handleManualPriceApply}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="sb-divider"></div>
-
-          {/* 6. УДОБСТВА ЖК (SİTE & SOSYAL ÖZELLİKLER) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Site & Sosyal Özellikler</span>
-            <div className={`space-y-1.5 mt-2 ${isTagsExpanded ? 'emlakjet-features-scroll' : ''}`}>
+          {/* 6. УДОБСТВА ЖК */}
+          <details>
+            <summary>Site &amp; sosyal özellikler</summary>
+            <div className="dl">
               {[
                 { id: 'Kapalı Otopark', label: 'Kapalı Otopark' },
                 { id: '24 Saat Güvenlik', label: '24 Saat Güvenlik' },
                 { id: 'Yüzme Havuzu', label: 'Yüzme Havuzu' },
                 { id: 'Çocuk Oyun Alanı', label: 'Çocuk Oyun Parkı' },
-                { id: 'Spor Salonu', label: 'Fitness & Spor Salonu' },
-                ...(isTagsExpanded ? [
-                  { id: 'Sauna', label: 'Sauna & Hamam' },
-                  { id: 'Jeneratör', label: 'Jeneratör' },
-                  { id: 'Peyzaj', label: 'Peyzaj & Yürüyüş Parkuru' },
-                  { id: 'Deprem', label: 'Deprem Yönetmeliğine Uygun' },
-                  { id: 'Şarj İstasyonu', label: 'Araç Şarj İstasyonu' }
-                ] : [])
+                { id: 'Spor Salonu', label: 'Spor Salonu' },
+                { id: 'Sauna', label: 'Sauna & Hamam' },
+                { id: 'Jeneratör', label: 'Jeneratör' },
+                { id: 'Peyzaj', label: 'Peyzaj & Yürüyüş Alanı' },
+                { id: 'Deprem', label: 'Deprem Yönetmeliğine Uygun' },
+                { id: 'Şarj İstasyonu', label: 'Araç Şarj İstasyonu' }
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
                 const matchCount = featureCounts[item.id] || 0;
                 return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between py-1.5 px-1 cursor-pointer select-none hover:opacity-80 transition"
-                    onClick={() => handleTagToggle(item.id)}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-400 bg-transparent'}`}>
-                        {isChecked && (
-                          <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        )}
-                      </div>
-                      <span className={`text-xs font-semibold ${isChecked ? 'font-bold' : ''}`} style={{ color: 'var(--text)' }}>
-                        {item.label}
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-bold" style={{ color: 'var(--muted)' }}>({matchCount})</span>
-                  </div>
+                  <label key={item.id} className="row">
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked}
+                      onChange={() => handleTagToggle(item.id)}
+                    />
+                    <span>{item.label}</span>
+                    <em>{matchCount}</em>
+                  </label>
                 );
               })}
             </div>
+          </details>
 
-            <span 
-              className="luxe-more-filters-link text-xs font-bold cursor-pointer inline-block mt-2.5" 
-              onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-            >
-              {isTagsExpanded ? 'Daha az göster ▴' : 'Daha fazla göster (5) ▾'}
-            </span>
-          </div>
-
-          <div className="sb-divider"></div>
-
-          {/* 7. ВНУТРЕННИЕ УДОБСТВА (DAİRE İÇİ ÖZELLİKLER) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Daire İçi Özellikler</span>
-            <div className="space-y-1.5 mt-2">
+          {/* 7. ВНУТРЕННИЕ ОСОБЕННОСТИ КВАРТИРЫ */}
+          <details>
+            <summary>Daire içi özellikler</summary>
+            <div className="dl">
               {[
                 { id: 'Yerden Isıtma', label: 'Yerden Isıtma' },
-                { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak Seti' },
-                { id: 'Manzara', label: 'Deniz / Doğa Manzarası' },
+                { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak' },
+                { id: 'Manzara', label: 'Doğa / Şehir Manzarası' },
                 { id: 'Akıllı Ev', label: 'Akıllı Ev Sistemi' }
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
                 const matchCount = featureCounts[item.id] || 0;
                 return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between py-1.5 px-1 cursor-pointer select-none hover:opacity-80 transition"
-                    onClick={() => handleTagToggle(item.id)}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-400 bg-transparent'}`}>
-                        {isChecked && (
-                          <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        )}
-                      </div>
-                      <span className={`text-xs font-semibold ${isChecked ? 'font-bold' : ''}`} style={{ color: 'var(--text)' }}>
-                        {item.label}
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-bold" style={{ color: 'var(--muted)' }}>({matchCount})</span>
-                  </div>
+                  <label key={item.id} className="row">
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked}
+                      onChange={() => handleTagToggle(item.id)}
+                    />
+                    <span>{item.label}</span>
+                    <em>{matchCount}</em>
+                  </label>
                 );
               })}
             </div>
-          </div>
+          </details>
 
-          <div className="sb-divider"></div>
-
-          {/* 8. ОПЛАТА (ÖDEME DURUMU) */}
-          <div className="sb-section">
-            <span className="sb-section-title">Ödeme durumu</span>
-            <div className="luxe-checkboxes mt-2">
+          {/* 8. ОПЛАТА */}
+          <details>
+            <summary>Ödeme durumu</summary>
+            <div className="dl">
               {[
                 { label: 'Krediye uygun', value: 'Krediye uygun' },
                 { label: 'Taksit imkanı', value: 'Taksit imkanı' },
                 { label: 'Peşin', value: 'Peşin' }
               ].map((pay) => (
-                <div 
-                  key={pay.value} 
-                  className={'luxe-checkbox-item ' + (filters.activePaymentFilters.includes(pay.value) ? 'checked' : '')}
-                  onClick={() => handlePaymentToggle(pay.value)}
-                >
-                  <div className="luxe-radio-dot"></div>
-                  <label style={{ cursor: 'pointer', margin: 0, color: 'var(--text)' }}>{pay.label}</label>
-                </div>
+                <label key={pay.value} className="row">
+                  <input 
+                    type="checkbox" 
+                    checked={filters.activePaymentFilters.includes(pay.value)}
+                    onChange={() => handlePaymentToggle(pay.value)}
+                  />
+                  <span>{pay.label}</span>
+                </label>
               ))}
             </div>
-          </div>
+          </details>
 
-        </div>
-
-        <div className="luxe-sidebar-mobile-footer" style={{ display: 'none' }}>
-          <button 
-            className="showList c-button c-button--primary" 
-            onClick={() => setIsMobileSidebarOpen(false)}
-            style={{ border: 'none', cursor: 'pointer' }}
-          >
-            <span>{totalCount}</span> Sonucu Göster
-          </button>
-          <button 
-            className="c-button c-button--transparent clearFilter clear-filters-btn" 
-            onClick={() => { onClearFilters(); setIsMobileSidebarOpen(false); }}
-            style={{ border: '1px solid #CBD5E1', cursor: 'pointer', background: 'none' }}
-          >
-            Temizle
-          </button>
         </div>
       </aside>
     </>
