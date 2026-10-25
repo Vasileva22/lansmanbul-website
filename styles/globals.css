@@ -602,91 +602,171 @@ body, html, .modern-header, .modern-header * {
 /* ==========================================================================
    4. БОКОВОЙ ФИЛЬТР (АРХИТЕКТУРА EMLAKJET: BOTTOM-STICKY + ПОЛНЫЙ СКРОЛЛ)
    ========================================================================== */
+/* САЙДБАР СТРОГО ПО ПРОТОТИПУ (290px, ПРЕМИУМ ДИЗАЙН) */
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: var(--sidebar-sticky-top, 100px) !important;
+    top: 84px !important;
     align-self: flex-start !important;
-    width: 315px !important;
-    min-width: 315px !important;
-    max-width: 315px !important;
-    height: auto !important;
-    max-height: calc(100vh - 115px) !important;
-    background: var(--surface) !important; /* Глубокий изумруд на темном фоне, мягкий белый на светлом */
+    width: 290px !important;
+    min-width: 290px !important;
+    max-width: 290px !important;
+    max-height: calc(100vh - 100px) !important;
+    background: var(--surface) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 16px !important;
-    padding: 20px 6px 16px 20px !important;
-    z-index: 30 !important;
-    box-shadow: 0 8px 24px rgba(10, 46, 42, 0.08) !important;
-    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    flex-shrink: 0 !important;
     overflow: hidden !important;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
+    box-sizing: border-box !important;
+    z-index: 30 !important;
 }
 
-/* ШАПКА ФИЛЬТРА ИЗ СКРИНШОТА */
-.sb-header-clean {
+.luxe-sidebar-scrollable-body {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
+    height: 100%;
+    overflow: hidden;
 }
-.sb-title {
-    margin: 0;
-    font-size: 21px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.3px;
+
+/* ШАПКА САЙДБАРА */
+.sbh {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
-.sb-subtitle-row {
+.sbh .t {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
 }
-.sb-count-info {
-    color: var(--muted);
-}
-.sb-count-info strong {
+.sbh h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
     color: var(--text);
+}
+.sbh p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+.sbh p b {
+    color: var(--link);
     font-weight: 700;
 }
-.sb-sep {
-    color: var(--muted);
+.clr {
+    background: transparent;
+    border: 0;
+    color: var(--link);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: underline;
+    padding: 2px 0;
+    cursor: pointer;
 }
-.sb-clear-link {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
+.sbx {
+    display: none;
+}
+
+/* ТЕЛО САЙДБАРА СО СКРОЛЛОМ */
+.sbb {
+    padding: 4px 18px 14px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* АККОРДЕОНЫ DETAILS И SUMMARY СО СТРЕЛОЧКАМИ */
+details {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+}
+details:last-child {
+    border-bottom: 0;
+}
+summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+}
+summary::-webkit-details-marker {
+    display: none;
+}
+summary::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+}
+details[open] summary::after {
+    transform: rotate(-135deg);
+}
+details .chips {
+    padding-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.dl {
+    padding-top: 6px;
+}
+
+/* ИНПУТЫ ДИАПАЗОНОВ RNG */
+.rng {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 12px;
+}
+.rng input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    text-align: center;
+    font-weight: 600;
+    font-size: 13.5px;
+    outline: none;
+}
+
+/* КНОПКА ИНОСТРАНЦЕВ В ПРАВОМ ВЕРХНЕМ УГЛУ ТУЛБАРА */
+.foreigner-btn-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 14px;
     font-size: 13.5px;
     font-weight: 700;
-    color: var(--e6, #1F6B61);
-    text-decoration: underline;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
     cursor: pointer;
-    transition: color 0.15s ease;
+    transition: all 0.2s ease;
 }
-.sb-clear-link:hover {
-    color: var(--c4, #D9BF8F);
+.foreigner-btn-top:hover {
+    border-color: var(--e8);
+    color: var(--e8);
 }
-
-/* ИЗУМРУДНАЯ РАЗДЕЛИТЕЛЬНАЯ ПОЛОСА ПОД ЗАГОЛОВКОМ */
-.sb-emerald-divider {
-    height: 2px;
-    background: var(--e8, #0D3B36);
-    border-radius: 2px;
-    margin-bottom: 18px;
-    width: 100%;
+.foreigner-btn-top.active {
+    background: var(--c4) !important;
+    color: var(--e8) !important;
+    border-color: var(--c4) !important;
 }
-:root[data-theme="dark"] .sb-emerald-divider,
-@media (prefers-color-scheme: dark) {
-    .sb-emerald-divider {
-        background: var(--c4, #D9BF8F); /* На темном фоне полоска становится золотой */
-    }
-}
-
 /* СЕКЦИИ САЙДБАРА */
 .sb-section {
     margin-bottom: 16px;
