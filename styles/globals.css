@@ -605,7 +605,6 @@ body, html, .modern-header, .modern-header * {
 .luxe-sidebar {
     position: -webkit-sticky !important;
     position: sticky !important;
-    /* Динамический top: в начале листается со страницей, затем липнет низом к экрану */
     top: var(--sidebar-sticky-top, 100px) !important;
     align-self: flex-start !important;
     width: 315px !important;
@@ -613,13 +612,12 @@ body, html, .modern-header, .modern-header * {
     max-width: 315px !important;
     height: auto !important;
     max-height: calc(100vh - 115px) !important;
-    background: #ffffff !important;
-    border: 1.5px solid #E2E8F0 !important;
-    border-bottom: none !important; /* Убираем нижний закругленный обрубок */
-    border-radius: 24px 24px 0 0 !important; /* Верх закруглен, низ уходит в край экрана */
-    padding: 20px 6px 0px 20px !important;
+    background: var(--surface) !important; /* Глубокий изумруд на темном фоне, мягкий белый на светлом */
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    padding: 20px 6px 16px 20px !important;
     z-index: 30 !important;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    box-shadow: 0 8px 24px rgba(10, 46, 42, 0.08) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -628,6 +626,147 @@ body, html, .modern-header, .modern-header * {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
+/* ШАПКА ФИЛЬТРА ИЗ СКРИНШОТА */
+.sb-header-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.sb-title {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+}
+.sb-subtitle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+}
+.sb-count-info {
+    color: var(--muted);
+}
+.sb-count-info strong {
+    color: var(--text);
+    font-weight: 700;
+}
+.sb-sep {
+    color: var(--muted);
+}
+.sb-clear-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--e6, #1F6B61);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+.sb-clear-link:hover {
+    color: var(--c4, #D9BF8F);
+}
+
+/* ИЗУМРУДНАЯ РАЗДЕЛИТЕЛЬНАЯ ПОЛОСА ПОД ЗАГОЛОВКОМ */
+.sb-emerald-divider {
+    height: 2px;
+    background: var(--e8, #0D3B36);
+    border-radius: 2px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+:root[data-theme="dark"] .sb-emerald-divider,
+@media (prefers-color-scheme: dark) {
+    .sb-emerald-divider {
+        background: var(--c4, #D9BF8F); /* На темном фоне полоска становится золотой */
+    }
+}
+
+/* СЕКЦИИ САЙДБАРА */
+.sb-section {
+    margin-bottom: 16px;
+}
+.sb-section-title {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+.sb-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+}
+
+/* ИНПУТЫ ДИАПАЗОНОВ (RNG) */
+.sb-section .rng {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.sb-section .rng input {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    text-align: center;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.sb-section .rng input:focus {
+    border-color: var(--e8);
+}
+.sb-section .rng span {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+/* СЛАЙДЕРЫ */
+.luxe-slider-track.noUi-target {
+    height: 4px !important;
+    border: none !important;
+    background-color: var(--border) !important;
+    margin: 10px 8px 16px 8px !important;
+}
+.luxe-slider-track .noUi-connect {
+    background: var(--e8, #0D3B36) !important;
+}
+:root[data-theme="dark"] .luxe-slider-track .noUi-connect,
+@media (prefers-color-scheme: dark) {
+    .luxe-slider-track .noUi-connect {
+        background: var(--c4, #D9BF8F) !important;
+    }
+}
+.luxe-slider-track .noUi-handle {
+    width: 16px !important;
+    height: 16px !important;
+    right: -8px !important;
+    top: -6px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--surface) !important;
+    background-color: var(--e8, #0D3B36) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+    cursor: pointer !important;
+}
+:root[data-theme="dark"] .luxe-slider-track .noUi-handle,
+@media (prefers-color-scheme: dark) {
+    .luxe-slider-track .noUi-handle {
+        background-color: var(--c4, #D9BF8F) !important;
+    }
+}
 /* ВНУТРЕННИЙ ПЛАВНЫЙ СКРОЛЛ (ДОСТУПЕН ВСЕГДА В ЛЮБОЙ ТОЧКЕ СТРАНИЦЫ) */
 .luxe-sidebar-scrollable-body {
     flex: 1 1 auto !important;
