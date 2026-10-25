@@ -621,6 +621,28 @@ export default function Home({ initialProperties }) {
             </div>
 
             <div className="tb-right">
+              {/* КНОПКА ДЛЯ ИНОСТРАНЦЕВ В ПРАВОМ ВЕРХНЕМ УГЛУ */}
+              <button
+                type="button"
+                className={`foreigner-btn-top ${isForeigner ? 'active' : ''}`}
+                onClick={() => {
+                  if (isForeigner) {
+                    setIsForeigner(false);
+                    setFilters(prev => ({
+                      ...prev,
+                      priceRange: [0, prev.priceRange[1]],
+                      activeFeatureFilters: prev.activeFeatureFilters.filter(
+                        t => t !== 'Vatandaşlığa Uygun' && t !== 'İkamete Uygun'
+                      )
+                    }));
+                  } else {
+                    setIsForeigner(true);
+                  }
+                }}
+              >
+                {isForeigner ? '‹ Genel İlanlar' : 'Yabancılar İçin ›'}
+              </button>
+
               {/* Переключатель вида Grid / List */}
               <div className="view-toggle-modern">
                 <button 
