@@ -600,184 +600,230 @@ body, html, .modern-header, .modern-header * {
     gap: 30px !important;
 }
 /* ==========================================================================
-   4. БОКОВОЙ ФИЛЬТР (АРХИТЕКТУРА EMLAKJET: BOTTOM-STICKY + ПОЛНЫЙ СКРОЛЛ)
+   4. БОКОВОЙ ФИЛЬТР (ТОЧНО ПО ПРОТОТИПУ LANSMANBUL)
    ========================================================================== */
-.luxe-sidebar {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: var(--sidebar-sticky-top, 100px) !important;
-    align-self: flex-start !important;
-    width: 315px !important;
-    min-width: 315px !important;
-    max-width: 315px !important;
-    height: auto !important;
-    max-height: calc(100vh - 115px) !important;
+.sb {
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 16px !important;
-    padding: 20px 6px 16px 20px !important;
-    z-index: 30 !important;
-    box-shadow: 0 8px 24px rgba(10, 46, 42, 0.08) !important;
-    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: var(--sidebar-sticky-top, 84px) !important;
+    width: 290px !important;
+    min-width: 290px !important;
+    max-width: 290px !important;
+    max-height: calc(100vh - 100px) !important;
     display: flex !important;
     flex-direction: column !important;
-    flex-shrink: 0 !important;
     overflow: hidden !important;
+    z-index: 30 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 4px 16px rgba(10, 46, 42, 0.04) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-right 0.3s ease !important;
 }
 
-/* ШАПКА ФИЛЬТРА ИЗ СКРИНШОТА */
-.sb-header-clean {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-}
-.sb-title {
-    margin: 0;
-    font-size: 21px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.3px;
-}
-.sb-subtitle-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
-}
-.sb-count-info {
-    color: var(--muted);
-}
-.sb-count-info strong {
-    color: var(--text);
-    font-weight: 700;
-}
-.sb-sep {
-    color: var(--muted);
-}
-.sb-clear-link {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--e6, #1F6B61);
-    text-decoration: underline;
-    cursor: pointer;
-    transition: color 0.15s ease;
-}
-.sb-clear-link:hover {
-    color: var(--c4, #D9BF8F);
+.sb.sidebar-hidden {
+    transform: translateX(-320px) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    margin-right: -290px !important;
 }
 
-/* ИЗУМРУДНАЯ РАЗДЕЛИТЕЛЬНАЯ ПОЛОСА ПОД ЗАГОЛОВКОМ */
-.sb-emerald-divider {
-    height: 2px;
-    background: var(--e8, #0D3B36);
-    border-radius: 2px;
-    margin-bottom: 18px;
-    width: 100%;
+/* Шапка сайдбара */
+.sbh {
+    padding: 16px 18px 12px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: var(--surface) !important;
+    flex-shrink: 0 !important;
 }
-:root[data-theme="dark"] .sb-emerald-divider,
-@media (prefers-color-scheme: dark) {
-    .sb-emerald-divider {
-        background: var(--c4, #D9BF8F);
-    }
+.sbh .t {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
 }
-/* СЕКЦИИ САЙДБАРА */
-.sb-section {
-    margin-bottom: 16px;
+.sbh h2 {
+    margin: 0 !important;
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
 }
-.sb-section-title {
-    display: block;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 10px;
+.sbh p {
+    margin: 3px 0 0 !important;
+    color: var(--muted) !important;
+    font-size: 14px !important;
 }
-.sb-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0;
+.sbh p b {
+    color: var(--link, #1F6B61) !important;
+    font-weight: 700 !important;
 }
-
-/* ИНПУТЫ ДИАПАЗОНОВ (RNG) */
-.sb-section .rng {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 12px;
-}
-.sb-section .rng input {
-    width: 100%;
-    min-width: 0;
-    height: 38px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg);
-    color: var(--text);
-    text-align: center;
-    font: inherit;
-    font-size: 13.5px;
-    font-weight: 700;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-.sb-section .rng input:focus {
-    border-color: var(--e8);
-}
-.sb-section .rng span {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-/* СЛАЙДЕРЫ */
-.luxe-slider-track.noUi-target {
-    height: 4px !important;
-    border: none !important;
-    background-color: var(--border) !important;
-    margin: 10px 8px 16px 8px !important;
-}
-.luxe-slider-track .noUi-connect {
-    background: var(--e8, #0D3B36) !important;
-}
-:root[data-theme="dark"] .luxe-slider-track .noUi-connect,
-@media (prefers-color-scheme: dark) {
-    .luxe-slider-track .noUi-connect {
-        background: var(--c4, #D9BF8F) !important;
-    }
-}
-.luxe-slider-track .noUi-handle {
-    width: 16px !important;
-    height: 16px !important;
-    right: -8px !important;
-    top: -6px !important;
-    border-radius: 50% !important;
-    border: 2px solid var(--surface) !important;
-    background-color: var(--e8, #0D3B36) !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+.clr {
+    background: transparent !important;
+    border: 0 !important;
+    color: var(--link, #1F6B61) !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-decoration: underline !important;
+    padding: 2px 0 !important;
     cursor: pointer !important;
 }
-:root[data-theme="dark"] .luxe-slider-track .noUi-handle,
-@media (prefers-color-scheme: dark) {
-    .luxe-slider-track .noUi-handle {
-        background-color: var(--c4, #D9BF8F) !important;
-    }
+.clr:hover {
+    opacity: 0.85;
 }
-/* ВНУТРЕННИЙ ПЛАВНЫЙ СКРОЛЛ (ДОСТУПЕН ВСЕГДА В ЛЮБОЙ ТОЧКЕ СТРАНИЦЫ) */
-.luxe-sidebar-scrollable-body {
-    flex: 1 1 auto !important;
-    height: 100% !important;
-    max-height: calc(100vh - 120px) !important;
+.sbx {
+    display: none;
+    background: transparent;
+    border: 0;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+/* Тело сайдбара со скроллом */
+.sbb {
+    padding: 4px 18px 14px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-right: 8px !important;
-    padding-bottom: 25px !important;
     box-sizing: border-box !important;
-    scroll-behavior: smooth !important;
-    overscroll-behavior: contain !important; /* Защита от дергания страницы при скролле внутри */
+    overscroll-behavior: contain !important;
+}
+.sbb::-webkit-scrollbar {
+    width: 4px !important;
+}
+.sbb::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+.sbb::-webkit-scrollbar-thumb {
+    background: var(--border) !important;
+    border-radius: 10px !important;
+}
+
+/* Секции details и summary из прототипа */
+details {
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 0 !important;
+}
+details:last-child {
+    border-bottom: 0 !important;
+}
+summary {
+    list-style: none !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    color: var(--text) !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+summary::-webkit-details-marker {
+    display: none !important;
+}
+summary::after {
+    content: "" !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-right: 2px solid var(--muted) !important;
+    border-bottom: 2px solid var(--muted) !important;
+    transform: rotate(45deg) !important;
+    transition: transform .18s ease !important;
+    flex-shrink: 0 !important;
+}
+details[open] summary::after {
+    transform: rotate(-135deg) !important;
+}
+details .chips {
+    padding-top: 12px !important;
+}
+.dl {
+    padding-top: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Диапазон чисел .rng */
+.rng {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding-top: 12px !important;
+}
+.rng input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    outline: none !important;
+}
+.rng input:focus {
+    border-color: var(--e8) !important;
+}
+.rng span {
+    color: var(--muted) !important;
+    font-weight: 600 !important;
+}
+
+/* Строки чекбоксов .row из прототипа */
+.row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 7px 6px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+    font-size: 14.5px !important;
+    color: var(--text) !important;
+    transition: background 0.15s ease !important;
+    user-select: none !important;
+}
+.row:hover {
+    background: var(--chip) !important;
+}
+.row input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: #1F6B61 !important;
+    flex: none !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+.row em {
+    margin-left: auto !important;
+    font-style: normal !important;
+    font-size: 13px !important;
+    color: var(--muted) !important;
+    font-weight: 600 !important;
+}
+
+/* Мобильная адаптивность */
+@media (max-width: 980px) {
+    .sb {
+        display: none !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 999999999 !important;
+        max-height: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        border: 0 !important;
+        top: 0 !important;
+    }
+    .sb.sidebar-mobile-show {
+        display: flex !important;
+    }
+    .sbx {
+        display: block !important;
+    }
 }
 
 /* Элегантный незаметный скроллбар */
