@@ -406,132 +406,90 @@ export default function SidebarFilters({
           &times;
         </span>
 
-        <div className="luxe-sidebar-scrollable-body">
-          <div ref={mapRef} id="yandex-map-container" className="luxe-sidebar-map"></div>
+       <div className="luxe-sidebar-scrollable-body">
 
-          <div className="luxe-sidebar-header flex flex-col items-start w-full">
-            <div className="flex flex-col w-full">
-              <div className="flex justify-between items-baseline w-full">
-                <span className="text-xl font-black text-slate-700 leading-none">Filtreleme</span>
-                
-                {isForeigner ? (
-                  <span 
-                    className="text-[11px] font-bold text-slate-400 hover:text-slate-800 cursor-pointer transition-colors"
-                    onClick={() => {
-                      setIsForeigner(false);
-                      setFilters(prev => ({
-                        ...prev,
-                        priceRange: [0, prev.priceRange[1]],
-                        activeFeatureFilters: prev.activeFeatureFilters.filter(
-                          t => t !== 'Vatandaşlığa Uygun' && t !== 'İkamete Uygun'
-                        )
-                      }));
-                    }}
-                  >
-                    ‹ Genel Filtreler
-                  </span>
-                ) : (
-                  <span 
-                    className="text-[11px] font-bold text-[#00A4A6] hover:text-[#00898B] cursor-pointer transition-colors"
-                    onClick={() => {
-                      setIsForeigner(true);
-                    }}
-                  >
-                    Yabancılar İçin ›
-                  </span>
-                )}
-              </div>
-              
-              <div className="luxe-sidebar-sub-count mt-2">
-                <span className="orange-count">
-                  <span>{totalCount}</span> Proje
-                </span> Listeleniyor
-              </div>
-            </div>
-
-            {/* === НОВОЕ: Переключатель типа объявлений (Tüm | Projeler | Tek Daireler) === */}
-            <div className="flex w-full bg-slate-100 p-1 rounded-xl mt-3.5 mb-2 border border-slate-200/60 select-none">
-              <button
-                onClick={() => setFilters(prev => ({ ...prev, listingType: 'all' }))}
-                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
-                  (filters.listingType || 'all') === 'all'
-                    ? 'bg-white text-[#00A4A6] shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                style={{ border: 'none', cursor: 'pointer' }}
-              >
-                Tüm İlanlar
-              </button>
-              <button
-                onClick={() => setFilters(prev => ({ ...prev, listingType: 'project' }))}
-                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
-                  filters.listingType === 'project'
-                    ? 'bg-white text-[#00A4A6] shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                style={{ border: 'none', cursor: 'pointer' }}
-              >
-                Projeler
-              </button>
-              <button
-                onClick={() => setFilters(prev => ({ ...prev, listingType: 'apartment' }))}
-                className={`flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all text-center ${
-                  filters.listingType === 'apartment'
-                    ? 'bg-white text-[#00A4A6] shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                style={{ border: 'none', cursor: 'pointer' }}
-              >
-                Tek Daireler
+          {/* ШАПКА ФИЛЬТРА СТРОГО ПО ВАШЕМУ СКРИНШОТУ */}
+          <div className="sb-header-clean">
+            <h2 className="sb-title">Detaylı filtreler</h2>
+            <div className="sb-subtitle-row">
+              <span className="sb-count-info">
+                <strong>{totalCount}</strong> proje listeleniyor
+              </span>
+              <span className="sb-sep">·</span>
+              <button type="button" className="sb-clear-link" onClick={onClearFilters}>
+                Temizle
               </button>
             </div>
-            {/* ========================================================================= */}
-            
-            <span className="clear-filters-btn clear-link mr-auto mt-2" onClick={onClearFilters}>
-              Filtreleri Temizle
-            </span>
           </div>
 
-          {isForeigner && (
+          <div className="sb-emerald-divider"></div>
+
+          {/* 1. СТАТУС ПРОЕКТА (PROJE DURUMU) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Proje durumu</span>
+            <div className="chips">
+              {['Lansman', 'Devam ediyor', 'Tamamlandı'].map((st) => {
+                const isSelected = (filters.selectedStatuses || []).includes(st);
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    className="chip"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      const updated = isSelected
+                        ? (filters.selectedStatuses || []).filter((s) => s !== st)
+                        : [...(filters.selectedStatuses || []), st];
+                      setFilters((prev) => ({ ...prev, selectedStatuses: updated }));
+                    }}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="sb-divider"></div>
+
+          {/* 2. ГОД СДАЧИ (TESLİM YILI) */}
+          {uniqueYears.length > 0 && (
             <>
-              <div className="luxe-divider"></div>
-              <div className="luxe-group">
-                <div className="luxe-tags flex flex-wrap gap-2.5 mt-2">
-                  <div 
-                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') ? 'active' : '')}
-                    onClick={() => handleTagToggle('Vatandaşlığa Uygun')}
-                    style={{ cursor: 'pointer', fontWeight: '800' }}
-                  >
-                    Vatandaşlığa Uygun
-                  </div>
-                  <div 
-                    className={'luxe-tag-item ' + (filters.activeFeatureFilters.includes('İkamete Uygun') ? 'active' : '')}
-                    onClick={() => handleTagToggle('İkamete Uygun')}
-                    style={{ cursor: 'pointer', fontWeight: '800' }}
-                  >
-                    İkamete Uygun
-                  </div>
+              <div className="sb-section">
+                <span className="sb-section-title">Teslim Yılı</span>
+                <div className="chips">
+                  {uniqueYears.map((year) => {
+                    const isActive = (filters.selectedYears || []).includes(year);
+                    return (
+                      <button
+                        key={year}
+                        type="button"
+                        className="chip"
+                        aria-pressed={isActive}
+                        onClick={() => handleYearToggle(year)}
+                      >
+                        {year}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+              <div className="sb-divider"></div>
             </>
           )}
 
-          <div className="luxe-divider"></div>
-
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Metrekare (m²)</span>
-            <div className="luxe-range-inputs-row">
+          {/* 3. МЕТРАЖ (METREKARE) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Metrekare (m²)</span>
+            <div className="rng">
               <input 
                 type="text" 
-                className="luxe-oval-input" 
                 value={minAreaInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMinAreaInput(val);
                   const num = parseInt(val);
-                  if (!isNaN(num)) {
-                    setFilters((prev) => ({ ...prev, areaRange: [num, prev.areaRange[1]] }));
-                  }
+                  if (!isNaN(num)) setFilters((prev) => ({ ...prev, areaRange: [num, prev.areaRange[1]] }));
                 }}
                 onBlur={() => {
                   if (minAreaInput === "" || isNaN(parseInt(minAreaInput))) {
@@ -540,18 +498,15 @@ export default function SidebarFilters({
                   }
                 }}
               />
-              <span className="luxe-range-separator">—</span>
+              <span>–</span>
               <input 
                 type="text" 
-                className="luxe-oval-input" 
                 value={maxAreaInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMaxAreaInput(val);
                   const num = parseInt(val);
-                  if (!isNaN(num)) {
-                    setFilters((prev) => ({ ...prev, areaRange: [prev.areaRange[0], num] }));
-                  }
+                  if (!isNaN(num)) setFilters((prev) => ({ ...prev, areaRange: [prev.areaRange[0], num] }));
                 }}
                 onBlur={() => {
                   if (maxAreaInput === "" || isNaN(parseInt(maxAreaInput))) {
@@ -564,22 +519,20 @@ export default function SidebarFilters({
             <div ref={areaSliderRef} className="luxe-slider-track"></div>
           </div>
 
-          <div className="luxe-divider"></div>
+          <div className="sb-divider"></div>
 
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Kat sayısı</span>
-            <div className="luxe-range-inputs-row">
+          {/* 4. ЭТАЖНОСТЬ (KAT SAYISI) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Kat sayısı</span>
+            <div className="rng">
               <input 
                 type="text" 
-                className="luxe-oval-input" 
                 value={minKatInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMinKatInput(val);
                   const num = parseInt(val);
-                  if (!isNaN(num)) {
-                    setFilters((prev) => ({ ...prev, katRange: [num, prev.katRange[1]] }));
-                  }
+                  if (!isNaN(num)) setFilters((prev) => ({ ...prev, katRange: [num, prev.katRange[1]] }));
                 }}
                 onBlur={() => {
                   if (minKatInput === "" || isNaN(parseInt(minKatInput))) {
@@ -588,18 +541,15 @@ export default function SidebarFilters({
                   }
                 }}
               />
-              <span className="luxe-range-separator">—</span>
+              <span>–</span>
               <input 
                 type="text" 
-                className="luxe-oval-input" 
                 value={maxKatInput}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setMaxKatInput(val);
                   const num = parseInt(val);
-                  if (!isNaN(num)) {
-                    setFilters((prev) => ({ ...prev, katRange: [prev.katRange[0], num] }));
-                  }
+                  if (!isNaN(num)) setFilters((prev) => ({ ...prev, katRange: [prev.katRange[0], num] }));
                 }}
                 onBlur={() => {
                   if (maxKatInput === "" || isNaN(parseInt(maxKatInput))) {
@@ -612,10 +562,11 @@ export default function SidebarFilters({
             <div ref={katSliderRef} className="luxe-slider-track"></div>
           </div>
 
-          <div className="luxe-divider"></div>
+          <div className="sb-divider"></div>
 
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-16 fw-600">Fiyat</span>
+          {/* 5. ЦЕНА (FİYAT) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Fiyat</span>
             <div className="price-live-display">
               <span>{filters.priceRange[0].toLocaleString('tr-TR')} TL</span> — <span>{filters.priceRange[1].toLocaleString('tr-TR')} TL</span>
             </div>
@@ -658,111 +609,66 @@ export default function SidebarFilters({
             </div>
           </div>
 
-          <div className="luxe-divider"></div>
+          <div className="sb-divider"></div>
 
-          {/* === НАЧАЛО ВСТАВКИ: Динамический фильтр годов сдачи === */}
-          {uniqueYears.length > 0 && (
-            <>
-              <div className="luxe-group">
-                <span className="luxe-group-label c-filter__title fs-14 fw-600">Teslim Yılı</span>
-                <div className="luxe-tags flex flex-wrap gap-2.5">
-                  {(() => {
-                    const currentYear = 2026;
-                    const isCompletedSelected = filters.selectedStatuses?.includes('Tamamlandı');
-                    
-                    const yearsToShow = uniqueYears.filter((year) => {
-                      const yrNum = parseInt(year);
-                      if (isNaN(yrNum)) return true;
-                      
-                      if (isCompletedSelected) {
-                        return yrNum <= currentYear;
-                      } else if (filters.selectedStatuses?.length > 0) {
-                        return yrNum > currentYear;
-                      }
-                      return true;
-                    });
-
-                    return yearsToShow.map((year) => {
-                      const isActive = (filters.selectedYears || []).includes(year);
-                      return (
-                        <div
-                          key={year}
-                          className={`luxe-tag-item ${isActive ? 'active' : ''}`}
-                          onClick={() => handleYearToggle(year)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          {year}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-              <div className="luxe-divider"></div>
-            </>
-          )}
-          {/* === КОНЕЦ ВСТАВКИ === */}
-
-        {/* СЕКЦИЯ 1: SITE & SOSYAL ÖZELLİKLER (В СТИЛЕ EMLAKJET) */}
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Site & Sosyal Özellikler</span>
-            
+          {/* 6. УДОБСТВА ЖК (SİTE & SOSYAL ÖZELLİKLER) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Site & Sosyal Özellikler</span>
             <div className={`space-y-1.5 mt-2 ${isTagsExpanded ? 'emlakjet-features-scroll' : ''}`}>
               {[
-                { id: 'Kapalı Otopark', label: 'Kapalı Otopark', stems: ['kapalı otopark', 'yeraltı otopark', 'otopark'] },
-                { id: '24 Saat Güvenlik', label: '24 Saat Güvenlik', stems: ['güvenlik', 'kamera', '7/24'] },
-                { id: 'Yüzme Havuzu', label: 'Yüzme Havuzu', stems: ['havuz', 'yüzme'] },
-                { id: 'Çocuk Oyun Alanı', label: 'Çocuk Oyun Parkı', stems: ['çocuk oyun', 'çocuk park', 'oyun park'] },
-                { id: 'Spor Salonu', label: 'Fitness & Spor Salonu', stems: ['fitness', 'spor salonu', 'gym', 'spor alanı'] },
-                // Раскрывающиеся элементы по кнопке Daha fazla
+                { id: 'Kapalı Otopark', label: 'Kapalı Otopark' },
+                { id: '24 Saat Güvenlik', label: '24 Saat Güvenlik' },
+                { id: 'Yüzme Havuzu', label: 'Yüzme Havuzu' },
+                { id: 'Çocuk Oyun Alanı', label: 'Çocuk Oyun Parkı' },
+                { id: 'Spor Salonu', label: 'Fitness & Spor Salonu' },
                 ...(isTagsExpanded ? [
-                  { id: 'Sauna', label: 'Sauna & Hamam', stems: ['sauna', 'hamam', 'buhar', 'spa'] },
-                  { id: 'Jeneratör', label: 'Jeneratör', stems: ['jeneratör', 'kesintisiz jeneratör'] },
-                  { id: 'Peyzaj', label: 'Peyzaj & Yürüyüş Parkuru', stems: ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'] },
-                  { id: 'Deprem', label: 'Deprem Yönetmeliğine Uygun', stems: ['deprem', 'radye', 'zemin etüd'] },
-                  { id: 'Şarj İstasyonu', label: 'Araç Şarj İstasyonu', stems: ['şarj', 'elektrikli araç'] }
+                  { id: 'Sauna', label: 'Sauna & Hamam' },
+                  { id: 'Jeneratör', label: 'Jeneratör' },
+                  { id: 'Peyzaj', label: 'Peyzaj & Yürüyüş Parkuru' },
+                  { id: 'Deprem', label: 'Deprem Yönetmeliğine Uygun' },
+                  { id: 'Şarj İstasyonu', label: 'Araç Şarj İstasyonu' }
                 ] : [])
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
-                
                 const matchCount = featureCounts[item.id] || 0;
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between py-1 px-1 cursor-pointer select-none hover:bg-slate-50 rounded-lg transition"
+                    className="flex items-center justify-between py-1.5 px-1 cursor-pointer select-none hover:opacity-80 transition"
                     onClick={() => handleTagToggle(item.id)}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-300 bg-white'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-400 bg-transparent'}`}>
                         {isChecked && (
                           <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <polyline points="20 6 9 17 4 12"></polyline>
                           </svg>
                         )}
                       </div>
-                      <span className={`text-xs font-semibold ${isChecked ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                      <span className={`text-xs font-semibold ${isChecked ? 'font-bold' : ''}`} style={{ color: 'var(--text)' }}>
+                        {item.label}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-bold text-slate-400">({matchCount})</span>
+                    <span className="text-[11px] font-bold" style={{ color: 'var(--muted)' }}>({matchCount})</span>
                   </div>
                 );
               })}
             </div>
 
             <span 
-              className="luxe-more-filters-link text-xs font-bold text-[#00A4A6] hover:underline cursor-pointer inline-block mt-2" 
+              className="luxe-more-filters-link text-xs font-bold cursor-pointer inline-block mt-2.5" 
               onClick={() => setIsTagsExpanded(!isTagsExpanded)}
             >
               {isTagsExpanded ? 'Daha az göster ▴' : 'Daha fazla göster (5) ▾'}
             </span>
           </div>
 
-          <div className="luxe-divider"></div>
+          <div className="sb-divider"></div>
 
-         {/* СЕКЦИЯ 2: DAİRE ÖZELLİKLERİ */}
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Daire İçi Özellikler</span>
-            
-            <div className="space-y-2 mt-2">
+          {/* 7. ВНУТРЕННИЕ УДОБСТВА (DAİRE İÇİ ÖZELLİKLER) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Daire İçi Özellikler</span>
+            <div className="space-y-1.5 mt-2">
               {[
                 { id: 'Yerden Isıtma', label: 'Yerden Isıtma' },
                 { id: 'Ankastre Mutfak', label: 'Ankastre Mutfak Seti' },
@@ -771,34 +677,37 @@ export default function SidebarFilters({
               ].map((item) => {
                 const isChecked = filters.activeFeatureFilters.includes(item.id);
                 const matchCount = featureCounts[item.id] || 0;
-
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between py-1 px-1 cursor-pointer select-none hover:bg-slate-50 rounded-lg transition"
+                    className="flex items-center justify-between py-1.5 px-1 cursor-pointer select-none hover:opacity-80 transition"
                     onClick={() => handleTagToggle(item.id)}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-300 bg-white'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-[#00A4A6] border-[#00A4A6]' : 'border-slate-400 bg-transparent'}`}>
                         {isChecked && (
                           <svg className="w-2.5 h-2.5 text-white stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <polyline points="20 6 9 17 4 12"></polyline>
                           </svg>
                         )}
                       </div>
-                      <span className={`text-xs font-semibold ${isChecked ? 'text-slate-900 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                      <span className={`text-xs font-semibold ${isChecked ? 'font-bold' : ''}`} style={{ color: 'var(--text)' }}>
+                        {item.label}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-bold text-slate-400">({matchCount})</span>
+                    <span className="text-[11px] font-bold" style={{ color: 'var(--muted)' }}>({matchCount})</span>
                   </div>
                 );
               })}
             </div>
           </div>
-          <div className="luxe-divider"></div>
 
-          <div className="luxe-group">
-            <span className="luxe-group-label c-filter__title fs-14 fw-600">Ödeme durumu</span>
-            <div className="luxe-checkboxes">
+          <div className="sb-divider"></div>
+
+          {/* 8. ОПЛАТА (ÖDEME DURUMU) */}
+          <div className="sb-section">
+            <span className="sb-section-title">Ödeme durumu</span>
+            <div className="luxe-checkboxes mt-2">
               {[
                 { label: 'Krediye uygun', value: 'Krediye uygun' },
                 { label: 'Taksit imkanı', value: 'Taksit imkanı' },
@@ -810,11 +719,12 @@ export default function SidebarFilters({
                   onClick={() => handlePaymentToggle(pay.value)}
                 >
                   <div className="luxe-radio-dot"></div>
-                  <label style={{ cursor: 'pointer', margin: 0 }}>{pay.label}</label>
+                  <label style={{ cursor: 'pointer', margin: 0, color: 'var(--text)' }}>{pay.label}</label>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
 
         <div className="luxe-sidebar-mobile-footer" style={{ display: 'none' }}>
