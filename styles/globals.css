@@ -339,14 +339,23 @@ body, html, .modern-header, .modern-header * {
     box-sizing: border-box !important;
 }
 .trust .w {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* Ровно 3 равные колонки на всю ширину */
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 1100px !important;                     /* Держит красивую дистанцию от краев экрана */
+    height: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 24px !important;
+    box-sizing: border-box !important;
+}
+
+.tr {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-evenly !important; /* Одинаковое красивое расстояние между пунктами */
-    height: 100% !important;
-    max-width: 1200px !important;            /* Не пускает пункты слишком близко к краям экрана */
-    padding: 0 40px !important;              /* Аккуратный отступ от краёв */
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
+    justify-content: center !important; /* Центрирует каждый пункт строго в своей трети */
+    gap: 10px !important;
+    white-space: nowrap !important;
 }
 .tr {
     display: inline-flex !important;
