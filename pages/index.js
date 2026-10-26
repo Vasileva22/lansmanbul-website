@@ -7,10 +7,7 @@ import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
 import PropertyCard from '../components/PropertyCard';
 
-// Безопасный динамический импорт боковой панели без SSR
-const SidebarFilters = dynamic(() => import('../components/SidebarFilters'), {
-  ssr: false,
-});
+import SidebarFilters from '../components/SidebarFilters';
 
 // Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
 function Lightbox({ photos, activeIndex, onClose, onPrev, onRight }) {
