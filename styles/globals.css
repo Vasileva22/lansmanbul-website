@@ -1530,17 +1530,17 @@ details .chips {
 .arrow-left { left: 8px !important; }
 .arrow-right { right: 8px !important; }
 
-/* Тело карточки (Кликабельно целиком на страницу проекта!) */
+/* Тело карточки (Кликабельно целиком) */
 .card-content-modern {
     padding: 16px 18px 18px 18px !important;
     display: flex !important;
     flex-direction: column !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
     cursor: pointer !important;
     box-sizing: border-box !important;
 }
 
-/* Заголовок проекта */
+/* Заголовок проекта: ровно 44px на всех карточках */
 .card-title-modern {
     margin: 0 !important;
     font-size: 17px !important;
@@ -1548,6 +1548,7 @@ details .chips {
     line-height: 1.3 !important;
     color: var(--text, #1B2B29) !important;
     min-height: 44px !important;
+    max-height: 44px !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
@@ -1557,45 +1558,56 @@ details .chips {
     color: var(--link, #1F6B61) !important;
 }
 
-/* Цена */
+/* Цена: фиксированная высота 28px, чтобы не прыгала */
 .card-price-modern {
     margin-top: 8px !important;
-    margin-bottom: 0px !important;
-    font-size: 22px !important;
+    margin-bottom: 2px !important;
+    font-size: 21px !important;
     font-weight: 700 !important;
     color: var(--e8, #0D3B36) !important;
     letter-spacing: -0.2px !important;
     line-height: 1.2 !important;
+    min-height: 28px !important;
 }
 
-/* Подстрочник для комнат */
+/* Подстрочник для комнат: всегда держит отступ 18px */
 .card-price-note {
     margin: 0 0 6px 0 !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     color: var(--link, #1F6B61) !important;
-    min-height: 20px !important;
+    min-height: 18px !important;
 }
 
-/* Характеристики */
+/* Характеристики: ровно 1 строка без перескоков */
 .card-line-meta {
     margin: 0 !important;
-    font-size: 15px !important;
+    font-size: 14.5px !important;
     color: var(--muted, #5B6B68) !important;
     line-height: 1.4 !important;
-}
-.card-line-sub {
-    margin: 2px 0 0 0 !important;
-    font-size: 15px !important;
-    color: var(--muted, #5B6B68) !important;
-    line-height: 1.4 !important;
+    min-height: 20px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-/* Широкая премиальная кнопка WhatsApp во всю ширину */
+/* Локация и срок сдачи: ровно 1 строка */
+.card-line-sub {
+    margin: 2px 0 0 0 !important;
+    font-size: 14.5px !important;
+    color: var(--muted, #5B6B68) !important;
+    line-height: 1.4 !important;
+    min-height: 20px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Кнопка WhatsApp: ВСЕГДА В САМОМ НИЗУ (margin-top: auto) */
 .card-wa-full-btn {
     position: relative !important;
     z-index: 5 !important;
-    margin-top: 16px !important;
+    margin-top: auto !important; /* Принудительно выравнивает все кнопки в один ряд! */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1612,6 +1624,11 @@ details .chips {
     box-sizing: border-box !important;
     cursor: pointer !important;
     transition: background 0.15s ease, transform 0.15s ease !important;
+}
+.card-wa-full-btn:hover {
+    background: var(--e6, #1F6B61) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px) !important;
 }
 .card-wa-full-btn:hover {
     background: var(--e6, #1F6B61) !important;
