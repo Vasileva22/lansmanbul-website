@@ -1579,16 +1579,94 @@ details .chips {
     min-height: 18px !important;
 }
 
-/* Характеристики: ровно 1 строка без перескоков */
-.card-line-meta {
+/* Строка планировок и кнопка со стрелочкой */
+.lay-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    min-height: 28px !important;
+}
+.lay-row .card-line-meta {
     margin: 0 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     font-size: 14.5px !important;
     color: var(--muted, #5B6B68) !important;
     line-height: 1.4 !important;
-    min-height: 20px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+}
+.lay-btn {
+    position: relative !important;
+    z-index: 5 !important;
+    flex: none !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    border: 1px solid var(--border, #E6E1D6) !important;
+    background: var(--surface, #FFFFFF) !important;
+    color: var(--e8, #0D3B36) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+}
+.lay-btn:hover {
+    border-color: var(--e8, #0D3B36) !important;
+    background: var(--chip, #EFEBE0) !important;
+}
+.lay-btn[aria-expanded="true"] {
+    transform: rotate(180deg) !important;
+    background: var(--e8, #0D3B36) !important;
+    color: #FFFFFF !important;
+    border-color: var(--e8, #0D3B36) !important;
+}
+
+/* Раскрывающийся блок планировок из нового прототипа */
+.lay-panel {
+    position: relative !important;
+    z-index: 5 !important;
+    margin-top: 10px !important;
+    margin-bottom: 8px !important;
+    border-top: 1px solid var(--border, #E6E1D6) !important;
+    padding-top: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+.lay-h {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--muted, #5B6B68) !important;
+    margin-bottom: 2px !important;
+}
+.lay-panel .tr {
+    display: grid !important;
+    grid-template-columns: 50px 1fr auto !important;
+    gap: 8px !important;
+    background: var(--row, #FAF8F3) !important;
+    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    align-items: center !important;
+}
+.lay-panel .tr b {
+    font-weight: 700 !important;
+    color: var(--e8, #0D3B36) !important;
+}
+.lay-panel .tr span:nth-child(2) {
+    color: var(--muted, #5B6B68) !important;
+}
+.lay-panel .tr span:last-child {
+    font-weight: 700 !important;
+    color: var(--price, #0D3B36) !important;
+}
+.lay-panel .tr.on {
+    background: var(--chip, #EFEBE0) !important;
 }
 
 /* Локация и срок сдачи: гарантированный отступ 14px над кнопкой WhatsApp */
