@@ -140,12 +140,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
       const prices = layouts.map(l => parseInt(String(l.price).replace(/\D/g, ''))).filter(Boolean);
       if (prices.length > 0) {
         const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
-        
-        // По вашей новой идее выводим диапазон "МИН - МАКС"
-        cardPrice = minPrice !== maxPrice 
-          ? `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}` 
-          : formatPrice(minPrice, true);
+        cardPrice = formatPrice(minPrice, true);
       }
     }
   }
@@ -293,8 +288,8 @@ return (
         }}
       >
         {/* Название проекта (ровно 2 строки, не пляшет по высоте) */}
-        <h3 className="card-title-modern">
-          {property?.testproje || 'Yeni Konut Projesi'}
+       <h3 className="card-title-modern">
+          {property?.testproje?.trim() ? property.testproje : 'Yeni Konut Projesi'}
         </h3>
 
         {/* Цена (крупная изумрудная 22px) */}
