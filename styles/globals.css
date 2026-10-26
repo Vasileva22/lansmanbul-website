@@ -1385,70 +1385,213 @@ details .chips {
 }
 
 /* ==========================================================================
-   СЕТКА И КАРТОЧКА ОБЪЕКТА (Quiet Luxury из прототипа Клода)
+   СЕТКА И КАРТОЧКА ОБЪЕКТА (ТОЧНО ПО ПРОТОТИПУ LANSMANBUL)
    ========================================================================== */
 .grid-layout {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
-    gap: 24px;
-    width: 100%;
-    align-items: start;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)) !important;
+    gap: 22px !important;
+    width: 100% !important;
+    align-items: start !important;
 }
+
 .custom-card {
-    background: var(--surface) !important;
+    background: var(--surface, #FFFFFF) !important;
     border-radius: 14px !important;
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--border, #E6E1D6) !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 18px rgba(10, 46, 42, 0.05) !important;
+    box-shadow: 0 4px 16px rgba(10, 46, 42, 0.05) !important;
     display: flex !important;
     flex-direction: column !important;
-    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
-    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+    height: 100% !important;
     position: relative !important;
+    box-sizing: border-box !important;
 }
+
 .custom-card:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 32px rgba(10, 46, 42, 0.12) !important;
-    border-color: #D6CEBE !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 24px rgba(10, 46, 42, 0.1) !important;
+    border-color: #D4CBBC !important;
 }
 
+/* Фотография: пропорция строго 4/3 */
 .custom-card .img-container {
-    height: 220px !important; 
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    background-color: #E2E8F0;
-    cursor: zoom-in;
+    position: relative !important;
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    background-color: #E2E8F0 !important;
+    cursor: zoom-in !important;
+    flex-shrink: 0 !important;
 }
 
-/* Бейджи статусов из прототипа */
+/* Бейджи статусов */
 .bdg-pill {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 999px;
-    z-index: 10;
-    letter-spacing: 0.2px;
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 4px 11px !important;
+    border-radius: 999px !important;
+    z-index: 10 !important;
+    letter-spacing: 0.2px !important;
+    user-select: none !important;
 }
 .bdg-active {
-    background-color: var(--c4) !important;
-    color: var(--e8) !important;
+    background-color: var(--c4, #D9BF8F) !important;
+    color: var(--e8, #0D3B36) !important;
 }
 .bdg-completed {
     background-color: #1F6B61 !important;
     color: #FFFFFF !important;
 }
 
-/* Тело карточки */
+/* Кнопка избранного */
+.hrt-btn {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: #FFFFFF !important;
+    color: #5B6B68 !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 12 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+    transition: transform 0.15s ease, background 0.15s ease !important;
+}
+.hrt-btn:hover {
+    transform: scale(1.08) !important;
+}
+
+/* Стрелочки переключения фото в цветах сайта */
+.slider-arrow {
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(13, 59, 54, 0.72) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease !important;
+    z-index: 11 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    user-select: none !important;
+}
+.custom-card:hover .slider-arrow {
+    opacity: 0.88 !important;
+}
+.slider-arrow:hover {
+    opacity: 1 !important;
+    background: var(--e8, #0D3B36) !important;
+    color: var(--c4, #D9BF8F) !important;
+}
+.arrow-left { left: 8px !important; }
+.arrow-right { right: 8px !important; }
+
+/* Тело карточки (Кликабельно целиком на страницу проекта!) */
 .card-content-modern {
-    padding: 16px 18px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 4px;
+    padding: 16px 18px 18px 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+}
+
+/* Заголовок проекта */
+.card-title-modern {
+    margin: 0 !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    color: var(--text, #1B2B29) !important;
+    min-height: 44px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+.card-content-modern:hover .card-title-modern {
+    color: var(--link, #1F6B61) !important;
+}
+
+/* Цена */
+.card-price-modern {
+    margin-top: 8px !important;
+    margin-bottom: 0px !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: var(--e8, #0D3B36) !important;
+    letter-spacing: -0.2px !important;
+    line-height: 1.2 !important;
+}
+
+/* Подстрочник для комнат */
+.card-price-note {
+    margin: 0 0 6px 0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--link, #1F6B61) !important;
+    min-height: 20px !important;
+}
+
+/* Характеристики */
+.card-line-meta {
+    margin: 0 !important;
+    font-size: 15px !important;
+    color: var(--muted, #5B6B68) !important;
+    line-height: 1.4 !important;
+}
+.card-line-sub {
+    margin: 2px 0 0 0 !important;
+    font-size: 15px !important;
+    color: var(--muted, #5B6B68) !important;
+    line-height: 1.4 !important;
+}
+
+/* Широкая премиальная кнопка WhatsApp во всю ширину */
+.card-wa-full-btn {
+    position: relative !important;
+    z-index: 5 !important;
+    margin-top: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: var(--e8, #0D3B36) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    font-weight: 700 !important;
+    font-size: 15.5px !important;
+    width: 100% !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+}
+.card-wa-full-btn:hover {
+    background: var(--e6, #1F6B61) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px) !important;
 }
 .card-title-modern {
     margin: 0;
@@ -1620,32 +1763,7 @@ details .chips {
     background-position: center !important;
     flex-shrink: 0 !important;
 }
-.slider-arrow {
-    position: absolute !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background: rgba(0,164,166,.85) !important;
-    color: #fff !important;
-    border: none !important;
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 50% !important;
-    cursor: pointer !important;
-    opacity: 0.8 !important;
-    transition: opacity .2s ease,background-color .2s ease !important;
-    z-index: 99 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    pointer-events: auto !important;
-    font-size: 15px !important;
-    font-weight: 900 !important;
-    user-select: none;
-}
-.custom-card:hover .slider-arrow {
-    opacity: 1 !important;
-    background: #00A4A6 !important;
-}
+
 .arrow-left {
     left: 8px !important;
 }
