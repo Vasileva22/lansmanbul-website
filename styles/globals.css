@@ -1955,44 +1955,52 @@ details .chips {
     display: inline !important;
 }
 
-/* ПАГИНАЦИЯ */
+/* ПАГИНАЦИЯ В СТИЛЕ QUIET LUXURY (ТОЧНО ПО ПРОТОТИПУ) */
 .pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 40px;
-    margin-bottom: 30px;
-    font-family: 'Mulish',Arial,sans-serif !important;
-    width: 100%;
-    user-select: none;
-    box-sizing: border-box;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 42px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
 }
 .pagination-item {
-    min-width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #00A4A6 !important;
-    border-radius: 5px !important;
-    color: #00A4A6 !important;
-    background: #fff !important;
-    cursor: pointer;
-    transition: all .2s ease-in-out;
-    font-weight: 600;
-    font-size: 14px;
-    box-sizing: border-box;
+    min-width: 40px !important;
+    height: 40px !important;
+    padding: 0 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--border, #E6E1D6) !important;
+    border-radius: 10px !important;
+    color: var(--text, #1B2B29) !important;
+    background: var(--surface, #FFFFFF) !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    font-weight: 600 !important;
+    font-size: 14.5px !important;
+    box-sizing: border-box !important;
 }
-.pagination-item:hover, .pagination-item.active {
-    background: #00A4A6 !important;
-    color: #fff !important;
+.pagination-item:hover {
+    border-color: var(--e8, #0D3B36) !important;
+    background-color: var(--chip, #EFEBE0) !important;
+    color: var(--e8, #0D3B36) !important;
+}
+.pagination-item.active {
+    background: var(--e8, #0D3B36) !important;
+    color: #FFFFFF !important;
+    border-color: var(--e8, #0D3B36) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(13, 59, 54, 0.2) !important;
 }
 .pagination-item.dots {
     border: none !important;
-    cursor: default;
+    cursor: default !important;
     background: transparent !important;
-    color: #00A4A6 !important;
+    color: var(--muted, #5B6B68) !important;
 }
 
 /* СЕКЦИЯ "О НАС" */
