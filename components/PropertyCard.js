@@ -329,29 +329,63 @@ return (
           )}
         </div>
 
-        {/* Раскрывающаяся таблица всех планировок проекта */}
-        {isExpanded && layouts && layouts.length >= 2 && (
-          <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="lay-h">Planlar ve fiyatlar (başlangıç)</div>
-            {layouts.map((u, idx) => {
-              const numPrice = parseInt(String(u.price || '').replace(/\D/g, '')) || 0;
-              const formattedPrice = numPrice ? numPrice.toLocaleString('tr-TR') + ' TL' : (u.price_str || 'Fiyat Belirtilmemiş');
-              const areaText = u.area ? `${u.area} m²` : '';
-              const roomClean = String(u.rooms || '').split('-')[0].trim() || u.rooms;
-              
-              // Подсветка строки, если эта комната выбрана в активных фильтрах
-              const isMatched = selectedRooms.some(r => roomClean.includes(r.replace(' ve üzeri', '').trim()));
+       {/* Раскрывающаяся таблица планировок строго по прототипу */}
+        {isExpanded && layouts && layouts.length >= 2 && (() => {
+          // 1. Группируем планировки по типу комнат (1+1, 2+1, 3+1...), собирая min/max площадь и min цену
+          const groups = {};
+          layouts.forEach((u) => {
+            const rawRoom = String(u.rooms || '').replace(/[\r\n]+/g, ' ').trim();
+            const roomType = rawRoom.split(/[-–\s]/)[0].trim() || rawRoom; // Извлекаем "2+1"
+            const areaNum = parseInt(String(u.area || '').replace(/\D/g, '')) || 0;
+            const priceNum = parseInt(String(u.price || '').replace(/\D/g, '')) || 0;
 
-              return (
-                <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
-                  <b>{roomClean}</b>
-                  <span>{areaText}</span>
-                  <span>{formattedPrice}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+            if (!groups[roomType]) {
+              groups[roomType] = {
+                room: roomType,
+                minArea: areaNum,
+                maxArea: areaNum,
+                minPrice: priceNum
+              };
+            } else {
+              if (areaNum > 0) {
+                if (groups[roomType].minArea === 0 || areaNum < groups[roomType].minArea) groups[roomType].minArea = areaNum;
+                if (areaNum > groups[roomType].maxArea) groups[roomType].maxArea = areaNum;
+              }
+              if (priceNum > 0) {
+                if (groups[roomType].minPrice === 0 || priceNum < groups[roomType].minPrice) groups[roomType].minPrice = priceNum;
+              }
+            }
+          });
+
+          const groupList = Object.values(groups);
+
+          return (
+            <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="lay-h">Planlar ve fiyatlar (başlangıç)</div>
+              {groupList.map((g, idx) => {
+                // Метраж в формате "52–94 m²" или "85 m²"
+                let areaString = '';
+                if (g.minArea > 0 && g.maxArea > 0) {
+                  areaString = g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`;
+                }
+
+                // Цена без 'den строго в TL (как в прототипе)
+                const priceString = g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz';
+
+                // Подсветка строки, если комната выбрана в фильтре
+                const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
+
+                return (
+                  <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
+                    <b>{g.room}</b>
+                    <span>{areaString}</span>
+                    <span>{priceString}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
        {/* Строка района и срока сдачи */}
         <p className="card-line-sub">
