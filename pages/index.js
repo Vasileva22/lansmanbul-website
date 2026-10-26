@@ -70,8 +70,8 @@ export default function Home({ initialProperties }) {
   });
 
  const [filters, setFilters] = useState({
-    selectedCity: 'Ankara',
-    selectedPropertyType: 'Daire', // <--- По умолчанию всегда стоят квартиры
+    selectedCity: 'Tümü', // Показываем все города
+    selectedPropertyType: 'all', // Показываем все типы (квартиры, виллы, таунхаусы)
     selectedLocations: [],
     selectedRooms: [],
     selectedStatuses: [],
@@ -81,7 +81,7 @@ export default function Home({ initialProperties }) {
     priceRange: [0, 50000000],
     activeFeatureFilters: [],
     activePaymentFilters: [],
-    listingType: 'all', // <--- НОВОЕ: Переключатель типов (all | project | apartment)
+    listingType: 'all',
   });
 
   // Запрос курса Центробанка один раз при загрузке страницы
@@ -553,6 +553,8 @@ export default function Home({ initialProperties }) {
 
  const handleClearFilters = () => {
     setFilters({
+      selectedCity: 'Tümü',
+      selectedPropertyType: 'all',
       selectedLocations: [],
       selectedRooms: [],
       selectedStatuses: [],
@@ -562,7 +564,7 @@ export default function Home({ initialProperties }) {
       priceRange: [0, 50000000],
       activeFeatureFilters: [],
       activePaymentFilters: [],
-      listingType: 'all', // <--- НОВОЕ: Сброс типа объявлений
+      listingType: 'all',
     });
     router.push('/', undefined, { shallow: true });
   };
