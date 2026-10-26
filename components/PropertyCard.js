@@ -219,25 +219,27 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
   const detailLink = '/properties/' + property?.id + (selectedRooms.length === 1 ? `?room=${encodeURIComponent(selectedRooms[0])}` : '');
   const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
   const isLansman = cleanStatus === "lansman";
-
-  return (
-    <div className="custom-card" data-id={property?.id}>
+return (
+    <article className="custom-card" data-id={property?.id}>
+      {/* 1. БЛОК ФОТОГРАФИИ (клик открывает полноэкранный просмотр фото) */}
       <div 
-        className="img-container relative" 
+        className="img-container" 
         onClick={() => onImageClick && onImageClick(photos, currentSlide)}
+        title="Büyük görseli incele"
       >
-        {/* КНОПКА ИЗБРАННОГО НАД КАРТИНКОЙ */}
+        {/* Кнопка Избранного (сердечко в белом кругляшке как в прототипе) */}
         <button 
-          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${isFavorite ? 'bg-white/95' : ''}`}
+          type="button"
+          className="hrt-btn"
           onClick={toggleFavorite}
           title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"}
-          style={{ border: 'none' }}
         >
-          <svg className="w-5 h-5 transition-colors duration-200" viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#ffffff"} strokeWidth="2.5">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#5B6B68"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19.5 12.6 12 20l-7.5-7.4a5 5 0 0 1 7.5-6.6 5 5 0 0 1 7.5 6.6z"/>
           </svg>
         </button>
 
+        {/* Слайдер фотографий прямо в карточке */}
         {photos.length > 0 ? (
           <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
             {photos.map((url, idx) => (
@@ -257,70 +259,91 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
           </div>
         )}
 
-{property?.konutcesit && (
+        {/* Бейдж статуса (Золотой для Devam ediyor / Изумрудный для Tamamlandı) */}
+        {property?.konutcesit && (
           <span className={`bdg-pill ${cleanStatus === 'tamamlandı' ? 'bdg-completed' : 'bdg-active'}`}>
             {property.konutcesit}
           </span>
         )}
 
+        {/* Стрелочки переключения фото в изумрудных цветах сайта */}
         {photos.length > 1 && (
           <>
-            <button className="slider-arrow arrow-left" onClick={prevSlide}>❮</button>
-            <button className="slider-arrow arrow-right" onClick={nextSlide}>❯</button>
+            <button 
+              type="button" 
+              className="slider-arrow arrow-left" 
+              onClick={prevSlide}
+              title="Önceki fotoğraf"
+            >
+              ❮
+            </button>
+            <button 
+              type="button" 
+              className="slider-arrow arrow-right" 
+              onClick={nextSlide}
+              title="Sonraki fotoğraf"
+            >
+              ❯
+            </button>
           </>
         )}
       </div>
 
-      <div className="card-content-modern">
-        {/* Заголовок проекта */}
+      {/* 2. ТЕЛО КАРТОЧКИ (КЛИКАБЕЛЬНО ПОЛНОСТЬЮ: КЛИК ПО ЛЮБОМУ МЕСТУ ОТКРЫВАЕТ ПРОЕКТ) */}
+      <div 
+        className="card-content-modern"
+        onClick={() => {
+          window.location.href = detailLink;
+        }}
+      >
+        {/* Название проекта (ровно 2 строки, не пляшет по высоте) */}
         <h3 className="card-title-modern">
-          <Link href={detailLink} className="hover:underline">
-            {property?.testproje || 'Yeni Konut Projesi'}
-          </Link>
+          {property?.testproje || 'Yeni Konut Projesi'}
         </h3>
 
-        {/* Цена */}
-        <div className="card-price-modern">
+        {/* Цена (крупная изумрудная 22px) */}
+        <p className="card-price-modern">
           {cardPrice}
-        </div>
+        </p>
 
-        {/* Характеристики: Планировки и Метраж через точку */}
-        <div className="card-line-meta">
-          <span>{cardRooms}</span>
-          {cardArea && (
-            <>
-              <span className="dot-sep">·</span>
-              <span>{cardArea}{!String(cardArea).includes('m²') ? ' m²' : ''}</span>
-            </>
-          )}
-        </div>
+        {/* Подстрочник для комнат (зеленый 13px как в прототипе) */}
+        <p className="card-price-note">
+          {selectedRooms.length === 1 ? `${selectedRooms[0]} için başlangıç fiyatı` : ''}
+        </p>
 
-        {/* Локация и Срок сдачи */}
-        <div className="card-line-sub">
-          <span>
-            {property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'}
-          </span>
-          <span className="dot-sep">·</span>
+        {/* Строка планировок и квадратуры */}
+        <p className="card-line-meta">
+          {cardRooms ? `${cardRooms}` : ''}
+          {cardArea ? ` · ${cardArea}${!String(cardArea).includes('m²') ? ' m²' : ''}` : ''}
+        </p>
+
+        {/* Строка района и срока сдачи */}
+        <p className="card-line-sub">
+          <span>{property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'}</span>
+          <span> · </span>
           <span>
             {cleanStatus === 'tamamlandı'
               ? 'Teslim hazır'
-              : (property?.Teslim_Yili ? `Teslim ${property.Teslim_Yili}` : 'Devam ediyor')}
+              : (property?.Teslim_Yili 
+                  ? `Teslim ${property.Teslim_Yili.match(/\b(20\d\d)\b/) ? property.Teslim_Yili.match(/\b(20\d\d)\b/)[1] : property.Teslim_Yili}` 
+                  : 'Devam ediyor')}
           </span>
-        </div>
+        </p>
 
-        {/* Кнопки действий: Detaylar + Солидный изумрудный WhatsApp */}
-        <div className="card-actions-modern">
-          <Link href={detailLink} className="btn-modern-details">
-            Detaylar
-          </Link>
-          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="btn-modern-wa">
-            <svg viewBox="0 0 24 24" className="wa-icon-svg" style={{ width: 17, height: 17, fill: 'currentColor' }}>
-              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>WhatsApp</span>
-          </a>
-        </div>
+        {/* Кнопка WhatsApp на всю ширину (клик по ней открывает чат, а не страницу проекта) */}
+        <a 
+          href={finalWaLink} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="card-wa-full-btn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+          </svg>
+          <span>WhatsApp</span>
+        </a>
       </div>
-    </div>
+    </article>
   );
 }
