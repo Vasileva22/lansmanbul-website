@@ -235,17 +235,52 @@ export default function Home({ initialProperties }) {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
 
-  // Вычисление уникальных годов на основе данных в базе
-  const uniqueYears = useMemo(() => {
-    const years = masterProperties
-      .map((p) => {
-        const yr = p.Teslim_Yili || p.teslim_yili;
-        return yr ? String(yr).trim() : null;
-      })
-      .filter(Boolean);
-    return [...new Set(years)].sort((a, b) => parseInt(a) - parseInt(b));
-  }, [masterProperties]);
+  // Вспомогательная функция: получает чистый год "2028" или "Hazır"
+  const getPropertyYear = (property) => {
+    const status = String(property?.konutcesit || '').toLowerCase().trim();
+    if (status === 'tamamlandı') {
+      return 'Hazır';
+    }
+    const raw = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
+    if (!raw) return null;
+    if (raw.toLowerCase().includes('hazır')) return 'Hazır';
 
+    // Извлекаем 4 цифры года (например, "2028" из "Aralık 2028")
+    const match = raw.match(/\b(20\d\d)\b/);
+    return match ? match[1] : raw;
+  };
+
+  // Динамический расчет: показывает только те года, которые реально есть у карточек с учетом статуса
+  const uniqueYears = useMemo(() => {
+    const relevantProperties = masterProperties.filter((property) => {
+      if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
+        const propCity = String(property.city || property.adress || 'Ankara').toLowerCase();
+        if (!propCity.includes(filters.selectedCity.toLowerCase())) return false;
+      }
+
+      if (filters.selectedStatuses && filters.selectedStatuses.length > 0) {
+        const propStatus = String(property.konutcesit || '').trim().toLowerCase();
+        const matchesStatus = filters.selectedStatuses.some(
+          (st) => String(st).trim().toLowerCase() === propStatus
+        );
+        if (!matchesStatus) return false;
+      }
+
+      return true;
+    });
+
+    const years = relevantProperties
+      .map(getPropertyYear)
+      .filter(Boolean);
+
+    const unique = [...new Set(years)];
+
+    return unique.sort((a, b) => {
+      if (a === 'Hazır') return -1;
+      if (b === 'Hazır') return 1;
+      return parseInt(a) - parseInt(b);
+    });
+  }, [masterProperties, filters.selectedCity, filters.selectedStatuses]);
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
    return masterProperties.filter((property) => {
@@ -366,12 +401,12 @@ export default function Home({ initialProperties }) {
         }
       }
 
-      // Фильтрация по динамическим годам сдачи (Teslim_Yili)
-      if (
-        filters.selectedYears && filters.selectedYears.length > 0 &&
-        !filters.selectedYears.includes(String(property.Teslim_Yili || '').trim())
-      ) {
-        return false;
+      // Фильтрация по годам сдачи
+      if (filters.selectedYears && filters.selectedYears.length > 0) {
+        const pYear = getPropertyYear(property);
+        if (!pYear || !filters.selectedYears.includes(pYear)) {
+          return false;
+        }
       }
 
       if (filters.selectedStatuses.length > 0) {
@@ -544,15 +579,7 @@ export default function Home({ initialProperties }) {
       />
 
      <section id="custom-catalog-search">
-        {/* Кнопка скрытия/раскрытия сайдбара */}
-        <div 
-          id="sidebar-toggle-btn"
-          onClick={() => setIsSidebarHidden(!isSidebarHidden)}
-         style={{ left: isSidebarHidden ? '0px' : '290px', transition: 'left 0.3s ease', position: 'fixed' }}
-        >
-          {isSidebarHidden ? '❯' : '❮'}
-        </div>
-
+        
         {/* Мобильная плавающая кнопка */}
         <button 
           className="mobile-filter-floating-btn show-btn" 
