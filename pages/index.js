@@ -232,22 +232,40 @@ export default function Home({ initialProperties }) {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
 
-  // Вспомогательная функция: получает чистый год "2028" или "Hazır"
-  const getPropertyYear = (property) => {
-    const status = String(property?.konutcesit || '').toLowerCase().trim();
-    if (status === 'tamamlandı') {
-      return 'Hazır';
-    }
-    const raw = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
-    if (!raw) return null;
-    if (raw.toLowerCase().includes('hazır')) return 'Hazır';
-
-    // Извлекаем 4 цифры года (например, "2028" из "Aralık 2028")
-    const match = raw.match(/\b(20\d\d)\b/);
-    return match ? match[1] : raw;
+  // Очистка статуса от \n и лишних пробелов из базы
+  const cleanStatusText = (status) => {
+    const s = String(status || '').toLowerCase().replace(/[\r\n]+/g, ' ').trim();
+    if (s.includes('tamam')) return 'tamamlandı';
+    if (s.includes('lansman')) return 'lansman';
+    if (s.includes('devam')) return 'devam ediyor';
+    return s;
   };
 
-  // Динамический расчет: показывает только те года, которые реально есть у карточек с учетом статуса
+  // Извлечение чистого года из поля Teslim_Yili или описания
+  const extractPropertyYear = (property) => {
+    const raw = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
+    if (raw) {
+      const match = raw.match(/\b(20\d\d)\b/);
+      if (match) return match[1];
+    }
+    const desc = String(property?.Açıklama || '');
+    const descMatch = desc.match(/\b(202\d)\b/);
+    if (descMatch) return descMatch[1];
+    return null;
+  };
+
+  // Проверка готовности объекта (Hazır)
+  const isPropertyReady = (property) => {
+    const status = cleanStatusText(property?.konutcesit);
+    if (status === 'tamamlandı') return true;
+    const yr = extractPropertyYear(property);
+    if (yr && parseInt(yr) <= 2025) return true;
+    const raw = String(property?.Teslim_Yili || '').toLowerCase();
+    if (raw.includes('hazır')) return true;
+    return false;
+  };
+
+  // Расчет кнопок годов: кнопка "Hazır" + реальные фактические года (2025, 2026, 2027, 2028...)
   const uniqueYears = useMemo(() => {
     const relevantProperties = masterProperties.filter((property) => {
       if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
@@ -256,27 +274,31 @@ export default function Home({ initialProperties }) {
       }
 
       if (filters.selectedStatuses && filters.selectedStatuses.length > 0) {
-        const propStatus = String(property.konutcesit || '').trim().toLowerCase();
-        const matchesStatus = filters.selectedStatuses.some(
-          (st) => String(st).trim().toLowerCase() === propStatus
+        const propStatus = cleanStatusText(property?.konutcesit);
+        const matches = filters.selectedStatuses.some(
+          (st) => cleanStatusText(st) === propStatus
         );
-        if (!matchesStatus) return false;
+        if (!matches) return false;
       }
 
       return true;
     });
 
-    const years = relevantProperties
-      .map(getPropertyYear)
-      .filter(Boolean);
+    const yearsSet = new Set();
+    let hasReady = false;
 
-    const unique = [...new Set(years)];
-
-    return unique.sort((a, b) => {
-      if (a === 'Hazır') return -1;
-      if (b === 'Hazır') return 1;
-      return parseInt(a) - parseInt(b);
+    relevantProperties.forEach((p) => {
+      if (isPropertyReady(p)) {
+        hasReady = true;
+      }
+      const y = extractPropertyYear(p);
+      if (y) {
+        yearsSet.add(y);
+      }
     });
+
+    const sortedYears = Array.from(yearsSet).sort((a, b) => parseInt(a) - parseInt(b));
+    return hasReady ? ['Hazır', ...sortedYears] : sortedYears;
   }, [masterProperties, filters.selectedCity, filters.selectedStatuses]);
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
@@ -398,19 +420,24 @@ export default function Home({ initialProperties }) {
         }
       }
 
-      // Фильтрация по годам сдачи
+      // Фильтрация по годам сдачи и кнопке 'Hazır'
       if (filters.selectedYears && filters.selectedYears.length > 0) {
-        const pYear = getPropertyYear(property);
-        if (!pYear || !filters.selectedYears.includes(pYear)) {
-          return false;
-        }
+        const pYear = extractPropertyYear(property);
+        const pReady = isPropertyReady(property);
+
+        const matchesYear = filters.selectedYears.some((selectedY) => {
+          if (selectedY === 'Hazır') return pReady;
+          return pYear === selectedY;
+        });
+
+        if (!matchesYear) return false;
       }
 
+      // Фильтрация по статусу (чистая, без ошибок из-за \n)
       if (filters.selectedStatuses.length > 0) {
-        const propStatus = property.konutcesit ? String(property.konutcesit).trim().toLowerCase() : "";
+        const propStatus = cleanStatusText(property.konutcesit);
         const isMatched = filters.selectedStatuses.some((status) => {
-          const cleanStatus = String(status).trim().toLowerCase();
-          return propStatus === cleanStatus;
+          return propStatus === cleanStatusText(status);
         });
         if (!isMatched) return false;
       }
@@ -516,7 +543,7 @@ export default function Home({ initialProperties }) {
     setCurrentPage(1);
   }, [filters]);
 
-  const itemsPerPage = isSidebarHidden ? 12 : 8;
+ const itemsPerPage = 12;
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
 
   const paginatedProperties = useMemo(() => {
