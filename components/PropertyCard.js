@@ -125,13 +125,20 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
         cardPrice = formatPrice(matchedLayout.price, true);
       }
     } else {
-      // Расчет диапазонов комнат, площадей и цен для превью
-      const validRooms = layouts.map(l => l.rooms).filter(Boolean);
-      const minRoom = validRooms[0] || '';
-      const maxRoom = validRooms[validRooms.length - 1] || '';
-      cardRooms = minRoom && maxRoom && minRoom !== maxRoom ? `${minRoom} — ${maxRoom}` : (minRoom || cardRooms);
+      // Собираем уникальные чистые типы комнат (1+1, 2+1...) через точку, как в прототипе
+      const cleanRoomSet = new Set();
+      layouts.forEach(l => {
+        const raw = String(l.rooms || '').replace(/[\r\n]+/g, ' ').trim();
+        const clean = raw.split(/[-–\s]/)[0].trim();
+        if (clean) cleanRoomSet.add(clean);
+      });
+      const uniqueRoomList = Array.from(cleanRoomSet);
+      if (uniqueRoomList.length > 0) {
+        cardRooms = uniqueRoomList.join(' · ');
+      }
 
-      const areas = layouts.map(l => parseInt(l.area)).filter(Boolean);
+      // Диапазон площадей
+      const areas = layouts.map(l => parseInt(String(l.area || '').replace(/\D/g, ''))).filter(Boolean);
       if (areas.length > 0) {
         const minArea = Math.min(...areas);
         const maxArea = Math.max(...areas);
