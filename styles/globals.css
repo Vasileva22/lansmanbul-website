@@ -1429,9 +1429,10 @@ details .chips {
     display: flex !important;
     flex-direction: column !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
-    height: 100% !important;
+    height: auto !important; /* Не растягивает соседей! */
     position: relative !important;
     box-sizing: border-box !important;
+    align-self: start !important; /* Каждая карточка независима по высоте */
 }
 
 .custom-card:hover {
@@ -1626,12 +1627,12 @@ details .chips {
     border-color: var(--e8, #0D3B36) !important;
 }
 
-/* Раскрывающийся блок планировок из нового прототипа */
+/* Раскрывающийся блок планировок точь-в-точь по прототипу */
 .lay-panel {
     position: relative !important;
-    z-index: 5 !important;
+    z-index: 2 !important;
     margin-top: 10px !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 10px !important;
     border-top: 1px solid var(--border, #E6E1D6) !important;
     padding-top: 10px !important;
     display: flex !important;
@@ -1646,13 +1647,14 @@ details .chips {
 }
 .lay-panel .tr {
     display: grid !important;
-    grid-template-columns: 50px 1fr auto !important;
-    gap: 8px !important;
+    grid-template-columns: 45px 1fr auto !important;
+    gap: 10px !important;
     background: var(--row, #FAF8F3) !important;
     border-radius: 8px !important;
     padding: 6px 10px !important;
     font-size: 13px !important;
     align-items: center !important;
+    box-sizing: border-box !important;
 }
 .lay-panel .tr b {
     font-weight: 700 !important;
@@ -1660,10 +1662,12 @@ details .chips {
 }
 .lay-panel .tr span:nth-child(2) {
     color: var(--muted, #5B6B68) !important;
+    font-size: 13px !important;
 }
 .lay-panel .tr span:last-child {
     font-weight: 700 !important;
     color: var(--price, #0D3B36) !important;
+    font-size: 13px !important;
 }
 .lay-panel .tr.on {
     background: var(--chip, #EFEBE0) !important;
