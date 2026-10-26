@@ -299,7 +299,7 @@ return (
 
         {/* Цена (крупная изумрудная 22px) */}
         <p className="card-price-modern">
-          {cardPrice}
+          {cardPrice || 'Fiyat Belirtilmemiş'}
         </p>
 
         {/* Подстрочник для комнат (зеленый 13px как в прототипе) */}
