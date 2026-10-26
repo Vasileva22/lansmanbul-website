@@ -260,11 +260,7 @@ return (
         )}
 
         {/* Бейдж статуса (Золотой для Devam ediyor / Изумрудный для Tamamlandı) */}
-        {property?.konutcesit && (
-          <span className={`bdg-pill ${cleanStatus === 'tamamlandı' ? 'bdg-completed' : 'bdg-active'}`}>
-            {property.konutcesit}
-          </span>
-        )}
+        
 
         {/* Стрелочки переключения фото в изумрудных цветах сайта */}
         {photos.length > 1 && (
@@ -317,19 +313,20 @@ return (
           {cardArea ? ` · ${cardArea}${!String(cardArea).includes('m²') ? ' m²' : ''}` : ''}
         </p>
 
-        {/* Строка района и срока сдачи */}
+       {/* Строка района и срока сдачи */}
         <p className="card-line-sub">
           <span>{property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'}</span>
           <span> · </span>
           <span>
-            {cleanStatus === 'tamamlandı'
-              ? 'Teslim hazır'
-              : (property?.Teslim_Yili 
-                  ? `Teslim ${property.Teslim_Yili.match(/\b(20\d\d)\b/) ? property.Teslim_Yili.match(/\b(20\d\d)\b/)[1] : property.Teslim_Yili}` 
-                  : 'Devam ediyor')}
+            {(() => {
+              const rawYr = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
+              const yrMatch = rawYr.match(/\b(20\d\d)\b/) || String(property?.Açıklama || '').match(/\b(202\d)\b/);
+              if (yrMatch) return `Teslim ${yrMatch[1]}`;
+              if (cleanStatus === 'tamamlandı') return 'Teslim hazır';
+              return 'Ankara';
+            })()}
           </span>
         </p>
-
         {/* Кнопка WhatsApp на всю ширину (клик по ней открывает чат, а не страницу проекта) */}
         <a 
           href={finalWaLink} 
