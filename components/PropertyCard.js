@@ -36,6 +36,7 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // Состояние раскрытия планировок
 
   // 2. Считываем состояние избранного при монтировании
   useEffect(() => {
@@ -303,10 +304,54 @@ return (
         </p>
 
         {/* Строка планировок и квадратуры */}
-        <p className="card-line-meta">
-          {cardRooms ? `${cardRooms}` : ''}
-          {cardArea ? ` · ${cardArea}${!String(cardArea).includes('m²') ? ' m²' : ''}` : ''}
-        </p>
+        {/* Строка планировок + кнопка со стрелочкой (если 2 и более планировки) */}
+        <div className="lay-row">
+          <p className="card-line-meta">
+            {cardRooms ? `${cardRooms}` : ''}
+            {cardArea ? ` · ${cardArea}${!String(cardArea).includes('m²') ? ' m²' : ''}` : ''}
+          </p>
+
+          {layouts && layouts.length >= 2 && (
+            <button 
+              type="button" 
+              className="lay-btn" 
+              aria-expanded={isExpanded}
+              onClick={(e) => {
+                e.stopPropagation(); // Не переходить на страницу проекта
+                setIsExpanded(!isExpanded);
+              }}
+              title="Planları ve fiyatları göster"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Раскрывающаяся таблица всех планировок проекта */}
+        {isExpanded && layouts && layouts.length >= 2 && (
+          <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="lay-h">Planlar ve fiyatlar (başlangıç)</div>
+            {layouts.map((u, idx) => {
+              const numPrice = parseInt(String(u.price || '').replace(/\D/g, '')) || 0;
+              const formattedPrice = numPrice ? numPrice.toLocaleString('tr-TR') + ' TL' : (u.price_str || 'Fiyat Belirtilmemiş');
+              const areaText = u.area ? `${u.area} m²` : '';
+              const roomClean = String(u.rooms || '').split('-')[0].trim() || u.rooms;
+              
+              // Подсветка строки, если эта комната выбрана в активных фильтрах
+              const isMatched = selectedRooms.some(r => roomClean.includes(r.replace(' ve üzeri', '').trim()));
+
+              return (
+                <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
+                  <b>{roomClean}</b>
+                  <span>{areaText}</span>
+                  <span>{formattedPrice}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
        {/* Строка района и срока сдачи */}
         <p className="card-line-sub">
