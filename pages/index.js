@@ -780,13 +780,14 @@ export default function Home({ initialProperties }) {
           </div>
 
           {paginatedProperties.length > 0 ? (
-           <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list-layout'}>
+           <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list'}>
               {paginatedProperties.map((property) => (
                 <PropertyCard 
                   key={property.id} 
                   property={property} 
                   onImageClick={handleOpenLightbox}
-                  selectedRooms={filters.selectedRooms} // <--- НОВОЕ: Передаем активный фильтр комнат
+                  selectedRooms={filters.selectedRooms}
+                  layout={layout}
                 />
               ))}
             </div>
