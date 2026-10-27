@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function PropertyCard({ property, onImageClick, selectedRooms = [] }) {
+export default function PropertyCard({ property, onImageClick, selectedRooms = [], layout = 'grid' }) {
   // 1. Функция безопасного парсинга картинок
   const parseJsonbPhotos = (value) => {
     if (!value) return [];
