@@ -1931,45 +1931,186 @@ details .chips {
     flex-shrink: 0;
 }
 
-/* СЕТКА СПИСКОМ */
-.list-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 100%;
+/* ==========================================================================
+   ВИД СПИСКОМ (.list, .lc, .lm, .lr, .tbl) ТОЧЬ-В-ТОЧЬ ИЗ ПРОТОТИПА
+   ========================================================================== */
+.list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
-.list-layout .custom-card {
-    background: #fff;
-    border-radius: 16px;
-    border: 1.5px solid #CBD5E1;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 164, 166, 0.06);
-    display: flex;
-    flex-direction: row;
-    transition: transform .3s ease,box-shadow .3s ease;
-    width: 100%;
+.lc {
     position: relative !important;
+    background: var(--surface, #FFFFFF) !important;
+    border: 1px solid var(--border, #E6E1D6) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    display: grid !important;
+    grid-template-columns: 320px minmax(0, 1fr) 220px !important;
+    box-shadow: 0 4px 16px rgba(10, 46, 42, 0.05) !important;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+.lc:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 24px rgba(10, 46, 42, 0.09) !important;
+    border-color: #D4CBBC !important;
+}
+
+/* Колонка 1: Фотография */
+.lc .ph {
+    position: relative !important;
+    min-height: 230px !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    background-color: #E2E8F0 !important;
+    cursor: zoom-in !important;
+}
+.lc .bdg {
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 4px 11px !important;
+    border-radius: 999px !important;
     z-index: 10 !important;
-    pointer-events: auto !important;
 }
-.list-layout .custom-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,164,166,.08);
+.lc .bdg.go { background: var(--c4, #D9BF8F) !important; color: var(--e8, #0D3B36) !important; }
+.lc .bdg.ok { background: #1F6B61 !important; color: #FFFFFF !important; }
+
+.lc .hrt {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: #FFFFFF !important;
+    color: #5B6B68 !important;
+    border: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
 }
-.list-layout .custom-card .img-container {
-    width: 320px;
-    min-width: 320px;
-    height: 250px;
-    position: relative;
-    overflow: hidden;
-    cursor: zoom-in;
-}
-.list-layout .custom-card .card-content {
-    padding: 24px !important;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+
+/* Колонка 2: Заголовок и планировки */
+.lm {
+    padding: 18px 20px !important;
     min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+}
+.lm h3 {
+    margin: 0 0 4px !important;
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    color: var(--text, #1B2B29) !important;
+}
+.lm h3 a:hover { color: var(--link, #1F6B61) !important; }
+.lm .ln {
+    margin: 0 0 12px !important;
+    font-size: 14.5px !important;
+    color: var(--muted, #5B6B68) !important;
+}
+.tbl {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+.tbl .tr {
+    display: grid !important;
+    grid-template-columns: 70px 1fr auto !important;
+    gap: 10px !important;
+    background: var(--row, #FAF8F3) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+.tbl .tr b { font-weight: 700 !important; color: var(--e8, #0D3B36) !important; display: block !important; }
+.tbl .tr span { display: block !important; }
+.tbl .tr span:nth-child(2) { color: var(--muted, #5B6B68) !important; }
+.tbl .tr span:last-child { font-weight: 700 !important; color: var(--price, #0D3B36) !important; text-align: right !important; }
+.tbl .tr.on { background: var(--chip, #EFEBE0) !important; }
+.more {
+    margin: 8px 0 0 !important;
+    color: var(--link, #1F6B61) !important;
+    font-weight: 600 !important;
+    font-size: 13.5px !important;
+}
+
+/* Колонка 3: Цена и кнопка */
+.lr {
+    padding: 18px 20px !important;
+    border-left: 1px solid var(--border, #E6E1D6) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+}
+.lr .pc {
+    margin: 0 !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: var(--price, #0D3B36) !important;
+    line-height: 1.2 !important;
+}
+.lr .wa {
+    margin-top: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: var(--btn, #0D3B36) !important;
+    color: #FFFFFF !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+.lr .wa:hover {
+    background: var(--e6, #1F6B61) !important;
+}
+
+/* Адаптивность для средних экранов */
+@media (max-width: 1180px) {
+    .lc { grid-template-columns: 260px minmax(0, 1fr) !important; }
+    .lr {
+        grid-column: 1 / -1 !important;
+        border-left: 0 !important;
+        border-top: 1px solid var(--border, #E6E1D6) !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+    }
+    .lr .wa { margin-top: 0 !important; min-width: 180px !important; }
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 700px) {
+    .lc { display: flex !important; flex-direction: column !important; }
+    .lc .ph { aspect-ratio: 4 / 3 !important; min-height: 0 !important; height: auto !important; }
+    .lr { flex-direction: column !important; align-items: stretch !important; }
+    .lr .wa { width: 100% !important; }
 }
 .list-layout .custom-card .title-price-row {
     display: flex;
