@@ -127,34 +127,72 @@ export default function CatalogMapView({ properties = [] }) {
     <div className="mapw">
       {/* Контейнер самой Яндекс.Карты */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }}></div>
+      {/* Всплывающая мини-карточка (.mini) с фото в правом верхнем углу карты */}
+      {selectedProperty && (() => {
+        // Извлекаем первую фотографию проекта
+        let photoUrl = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80';
+        if (selectedProperty.property_images && selectedProperty.property_images.length > 0) {
+          const raw = selectedProperty.property_images[0]?.image_url;
+          if (Array.isArray(raw) && raw.length > 0) photoUrl = raw[0];
+          else if (typeof raw === 'string') {
+            const trimmed = raw.trim();
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+              try {
+                const arr = JSON.parse(trimmed);
+                if (Array.isArray(arr) && arr.length > 0) photoUrl = arr[0];
+              } catch (e) {}
+            } else {
+              const spl = trimmed.split(/[\s,]+/);
+              if (spl.length > 0 && spl[0]) photoUrl = spl[0];
+            }
+          }
+        }
 
-      {/* Всплывающая мини-карточка (.mini) в правом верхнем углу карты */}
-      {selectedProperty && (
-        <div className="mini">
-          <button 
-            type="button" 
-            className="x" 
-            onClick={() => setSelectedProperty(null)}
-            aria-label="Kapat"
-          >
-            ✕
-          </button>
-          <h3>{selectedProperty.testproje?.trim() ? selectedProperty.testproje : 'Yeni Konut Projesi'}</h3>
-          <p className="ln">
-            {selectedProperty.district || selectedProperty['İlçe/Semt'] || selectedProperty.city || 'Ankara'}
-            {selectedProperty['card odalar'] ? ` · ${selectedProperty['card odalar']}` : ''}
-          </p>
-          <p className="pc">{formatPriceFull(selectedProperty.Fiyat)}</p>
-          <a 
-            href={finalWaLink} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="wa"
-          >
-            WhatsApp
-          </a>
-        </div>
-      )}
+        const projectLink = `/properties/${selectedProperty.id}`;
+
+        return (
+          <div className="mini">
+            <button 
+              type="button" 
+              className="x" 
+              onClick={() => setSelectedProperty(null)}
+              aria-label="Kapat"
+            >
+              ✕
+            </button>
+
+            {/* Фотография проекта с кликом на страницу */}
+            <a 
+              href={projectLink} 
+              className="mini-photo" 
+              style={{ backgroundImage: `url('${photoUrl}')` }}
+              title="Projeyi İncele"
+            ></a>
+
+            <h3>
+              <a href={projectLink} style={{ color: 'inherit', textDecoration: 'none' }}>
+                {selectedProperty.testproje?.trim() ? selectedProperty.testproje : 'Yeni Konut Projesi'}
+              </a>
+            </h3>
+
+            <p className="ln">
+              {selectedProperty.district || selectedProperty['İlçe/Semt'] || selectedProperty.city || 'Ankara'}
+              {selectedProperty['card odalar'] ? ` · ${selectedProperty['card odalar']}` : ''}
+            </p>
+
+            <p className="pc">{formatPriceFull(selectedProperty.Fiyat)}</p>
+
+            <a 
+              href={finalWaLink} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="wa"
+            >
+              WhatsApp
+            </a>
+          </div>
+        );
+      })()}
     </div>
   );
 }
