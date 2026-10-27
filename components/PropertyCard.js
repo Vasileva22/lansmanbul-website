@@ -220,9 +220,131 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
 
   // Передаем активную планировку в URL детальной страницы
   const detailLink = '/properties/' + property?.id + (selectedRooms.length === 1 ? `?room=${encodeURIComponent(selectedRooms[0])}` : '');
-  const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
+const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCase() : "";
   const isLansman = cleanStatus === "lansman";
-return (
+  const isCompleted = cleanStatus.includes('tamam');
+  const badgeLabel = isCompleted ? 'Tamamlandı' : (cleanStatus.includes('lansman') ? 'Lansman' : 'Devam ediyor');
+
+  // Умный поиск года сдачи
+  const rawYr = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
+  const yrMatch = rawYr.match(/\b(20\d\d)\b/) || String(property?.Açıklama || '').match(/\b(202\d)\b/);
+  const deliveryText = yrMatch ? `Teslim ${yrMatch[1]}` : (isCompleted ? 'Teslim hazır' : 'Ankara');
+
+  // Сбор планировок для таблицы списка
+  const listGroups = {};
+  layouts.forEach((u) => {
+    const rawRoom = String(u.rooms || '').replace(/[\r\n]+/g, ' ').trim();
+    const roomType = rawRoom.split(/[-–\s]/)[0].trim() || rawRoom;
+    const areaNum = parseInt(String(u.area || '').replace(/\D/g, '')) || 0;
+    const priceNum = parseInt(String(u.price || '').replace(/\D/g, '')) || 0;
+
+    if (!listGroups[roomType]) {
+      listGroups[roomType] = { room: roomType, minArea: areaNum, maxArea: areaNum, minPrice: priceNum };
+    } else {
+      if (areaNum > 0) {
+        if (listGroups[roomType].minArea === 0 || areaNum < listGroups[roomType].minArea) listGroups[roomType].minArea = areaNum;
+        if (areaNum > listGroups[roomType].maxArea) listGroups[roomType].maxArea = areaNum;
+      }
+      if (priceNum > 0) {
+        if (listGroups[roomType].minPrice === 0 || priceNum < listGroups[roomType].minPrice) listGroups[roomType].minPrice = priceNum;
+      }
+    }
+  });
+  const listGroupArray = Object.values(listGroups);
+
+  // === 1. РЕЖИМ СПИСКА (LISTE) ТОЧЬ-В-ТОЧЬ ИЗ ПРОТОТИПА ===
+  if (layout === 'list') {
+    return (
+      <article className="lc" data-id={property?.id}>
+        {/* Колонка 1: Фотография (320px) */}
+        <div 
+          className="ph" 
+          onClick={() => onImageClick && onImageClick(photos, currentSlide)}
+          title="Büyük görseli incele"
+        >
+          {photos.length > 0 ? (
+            <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
+              {photos.map((url, idx) => (
+                <div key={idx} className="slider-item" style={{ backgroundImage: "url('" + url + "')" }}></div>
+              ))}
+            </div>
+          ) : (
+            <div className="slider-track">
+              <div className="slider-item" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80')" }}></div>
+            </div>
+          )}
+
+          <span className={`bdg ${isCompleted ? 'ok' : 'go'}`}>{badgeLabel}</span>
+
+          <button type="button" className="hrt" onClick={toggleFavorite} title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#5B6B68"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19.5 12.6 12 20l-7.5-7.4a5 5 0 0 1 7.5-6.6 5 5 0 0 1 7.5 6.6z"/>
+            </svg>
+          </button>
+
+          {photos.length > 1 && (
+            <>
+              <button type="button" className="slider-arrow arrow-left" onClick={prevSlide}>❮</button>
+              <button type="button" className="slider-arrow arrow-right" onClick={nextSlide}>❯</button>
+            </>
+          )}
+        </div>
+
+        {/* Колонка 2: Заголовок, район и таблица планировок */}
+        <div className="lm" onClick={() => { window.location.href = detailLink; }}>
+          <h3>
+            <Link href={detailLink} onClick={(e) => e.stopPropagation()}>
+              {property?.testproje?.trim() ? property.testproje : 'Yeni Konut Projesi'}
+            </Link>
+          </h3>
+          <p className="ln">
+            {property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'} · {deliveryText}
+          </p>
+
+          {listGroupArray.length > 0 && (
+            <div className="tbl">
+              {listGroupArray.slice(0, 4).map((g, idx) => {
+                const areaStr = g.minArea > 0 ? (g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`) : '';
+                const prcStr = g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL'den` : 'Fiyat sorunuz';
+                const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
+
+                return (
+                  <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
+                    <b>{g.room}</b>
+                    <span>{areaStr}</span>
+                    <span>{prcStr}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {listGroupArray.length > 4 && (
+            <p className="more">+{listGroupArray.length - 4} plan daha</p>
+          )}
+        </div>
+
+        {/* Колонка 3: Цена и кнопка WhatsApp (220px) */}
+        <div className="lr">
+          <div>
+            <p className="ln" style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px 0' }}>
+              {selectedRooms.length === 1 ? `${selectedRooms[0]} için` : 'başlangıç'}
+            </p>
+            <p className="pc">{cardPrice || 'Fiyat Belirtilmemiş'}</p>
+          </div>
+          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="wa" onClick={(e) => e.stopPropagation()}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+            </svg>
+            <span>WhatsApp</span>
+          </a>
+        </div>
+      </article>
+    );
+  }
+
+  // === 2. РЕЖИМ ПЛИТКИ (GRID) ===
+  return (
     <article className="custom-card" data-id={property?.id}>
       {/* 1. БЛОК ФОТОГРАФИИ (клик открывает полноэкранный просмотр фото) */}
       <div 
@@ -262,8 +384,10 @@ return (
           </div>
         )}
 
-        {/* Бейдж статуса (Золотой для Devam ediyor / Изумрудный для Tamamlandı) */}
-        
+       {/* Бейдж статуса (Золотой для Devam ediyor / Изумрудный для Tamamlandı) */}
+        <span className={`bdg-pill ${isCompleted ? 'bdg-completed' : 'bdg-active'}`}>
+          {badgeLabel}
+        </span>
 
         {/* Стрелочки переключения фото в изумрудных цветах сайта */}
         {photos.length > 1 && (
