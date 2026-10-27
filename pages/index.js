@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import HeroSearch from '../components/HeroSearch';
 import PropertyCard from '../components/PropertyCard';
-
+import CatalogMapView from '../components/CatalogMapView'; // <--- НОВЫЙ ИМПОРТ КАРТЫ
 import SidebarFilters from '../components/SidebarFilters';
 
 // Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
@@ -696,18 +696,18 @@ export default function Home({ initialProperties }) {
                 {isForeigner ? '‹ Genel İlanlar' : 'Yabancılar İçin ›'}
               </button>
 
-              {/* Переключатель вида Grid / List */}
+              {/* Переключатель вида: Galeri / Liste / Harita */}
               <div className="view-toggle-modern">
                 <button 
                   className={layout === 'grid' ? 'active' : ''}
                   onClick={() => setLayout('grid')}
-                  title="Plitka"
+                  title="Galeri"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/>
                     <rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>
                   </svg>
-                  <span>Plitka</span>
+                  <span>Galeri</span>
                 </button>
                 <button 
                   className={layout === 'list' ? 'active' : ''}
@@ -718,6 +718,16 @@ export default function Home({ initialProperties }) {
                     <rect x="3.5" y="4.5" width="17" height="6" rx="1.5"/><rect x="3.5" y="13.5" width="17" height="6" rx="1.5"/>
                   </svg>
                   <span>Liste</span>
+                </button>
+                <button 
+                  className={layout === 'map' ? 'active' : ''}
+                  onClick={() => setLayout('map')}
+                  title="Harita"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.5"/>
+                  </svg>
+                  <span>Harita</span>
                 </button>
               </div>
             </div>
@@ -779,7 +789,9 @@ export default function Home({ initialProperties }) {
             )}
           </div>
 
-          {paginatedProperties.length > 0 ? (
+          {layout === 'map' ? (
+            <CatalogMapView properties={filteredProperties} />
+          ) : paginatedProperties.length > 0 ? (
            <div id="catalog-list" className={layout === 'grid' ? 'grid-layout' : 'list'}>
               {paginatedProperties.map((property) => (
                 <PropertyCard 
