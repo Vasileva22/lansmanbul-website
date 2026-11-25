@@ -303,12 +303,6 @@ export default function Home({ initialProperties }) {
 // Логика фильтрации
   const filteredProperties = useMemo(() => {
    return masterProperties.filter((property) => {
-      // 👇 ДИАГНОСТИКА: почему отсекается Çankaya или Etimesgut
-      const isTestTarget = String(property['İlçe/Semt']).includes('Çankaya') || String(property['İlçe/Semt']).includes('Etimesgut');
-
-      if (isTestTarget) {
-        console.log("=== ТЕСТ ПРОЕКТА ===", property.testproje, property['İlçe/Semt']);
-      }
     // 1. Фильтрация по городу (со страховкой: если city null, проверяем адрес или берем Анкару)
       if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
         const propCity = String(property.city || property.adress || 'Ankara').toLowerCase().trim();
@@ -347,34 +341,6 @@ export default function Home({ initialProperties }) {
           return false;
         }
       }
-      // === НОВОЕ: Фильтрация по типу объекта (Проект / Квартира) ===
-      if (filters.listingType === 'project' && property.is_project !== true) {
-        return false;
-      }
-      if (filters.listingType === 'apartment' && property.is_project === true) {
-        return false;
-      }
-      // =============================================================
-
-     // 2. Умная фильтрация по району (находит даже если написано "Etimesgut Yukarıyurtçu Mahallesi")
-      if (filters.selectedLocations && filters.selectedLocations.length > 0) {
-        const fullAddressText = (
-          String(property['İlçe/Semt'] || '') + ' ' +
-          String(property.district || '') + ' ' +
-          String(property.mahalle || '') + ' ' +
-          String(property.adress || '')
-        ).toLowerCase();
-
-        const isMatched = filters.selectedLocations.some((selectedLoc) => {
-          const locLower = String(selectedLoc).toLowerCase().trim();
-          return fullAddressText.includes(locLower);
-        });
-
-        if (!isMatched) {
-          return false;
-        }
-      }
-
 // 4.1 Фильтрация по типу жилья (Daire, Villa, Penthouse)
       if (filters.selectedPropertyType && filters.selectedPropertyType !== 'all') {
         const pTypeRaw = String(property.property_type || '').toLowerCase();

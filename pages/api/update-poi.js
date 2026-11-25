@@ -1,9 +1,13 @@
 import { updatePropertyPOIs } from '../../services/poiService';
+import { requireAdminSecret } from '../../lib/requireAdminSecret';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
   }
+
+  // Вызывать может только вебхук Supabase (он передаёт пароль в заголовке x-admin-secret)
+  if (!requireAdminSecret(req, res)) return;
 
   try {
     const { type, table, record, old_record } = req.body;
