@@ -1,11 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { createClient } from '@supabase/supabase-js';
-
-// Инициализация безопасного клиента Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getSupabaseAdmin } from '../../lib/supabaseAdmin';
+import { requireAdminSecret } from '../../lib/requireAdminSecret';
 
 // Умная функция автоопределения статуса по тексту
 function detectStatus(text) {
@@ -23,6 +19,11 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Sadece GET isteği destekleniyor' });
   }
+
+  // Запуск только с паролем: /api/scrape-sincan?secret=...
+  if (!requireAdminSecret(req, res)) return;
+
+  const supabase = getSupabaseAdmin();
 
   const baseUrl = 'https://www.projedefirsat.com';
   const targetUrl = `${baseUrl}/ankara-konut-projeleri`;
@@ -97,28 +98,30 @@ export default async function handler(req, res) {
           }
         });
 
-        // Сбор примерных планировок и площадей
-        let roomsText = '2+1';
-        let areaText = '85';
+        // Сбор планировок и площадей. Если на странице их нет — оставляем пустыми,
+        // НИКАКИХ значений по умолчанию: на сайте не должно быть выдуманных данных.
+        const roomsSet = new Set();
+        const areas = [];
         $detail('td, span, div').each((i, el) => {
           const text = $detail(el).text().trim();
-          if (text.match(/^\d\+\d$/)) roomsText = text; // Находим комнатность
-          if (text.match(/^\d+\s*m²/)) areaText = text.replace(/\D/g, ''); // Находим площадь
+          if (/^\d\+\d$/.test(text)) roomsSet.add(text);
+          const areaMatch = text.match(/^(\d{2,4})\s*m²/);
+          if (areaMatch) areas.push(parseInt(areaMatch[1], 10));
         });
+        const roomsText = roomsSet.size > 0 ? Array.from(roomsSet).sort().join(', ') : null;
+        const areaText = areas.length > 0 ? Math.min(...areas) : null; // минимальная площадь «от»
 
-        // Модель проекта для сохранения
+        // Модель проекта: только то, что реально найдено на странице.
+        // Цена, этажность и дата стройки сюда НЕ подставляются — их вносим вручную после проверки.
         const projectData = {
           testproje: title,
           konutcesit: status,
           city: "Ankara",
           "İlçe/Semt": "Sincan",
-          Açıklama: description || "Proje detayları yakında eklenecektir.",
-          Fiyat: "3.200.000 TL'den", // Генерируем базовую стартовую цену для Синжана
+          Açıklama: description || null,
           "card odalar": roomsText,
           "card-area": areaText,
-          "Kat Sayısı": "10",
-          Özellikler: features || "Güvenlik, Açık Otopark, Çocuk Oyun Alanı",
-          "Santiye Tarihi": "21.11.2026", // Дата для шantiye günlüğü
+          Özellikler: features || null,
           is_active: true,
           last_seen_at: new Date().toISOString()
         };
@@ -131,21 +134,23 @@ export default async function handler(req, res) {
           .maybeSingle();
 
         if (existing) {
-          await supabase
+          // Обновляем только поля, у которых есть новое значение — не затираем данные пустотой
+          const updateData = { last_seen_at: projectData.last_seen_at, is_active: true };
+          if (projectData["card odalar"]) updateData["card odalar"] = projectData["card odalar"];
+          if (projectData["card-area"]) updateData["card-area"] = projectData["card-area"];
+          if (projectData.Özellikler) updateData.Özellikler = projectData.Özellikler;
+
+          const { error: updErr } = await supabase
             .from('properties')
-            .update({ 
-              last_seen_at: projectData.last_seen_at, 
-              is_active: true,
-              "card odalar": projectData["card odalar"],
-              "card-area": projectData["card-area"],
-              Özellikler: projectData.Özellikler
-            })
+            .update(updateData)
             .eq('id', existing.id);
+          if (updErr) throw updErr;
           savedCount++;
         } else {
-          await supabase
+          const { error: insErr } = await supabase
             .from('properties')
             .insert(projectData);
+          if (insErr) throw insErr;
           savedCount++;
         }
 

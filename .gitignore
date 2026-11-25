@@ -1,0 +1,15 @@
+# Зависимости и сборка
+node_modules/
+.next/
+out/
+build/
+
+# Секреты: ключи хранятся только в настройках Vercel
+.env
+.env*.local
+.env.production
+
+# Служебное
+.vercel
+.DS_Store
+*.log

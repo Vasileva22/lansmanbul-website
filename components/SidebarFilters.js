@@ -181,7 +181,7 @@ export default function SidebarFilters({
       if (!window.ymaps && !document.getElementById('yandex-maps-script')) {
         const script = document.createElement('script');
         script.id = 'yandex-maps-script';
-        script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '72709de3-d8bc-49c9-88c6-339937b3fa51') + '&lang=tr_TR';
+        script.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + (process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '') + '&lang=tr_TR';
         script.type = 'text/javascript';
         script.onload = initMapInstance;
         document.head.appendChild(script);
