@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
+import { toCardShape } from '../../lib/projects';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 // --- НАЧАЛО ВСТАВКИ: Иконки и парсинг ---
@@ -876,6 +877,7 @@ export async function getServerSideProps(context) {
       .from('properties')
       .select('*, property_images(*)')
       .eq('id', id)
+      .neq('listing_status', 'archived')
       .single();
 
     if (error || !property) {
@@ -889,7 +891,7 @@ export async function getServerSideProps(context) {
 
     return {
       props: {
-        property,
+        property: toCardShape(property),
         error: false,
       },
     };

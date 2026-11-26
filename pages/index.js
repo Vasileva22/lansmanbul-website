@@ -8,6 +8,7 @@ import HeroSearch from '../components/HeroSearch';
 import PropertyCard from '../components/PropertyCard';
 import CatalogMapView from '../components/CatalogMapView'; // <--- НОВЫЙ ИМПОРТ КАРТЫ
 import SidebarFilters from '../components/SidebarFilters';
+import { fetchCatalogProjects } from '../lib/projects';
 
 // Компонент Лайтбокса встроен напрямую в файл, исключая внешние импорты
 function Lightbox({ photos, activeIndex, onClose, onPrev, onRight }) {
@@ -100,24 +101,9 @@ export default function Home({ initialProperties }) {
   useEffect(() => {
     async function loadClientData() {
       if (masterProperties.length === 0) {
-        const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
-        const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim(); // <--- Исправлено объявление
-        if (!supabaseUrl || !supabaseAnonKey) return;
-
         try {
-          const res = await fetch(
-            supabaseUrl + '/rest/v1/properties?select=*,property_images(*)',
-            {
-              headers: {
-                'apikey': supabaseAnonKey,
-                'Authorization': 'Bearer ' + supabaseAnonKey,
-              },
-            }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            setMasterProperties(data);
-          }
+          const data = await fetchCatalogProjects();
+          setMasterProperties(data);
         } catch (err) {
           console.error("Client fetch error:", err);
         }
@@ -902,45 +888,11 @@ export default function Home({ initialProperties }) {
 }
 
 export async function getServerSideProps() {
-  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim();
-  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim();
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return {
-      props: {
-        initialProperties: [],
-      },
-    };
-  }
-
   try {
-    const res = await fetch(
-      supabaseUrl + '/rest/v1/properties?select=*,property_images(*)',
-      {
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Authorization': 'Bearer ' + supabaseAnonKey,
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error('Supabase REST error: ' + res.statusText);
-    }
-
-    const properties = await res.json();
-
-    return {
-      props: {
-        initialProperties: properties || [],
-      },
-    };
+    const properties = await fetchCatalogProjects();
+    return { props: { initialProperties: properties || [] } };
   } catch (err) {
     console.error("Server-side properties fetch error:", err);
-    return {
-      props: {
-        initialProperties: [],
-      },
-    };
+    return { props: { initialProperties: [] } };
   }
 }

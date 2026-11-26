@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PropertyCard from '../components/PropertyCard';
 import { supabase } from '../supabase';
+import { toCardShape } from '../lib/projects';
 
 export default function FavoritesPage() {
   const [favoriteProperties, setFavoriteProperties] = useState([]);
@@ -27,10 +28,11 @@ export default function FavoritesPage() {
       const { data, error } = await supabase
         .from('properties')
         .select('*, property_images(*)')
-        .in('id', favIds);
+        .in('id', favIds)
+        .neq('listing_status', 'archived');
 
       if (!error && data) {
-        setFavoriteProperties(data);
+        setFavoriteProperties(data.map(toCardShape));
       }
     } catch (err) {
       console.error("Error fetching favorites from Supabase:", err);
