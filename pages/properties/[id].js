@@ -917,9 +917,9 @@ export async function getServerSideProps(context) {
     let query;
     if (adminPreview) {
       const { getSupabaseAdmin } = await import('../../lib/supabaseAdmin');
-      query = getSupabaseAdmin().from('properties').select('*, property_images(*)').eq('id', id);
+      query = getSupabaseAdmin().from('properties').select('*, property_images(*), developer:developers(name, is_verified, founded_year, completed_projects_count, website)').eq('id', id);
     } else {
-      query = supabase.from('properties').select('*, property_images(*)').eq('id', id).neq('listing_status', 'archived');
+      query = supabase.from('properties').select('*, property_images(*), developer:developers(name, is_verified, founded_year, completed_projects_count, website)').eq('id', id).neq('listing_status', 'archived');
     }
     const { data: property, error } = await query.single();
 
