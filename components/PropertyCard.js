@@ -1,6 +1,55 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+// Этапы стройки — шкала «как у заказа на маркетплейсе»
+const STAGE_ORDER = ['lansman', 'temel', 'kaba_insaat', 'ince_isler', 'teslim'];
+const STAGE_LABELS = { lansman: 'Lansman', temel: 'Temel', kaba_insaat: 'Kaba inşaat', ince_isler: 'İnce işler', teslim: 'Teslim' };
+
+function daysAgoText(iso) {
+  if (!iso) return '';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'bugün güncellendi';
+  if (days === 1) return 'dün güncellendi';
+  if (days < 30) return `${days} gün önce güncellendi`;
+  const months = Math.floor(days / 30);
+  return `${months} ay önce güncellendi`;
+}
+
+export function StageBar({ stage, updatedAt, deliveryText }) {
+  const idx = STAGE_ORDER.indexOf(stage);
+  if (idx < 0) return null;
+  const parts = [STAGE_LABELS[stage], daysAgoText(updatedAt), deliveryText].filter(Boolean);
+  return (
+    <div style={{ margin: '8px 0 6px' }} title="İnşaat aşaması">
+      <div style={{ display: 'flex', gap: 3 }}>
+        {STAGE_ORDER.map((st, i) => (
+          <div key={st} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= idx ? '#0F6E56' : '#dfe5e3' }} />
+        ))}
+      </div>
+      <div style={{ fontSize: 12, color: '#5B6B68', marginTop: 4 }}>{parts.join(' · ')}</div>
+    </div>
+  );
+}
+
+// Заглушка вместо фото для справочной карточки
+function ReferenceCover({ area, compact = false }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: '#E1F5EE', color: '#085041', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, textAlign: 'center', padding: 12 }}>
+      <svg width={compact ? 26 : 30} height={compact ? 26 : 30} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
+      </svg>
+      <span style={{ fontSize: 12, fontWeight: 600 }}>{area}</span>
+    </div>
+  );
+}
+
+const refNoteStyle = { fontSize: 12.5, color: '#5B6B68', background: '#f1f5f4', borderRadius: 8, padding: '8px 10px', margin: '8px 0', lineHeight: 1.4 };
+const CLAIM_WA = '905459418536';
+function claimLink(name) {
+  const text = `Merhaba, lansmanbul.com'daki "${name || ''}" projesinin yetkilisiyim. Sayfayı onaylamak ve fiyat/fotoğraf eklemek istiyorum.`;
+  return `https://wa.me/${CLAIM_WA}?text=${encodeURIComponent(text)}`;
+}
+
 export default function PropertyCard({ property, onImageClick, selectedRooms = [], layout = 'grid' }) {
   // 1. Функция безопасного парсинга картинок
   const parseJsonbPhotos = (value) => {
@@ -99,6 +148,9 @@ export default function PropertyCard({ property, onImageClick, selectedRooms = [
   })();
 
   const isProject = property?.is_project === true;
+  const isReference = property?.is_reference === true;
+  const projectName = property?.testproje?.trim() ? property.testproje : 'Yeni Konut Projesi';
+  const locationText = property?.['İlçe/Semt'] || property?.district || property?.city || 'Ankara';
 
   // 5. Вспомогательная функция форматирования цены
   const formatPrice = (val, isStartPrice = false) => {
@@ -227,8 +279,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
 
   // Умный поиск года сдачи
   const rawYr = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
-  const yrMatch = rawYr.match(/\b(20\d\d)\b/) || String(property?.Açıklama || '').match(/\b(202\d)\b/);
-  const deliveryText = yrMatch ? `Teslim ${yrMatch[1]}` : (isCompleted ? 'Teslim hazır' : 'Ankara');
+  const deliveryText = rawYr ? `Teslim ${rawYr}` : (isCompleted ? 'Teslim hazır' : '');
 
   // Сбор планировок для таблицы списка
   const listGroups = {};
@@ -255,14 +306,17 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
   // === 1. РЕЖИМ СПИСКА (LISTE) ТОЧЬ-В-ТОЧЬ ИЗ ПРОТОТИПА ===
   if (layout === 'list') {
     return (
-      <article className="lc" data-id={property?.id}>
+      <article className="lc" data-id={property?.id} style={isReference ? undefined : { outline: '2px solid #0F6E56', outlineOffset: -2 }}>
         {/* Колонка 1: Фотография (320px) */}
         <div 
           className="ph" 
-          onClick={() => onImageClick && onImageClick(photos, currentSlide)}
-          title="Büyük görseli incele"
+          onClick={() => !isReference && onImageClick && onImageClick(photos, currentSlide)}
+          title={isReference ? undefined : 'Büyük görseli incele'}
+          style={isReference ? { cursor: 'default' } : undefined}
         >
-          {photos.length > 0 ? (
+          {isReference ? (
+            <ReferenceCover area={locationText} compact />
+          ) : photos.length > 0 ? (
             <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
               {photos.map((url, idx) => (
                 <div key={idx} className="slider-item" style={{ backgroundImage: "url('" + url + "')" }}></div>
@@ -274,7 +328,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
             </div>
           )}
 
-          <span className={`bdg ${isCompleted ? 'ok' : 'go'}`}>{badgeLabel}</span>
+          <span className={`bdg ${isCompleted ? 'ok' : 'go'}`}>{isReference ? 'Bilgi kartı' : '✓ Onaylı proje'}</span>
 
           <button type="button" className="hrt" onClick={toggleFavorite} title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#5B6B68"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -294,18 +348,19 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         <div className="lm" onClick={() => { window.location.href = detailLink; }}>
           <h3>
             <Link href={detailLink} onClick={(e) => e.stopPropagation()}>
-              {property?.testproje?.trim() ? property.testproje : 'Yeni Konut Projesi'}
+              {projectName}
             </Link>
           </h3>
           <p className="ln">
-            {property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'} · {deliveryText}
+            {[locationText, badgeLabel, deliveryText].filter(Boolean).join(' · ')}
           </p>
+          <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} />
 
           {listGroupArray.length > 0 && (
             <div className="tbl">
               {listGroupArray.slice(0, 4).map((g, idx) => {
                 const areaStr = g.minArea > 0 ? (g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`) : '';
-                const prcStr = g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL'den` : 'Fiyat sorunuz';
+                const prcStr = isReference ? 'Onay bekliyor' : (g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL'den` : 'Fiyat sorunuz');
                 const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
 
                 return (
@@ -326,18 +381,32 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
 
         {/* Колонка 3: Цена и кнопка WhatsApp (220px) */}
         <div className="lr">
-          <div>
-            <p className="ln" style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px 0' }}>
-              {selectedRooms.length === 1 ? `${selectedRooms[0]} için` : 'başlangıç'}
-            </p>
-            <p className="pc">{cardPrice || 'Fiyat Belirtilmemiş'}</p>
-          </div>
-          <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="wa" onClick={(e) => e.stopPropagation()}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
-            </svg>
-            <span>WhatsApp</span>
-          </a>
+          {isReference ? (
+            <>
+              <p style={refNoteStyle}>Fiyat bilgisi geliştiriciden onay bekliyor</p>
+              <Link href={detailLink} className="wa" style={{ background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56' }}>
+                <span>Detaylar</span>
+              </Link>
+              <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#0F6E56', textAlign: 'center', marginTop: 6 }}>
+                Projenin sahibi misiniz?
+              </a>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="ln" style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px 0' }}>
+                  {selectedRooms.length === 1 ? `${selectedRooms[0]} için` : 'başlangıç'}
+                </p>
+                <p className="pc">{cardPrice || 'Fiyat sorunuz'}</p>
+              </div>
+              <a href={finalWaLink} target="_blank" rel="noopener noreferrer" className="wa" onClick={(e) => e.stopPropagation()}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+                </svg>
+                <span>WhatsApp</span>
+              </a>
+            </>
+          )}
         </div>
       </article>
     );
@@ -345,12 +414,13 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
 
   // === 2. РЕЖИМ ПЛИТКИ (GRID) ===
   return (
-    <article className="custom-card" data-id={property?.id}>
+    <article className="custom-card" data-id={property?.id} style={isReference ? undefined : { outline: '2px solid #0F6E56', outlineOffset: -2 }}>
       {/* 1. БЛОК ФОТОГРАФИИ (клик открывает полноэкранный просмотр фото) */}
       <div 
         className="img-container" 
-        onClick={() => onImageClick && onImageClick(photos, currentSlide)}
-        title="Büyük görseli incele"
+        onClick={() => !isReference && onImageClick && onImageClick(photos, currentSlide)}
+        title={isReference ? undefined : 'Büyük görseli incele'}
+        style={isReference ? { cursor: 'default' } : undefined}
       >
         {/* Кнопка Избранного (сердечко в белом кругляшке как в прототипе) */}
         <button 
@@ -365,7 +435,9 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         </button>
 
         {/* Слайдер фотографий прямо в карточке */}
-        {photos.length > 0 ? (
+        {isReference ? (
+          <ReferenceCover area={locationText} />
+        ) : photos.length > 0 ? (
           <div className="slider-track" style={{ transform: 'translateX(-' + (currentSlide * 100) + '%)' }}>
             {photos.map((url, idx) => (
               <div 
@@ -387,6 +459,9 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
        {/* Бейдж статуса (Золотой для Devam ediyor / Изумрудный для Tamamlandı) */}
         <span className={`bdg-pill ${isCompleted ? 'bdg-completed' : 'bdg-active'}`}>
           {badgeLabel}
+        </span>
+        <span style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 3, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: isReference ? 'rgba(255,255,255,.9)' : '#04342C', color: isReference ? '#5B6B68' : '#E1F5EE' }}>
+          {isReference ? 'Bilgi kartı' : '✓ Onaylı proje'}
         </span>
 
         {/* Стрелочки переключения фото в изумрудных цветах сайта */}
@@ -421,18 +496,24 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
       >
         {/* Название проекта (ровно 2 строки, не пляшет по высоте) */}
        <h3 className="card-title-modern">
-          {property?.testproje?.trim() ? property.testproje : 'Yeni Konut Projesi'}
+          {projectName}
         </h3>
 
-        {/* Цена (крупная изумрудная 22px) */}
-        <p className="card-price-modern">
-          {cardPrice || 'Fiyat Belirtilmemiş'}
-        </p>
+        {isReference ? (
+          <p style={refNoteStyle}>Fiyat bilgisi geliştiriciden onay bekliyor</p>
+        ) : (
+          <>
+            {/* Цена (крупная изумрудная 22px) */}
+            <p className="card-price-modern">
+              {cardPrice || 'Fiyat sorunuz'}
+            </p>
 
-        {/* Подстрочник для комнат (зеленый 13px как в прототипе) */}
-        <p className="card-price-note">
-          {selectedRooms.length === 1 ? `${selectedRooms[0]} için başlangıç fiyatı` : ''}
-        </p>
+            {/* Подстрочник для комнат (зеленый 13px как в прототипе) */}
+            <p className="card-price-note">
+              {selectedRooms.length === 1 ? `${selectedRooms[0]} için başlangıç fiyatı` : ''}
+            </p>
+          </>
+        )}
 
         {/* Строка планировок и квадратуры */}
         {/* Строка планировок + кнопка со стрелочкой (если 2 и более планировки) */}
@@ -492,7 +573,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
 
           return (
             <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="lay-h">Planlar ve fiyatlar (başlangıç)</div>
+              <div className="lay-h">{isReference ? 'Planlar' : 'Planlar ve fiyatlar (başlangıç)'}</div>
               {groupList.map((g, idx) => {
                 // Метраж в формате "52–94 m²" или "85 m²"
                 let areaString = '';
@@ -501,7 +582,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
                 }
 
                 // Цена без 'den строго в TL (как в прототипе)
-                const priceString = g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz';
+                const priceString = isReference ? 'Onay bekliyor' : (g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz');
 
                 // Подсветка строки, если комната выбрана в фильтре
                 const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
@@ -518,33 +599,35 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
           );
         })()}
 
-       {/* Строка района и срока сдачи */}
+       {/* Шкала стройки, район и срок сдачи */}
+        <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} />
         <p className="card-line-sub">
-          <span>{property?.district || property?.['İlçe/Semt'] || property?.city || 'Ankara'}</span>
-          <span> · </span>
-          <span>
-            {(() => {
-              const rawYr = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
-              const yrMatch = rawYr.match(/\b(20\d\d)\b/) || String(property?.Açıklama || '').match(/\b(202\d)\b/);
-              if (yrMatch) return `Teslim ${yrMatch[1]}`;
-              if (cleanStatus === 'tamamlandı') return 'Teslim hazır';
-              return 'Ankara';
-            })()}
-          </span>
+          <span>{[locationText, deliveryText].filter(Boolean).join(' · ')}</span>
         </p>
         {/* Кнопка WhatsApp на всю ширину (клик по ней открывает чат, а не страницу проекта) */}
-        <a 
-          href={finalWaLink} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="card-wa-full-btn"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
-          </svg>
-          <span>WhatsApp</span>
-        </a>
+        {isReference ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 8 }}>
+            <Link href={detailLink} className="card-wa-full-btn" style={{ background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', flex: 1 }} onClick={(e) => e.stopPropagation()}>
+              <span>Detaylar</span>
+            </Link>
+            <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, color: '#0F6E56', whiteSpace: 'nowrap' }}>
+              Projenin sahibi misiniz?
+            </a>
+          </div>
+        ) : (
+          <a 
+            href={finalWaLink} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="card-wa-full-btn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+            </svg>
+            <span>WhatsApp</span>
+          </a>
+        )}
       </div>
     </article>
   );

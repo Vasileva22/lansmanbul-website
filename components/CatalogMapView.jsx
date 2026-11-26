@@ -72,7 +72,7 @@ export default function CatalogMapView({ properties = [] }) {
           }
 
           if (!isNaN(lat) && !isNaN(lon)) {
-            const shortPrice = formatShortPrice(property.Fiyat);
+            const shortPrice = property.is_reference ? 'Bilgi' : formatShortPrice(property.Fiyat);
 
             const placemark = new window.ymaps.Placemark(
               [lat, lon],
@@ -273,7 +273,7 @@ export default function CatalogMapView({ properties = [] }) {
 
           {/* Цена */}
           <p className="pc" style={{ margin: '4px 0 6px 0', fontSize: 19 }}>
-            {formatPriceFull(selectedProperty.Fiyat)}
+            {selectedProperty.is_reference ? 'Fiyat bilgisi onay bekliyor' : formatPriceFull(selectedProperty.Fiyat)}
           </p>
 
           {/* Строка комнат + стрелочка планировок */}
@@ -311,7 +311,7 @@ export default function CatalogMapView({ properties = [] }) {
                 if (g.minArea > 0 && g.maxArea > 0) {
                   aStr = g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`;
                 }
-                const pStr = g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz';
+                const pStr = selectedProperty.is_reference ? 'Onay bekliyor' : (g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz');
 
                 return (
                   <div key={idx} className="tr" style={{ padding: '4px 8px', fontSize: 12 }}>
@@ -329,7 +329,12 @@ export default function CatalogMapView({ properties = [] }) {
             {selectedProperty.district || selectedProperty['İlçe/Semt'] || selectedProperty.city || 'Ankara'} · {deliveryText}
           </p>
 
-          {/* Кнопка WhatsApp */}
+          {/* Кнопка WhatsApp (у справочной карточки — переход к деталям) */}
+          {selectedProperty.is_reference ? (
+            <a href={'/properties/' + selectedProperty.id} className="wa" style={{ marginTop: 10, padding: 9, fontSize: 13.5, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56' }}>
+              <span>Detaylar</span>
+            </a>
+          ) : (
           <a 
             href={finalWaLink} 
             target="_blank" 
@@ -342,6 +347,7 @@ export default function CatalogMapView({ properties = [] }) {
             </svg>
             <span>WhatsApp</span>
           </a>
+          )}
         </div>
       )}
     </div>

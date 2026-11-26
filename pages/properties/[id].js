@@ -170,6 +170,9 @@ export default function PropertyDetail({ property, error, adminPreview = false }
   const planPhotosList = images.flatMap(img => parseJsonbPhotos(img?.planfoto));
   const planPhoto = planPhotosList.length > 0 ? planPhotosList[0] : null;
   const constructionPhotos = images.flatMap(img => parseJsonbPhotos(img?.Construction));
+  // Справочная карточка: без цен, фото и кнопок продажи (данные уже вырезаны на сервере)
+  const isReference = property.is_reference === true;
+  const claimWaLink = `https://wa.me/905459418536?text=${encodeURIComponent(`Merhaba, lansmanbul.com'daki "${property.testproje || ''}" projesinin yetkilisiyim. Sayfayı onaylamak ve fiyat/fotoğraf eklemek istiyorum.`)}`;
 
   // === НОВОЕ: Чтение JSON планировок из базы ===
   const layouts = (() => {
@@ -336,6 +339,19 @@ export default function PropertyDetail({ property, error, adminPreview = false }
             {/* ЛЕВАЯ КОЛОНКА */}
             <div className="lg:col-span-2 space-y-8">
               
+              {/* Справочная карточка: вместо фото — пояснение */}
+              {isReference && (
+                <section style={{ background: '#E1F5EE', color: '#085041', borderRadius: 16, padding: '36px 24px', textAlign: 'center' }}>
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ margin: '0 auto 10px', display: 'block' }}>
+                    <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
+                  </svg>
+                  <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>{property['İlçe/Semt'] || property.city}</div>
+                  <div style={{ fontSize: 14, maxWidth: 460, margin: '0 auto', lineHeight: 1.5 }}>
+                    Bu bir bilgi kartıdır. Fotoğraflar, fiyatlar ve satış koşulları geliştirici firma onayladıktan sonra yayınlanır.
+                  </div>
+                </section>
+              )}
+
               {/* СЛАЙДЕР С ТАМБНЕЙЛАМИ */}
               {galleryPhotos.length > 0 && (
                 <section className="space-y-3">
@@ -466,7 +482,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
               {property.is_project && layouts.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   <h2 className="text-lg font-black text-slate-800 border-b border-slate-100 pb-3 mb-4">Kullanılabilir Daire Tipleri</h2>
-                  <p className="text-sm text-slate-500 mb-5">Projede sunulan tüm daire seçenekleri и планировки:</p>
+                  <p className="text-sm text-slate-500 mb-5">Projede sunulan tüm daire seçenekleri ve planları:</p>
                   
                   <div className="space-y-3">
                     {layouts.map((layout, idx) => {
@@ -495,7 +511,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
 
                             <div className="flex items-center gap-4">
                               <span className={`text-sm font-black ${isSold ? 'text-red-500' : 'text-[#00A4A6]'}`}>
-                                {isSold ? 'Satıldı' : formatPrice(layout.price, true)}
+                                {isSold ? 'Satıldı' : (isReference ? 'Onay bekliyor' : formatPrice(layout.price, true))}
                               </span>
                               {!isSold && (
                                 <svg 
@@ -528,17 +544,19 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                               
                               <div className="flex-1 space-y-3">
                                 <h4 className="text-sm font-extrabold text-slate-800">{layout.rooms} Daire Plan Detayları</h4>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                  Bu daire tipi {layout.area} m² kullanım alanına sahiptir. Fiyatlar {formatPrice(layout.price, true)} başlamaktadır. Güncel boş kat listesi için doğrudan müteahhit ile WhatsApp üzerinden iletişime geçebilirsiniz.
+ <p className="text-xs text-slate-500 leading-relaxed">
+                                  {isReference
+                                    ? `Bu daire tipi ${layout.area} m² kullanım alanına sahiptir. Fiyat bilgisi geliştirici onayından sonra yayınlanır.`
+                                    : `Bu daire tipi ${layout.area} m² kullanım alanına sahiptir. Fiyatlar ${formatPrice(layout.price, true)} başlamaktadır. Güncel boş kat listesi için doğrudan müteahhit ile WhatsApp üzerinden iletişime geçebilirsiniz.`}
                                 </p>
-                                <a 
+                                {!isReference && (<a 
                                   href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Merhaba, ${property.testproje || ''} projesindeki ${layout.rooms} tipi daireler hakkında detaylı bilgi alabilir miyim?`)}`}
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#25D366] text-white text-xs font-bold rounded-lg hover:bg-[#20ba5a] transition text-decoration-none uppercase tracking-wider shadow-sm"
                                 >
                                   WhatsApp'tan Kat Sor
-                                </a>
+                                </a>)}
                               </div>
                             </div>
                           )}
@@ -682,6 +700,21 @@ export default function PropertyDetail({ property, error, adminPreview = false }
             {/* ПРАВАЯ СТИКИ-КОЛОНКА (САЙДБАР) */}
             <div className="lg:col-span-1 luxe-sticky-sidebar">
               <div className="bg-white p-6 rounded-3xl shadow-[0_15px_45px_rgba(0,0,0,0.06)] border border-slate-100 space-y-6">
+                {isReference ? (
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Bilgi kartı</span>
+                      <div className="text-base font-bold text-slate-700 mt-2 leading-snug">Fiyat bilgisi geliştiriciden onay bekliyor</div>
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                      Bu sayfadaki bilgiler kamuya açık kaynaklardan derlenmiştir. Fiyat, fotoğraf ve satış koşulları geliştirici firma tarafından onaylandığında yayınlanır.
+                    </p>
+                    <a href={claimWaLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 px-4 rounded-xl font-bold text-sm" style={{ border: '1.5px solid #0F6E56', color: '#0F6E56' }}>
+                      Projenin sahibi misiniz? Sayfayı onaylayın
+                    </a>
+                  </div>
+                ) : (
+                <>
                 <div>
                   <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
                   <div className="text-3xl font-black text-[#00A4A6] mt-1">
@@ -706,11 +739,10 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   <div className="flex justify-between text-sm items-center">
                     <span className="text-gray-500 font-medium mr-2">Kredi Durumu</span>
                     <span className={`font-bold text-right shrink-0 whitespace-nowrap ${
-                      property.Kredi_Durumu?.toLowerCase().includes('uygun değil') || property.Kredi_Durumu?.toLowerCase().includes('değil')
-                        ? 'text-red-500' 
-                        : 'text-green-600'
+                      !property.Kredi_Durumu ? 'text-slate-400'
+                        : property.Kredi_Durumu.toLowerCase().includes('değil') ? 'text-red-500' : 'text-green-600'
                     }`}>
-                      {property.Kredi_Durumu || 'Krediye Uygun Değil'}
+                      {property.Kredi_Durumu || 'Belirtilmemiş'}
                     </span>
                   </div>
                 </div>
@@ -722,12 +754,10 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                       <span className="font-bold opacity-90 text-[10px] mt-0.5 text-white">Bilgi Al</span>
                     </span>
                   </a>
-                  
-                  {/* ИСПРАВЛЕННЫЙ БРЕНД СНОСКИ LANSMANBUL */}
-                  <p className="text-center text-[10px] text-gray-400 mt-2 leading-relaxed">
-                    Tıklama sayınız <strong className="text-slate-500 font-bold">LansmanBul</strong> güvencesiyle kaydedilmektedir.
-                  </p>
+
                 </div>
+                </>
+                )}
               </div>
             </div>
 
