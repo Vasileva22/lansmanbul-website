@@ -15,15 +15,24 @@ function daysAgoText(iso) {
   return `${months} ay önce güncellendi`;
 }
 
-export function StageBar({ stage, updatedAt, deliveryText }) {
-  const idx = STAGE_ORDER.indexOf(stage);
-  if (idx < 0) return null;
-  const parts = [STAGE_LABELS[stage], daysAgoText(updatedAt), deliveryText].filter(Boolean);
+export function StageBar({ stage, updatedAt, deliveryText, projectStatus }) {
+  let idx = STAGE_ORDER.indexOf(stage);
+  let label = STAGE_LABELS[stage];
+  let inProgress = false; // точный этап неизвестен, но стройка идёт
+  if (idx < 0) {
+    const st = String(projectStatus || '').toLowerCase();
+    if (st.includes('tamam')) { idx = 4; label = 'Teslim edildi'; }
+    else if (st.includes('lansman')) { idx = 0; label = 'Lansman'; }
+    else if (st.includes('devam')) { idx = 0; inProgress = true; label = 'İnşaat devam ediyor'; }
+    else return null;
+    updatedAt = null;
+  }
+  const parts = [label, daysAgoText(updatedAt), deliveryText].filter(Boolean);
   return (
     <div style={{ margin: '8px 0 6px' }} title="İnşaat aşaması">
       <div style={{ display: 'flex', gap: 3 }}>
         {STAGE_ORDER.map((st, i) => (
-          <div key={st} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= idx ? '#0F6E56' : '#dfe5e3' }} />
+          <div key={st} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= idx ? '#0F6E56' : (inProgress && i < 4 ? 'repeating-linear-gradient(90deg, #9FE1CB 0 6px, #dfe5e3 6px 10px)' : '#dfe5e3') }} />
         ))}
       </div>
       <div style={{ fontSize: 12, color: '#5B6B68', marginTop: 4 }}>{parts.join(' · ')}</div>
@@ -354,7 +363,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
           <p className="ln">
             {[locationText, badgeLabel, deliveryText].filter(Boolean).join(' · ')}
           </p>
-          <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} />
+          <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} projectStatus={property?.konutcesit} />
 
           {listGroupArray.length > 0 && (
             <div className="tbl">
@@ -460,9 +469,11 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         <span className={`bdg-pill ${isCompleted ? 'bdg-completed' : 'bdg-active'}`}>
           {badgeLabel}
         </span>
-        <span style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 3, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: isReference ? 'rgba(255,255,255,.9)' : '#04342C', color: isReference ? '#5B6B68' : '#E1F5EE' }}>
-          {isReference ? 'Bilgi kartı' : '✓ Onaylı proje'}
-        </span>
+        {!isReference && (
+          <span style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 3, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: '#04342C', color: '#E1F5EE' }}>
+            ✓ Onaylı proje
+          </span>
+        )}
 
         {/* Стрелочки переключения фото в изумрудных цветах сайта */}
         {photos.length > 1 && (
@@ -495,9 +506,14 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         }}
       >
         {/* Название */}
-        <h3 className="card-title-modern">
-          {projectName}
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <h3 className="card-title-modern" style={{ margin: 0 }}>
+            {projectName}
+          </h3>
+          {isReference && (
+            <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, background: '#f1f5f4', color: '#5B6B68', marginTop: 2 }}>Bilgi kartı</span>
+          )}
+        </div>
 
         {/* Застройщик */}
         <p style={{ fontSize: 13, color: '#5B6B68', margin: '2px 0 0' }}>
@@ -514,13 +530,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         </p>
 
         {/* Шкала стройки + срок сдачи */}
-        {property?.construction_stage ? (
-          <StageBar stage={property.construction_stage} updatedAt={property?.stage_updated_at} deliveryText={deliveryText} />
-        ) : (
-          <p style={{ fontSize: 12, color: '#5B6B68', margin: '8px 0 6px' }}>
-            {[badgeLabel, deliveryText].filter(Boolean).join(' · ')}
-          </p>
-        )}
+        <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} deliveryText={deliveryText} projectStatus={property?.konutcesit} />
 
         {/* Планировки и площадь — плашками; стрелка раскрывает все планы */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '4px 0 8px' }}>
@@ -588,8 +598,8 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         {/* Кнопки */}
         {isReference ? (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 'auto' }}>
-            <Link href={detailLink} className="card-wa-full-btn" style={{ background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', flex: 1 }} onClick={(e) => e.stopPropagation()}>
-              <span>Detaylar</span>
+            <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', fontWeight: 700, fontSize: 14, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+              Detaylar
             </Link>
             <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, color: '#0F6E56', whiteSpace: 'nowrap' }}>
               Projenin sahibi misiniz?
@@ -610,8 +620,8 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
               </svg>
               <span>WhatsApp</span>
             </a>
-            <Link href={detailLink} className="card-wa-full-btn" style={{ background: '#fff', color: '#1f2d2a', border: '1px solid #d6dedc', flex: 1 }} onClick={(e) => e.stopPropagation()}>
-              <span>Detaylar</span>
+            <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#1f2d2a', border: '1px solid #d6dedc', fontWeight: 700, fontSize: 14, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+              Detaylar
             </Link>
           </div>
         )}
