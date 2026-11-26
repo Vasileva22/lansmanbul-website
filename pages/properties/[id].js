@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
 import { toCardShape } from '../../lib/projects';
+import { LISTING_STATUSES } from '../../lib/adminFields';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 // --- НАЧАЛО ВСТАВКИ: Иконки и парсинг ---
@@ -26,7 +27,7 @@ const parseNewLocation = (str) => {
 };
 // --- КОНЕЦ ВСТАВКИ ---
 
-export default function PropertyDetail({ property, error }) {
+export default function PropertyDetail({ property, error, adminPreview = false }) {
   const router = useRouter();
 
   // Безопасный парсинг фото
@@ -290,6 +291,12 @@ export default function PropertyDetail({ property, error }) {
       </Head>
 
       <Header setFilters={() => {}} />
+      {adminPreview && (
+        <div style={{ position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: '#064e3b', color: '#fff', padding: '10px 18px', borderRadius: 999, fontSize: 13, fontWeight: 700, boxShadow: '0 8px 30px rgba(0,0,0,.25)', display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span>Режим администратора · статус: {(LISTING_STATUSES.find((x) => x.value === property.listing_status) || {}).label || property.listing_status}</span>
+          <a href={'/admin/projects/' + property.id} style={{ color: '#e7d3a7', textDecoration: 'underline' }}>Изменить</a>
+        </div>
+      )}
 
       <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12">
         <div className="max-w-[1400px] mx-auto px-5">
@@ -872,36 +879,27 @@ export default function PropertyDetail({ property, error }) {
 export async function getServerSideProps(context) {
   const { id } = context.params;
 
+  // Администратор видит любую карточку (черновики, архив) — для предпросмотра
+  const { isAdminRequest } = await import('../../lib/adminAuth');
+  const adminPreview = isAdminRequest(context.req);
+
   try {
-    const { data: property, error } = await supabase
-      .from('properties')
-      .select('*, property_images(*)')
-      .eq('id', id)
-      .neq('listing_status', 'archived')
-      .single();
+    let query;
+    if (adminPreview) {
+      const { getSupabaseAdmin } = await import('../../lib/supabaseAdmin');
+      query = getSupabaseAdmin().from('properties').select('*, property_images(*)').eq('id', id);
+    } else {
+      query = supabase.from('properties').select('*, property_images(*)').eq('id', id).neq('listing_status', 'archived');
+    }
+    const { data: property, error } = await query.single();
 
     if (error || !property) {
-      return {
-        props: {
-          property: null,
-          error: true,
-        },
-      };
+      return { props: { property: null, error: true } };
     }
 
-    return {
-      props: {
-        property: toCardShape(property),
-        error: false,
-      },
-    };
+    return { props: { property: toCardShape(property), error: false, adminPreview } };
   } catch (err) {
     console.error('Server side props error:', err);
-    return {
-      props: {
-        property: null,
-        error: true,
-      },
-    };
+    return { props: { property: null, error: true } };
   }
 }
