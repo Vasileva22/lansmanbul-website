@@ -5,6 +5,7 @@ import { requireAdminPage } from '../../lib/adminAuth';
 import { getSupabaseAdmin } from '../../lib/supabaseAdmin';
 import { LISTING_STATUSES } from '../../lib/adminFields';
 import { formatTL, formatDelivery } from '../../lib/projects';
+import { APPROVAL_STATUS_LABELS } from '../../lib/approvals';
 
 const cell = { padding: '12px 14px', borderBottom: '1px solid #e5e7eb', fontSize: 14, verticalAlign: 'middle' };
 
@@ -13,8 +14,9 @@ export default function AdminHome({ projects }) {
   const [query, setQuery] = useState('');
 
   const counts = useMemo(() => {
-    const c = { active: 0 };
+    const c = { active: 0, to_review: 0 };
     for (const p of projects) {
+      if (p.approval_status === 'approved' || p.approval_status === 'needs_changes') c.to_review += 1;
       c[p.listing_status] = (c[p.listing_status] || 0) + 1;
       if (p.listing_status !== 'archived') c.active += 1;
     }
@@ -24,14 +26,15 @@ export default function AdminHome({ projects }) {
   const visible = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr');
     return projects.filter((p) => {
-      if (tab === 'active' && p.listing_status === 'archived') return false;
-      if (tab !== 'active' && p.listing_status !== tab) return false;
+      if (tab === 'to_review') { if (!['approved', 'needs_changes'].includes(p.approval_status)) return false; }
+      else if (tab === 'active') { if (p.listing_status === 'archived') return false; }
+      else if (p.listing_status !== tab) return false;
       if (!q) return true;
       return [p.name, p.district, p.neighborhood].filter(Boolean).join(' ').toLocaleLowerCase('tr').includes(q);
     });
   }, [projects, tab, query]);
 
-  const tabs = [{ value: 'active', label: 'Все рабочие' }, ...LISTING_STATUSES];
+  const tabs = [{ value: 'active', label: 'Все рабочие' }, { value: 'to_review', label: '⚑ Ответили застройщики' }, ...LISTING_STATUSES];
 
   return (
     <AdminLayout title="Проекты">
@@ -87,7 +90,14 @@ export default function AdminHome({ projects }) {
                   <div style={{ fontSize: 12, color: '#94a3b8' }}>#{p.id}{p.source_name ? ` · ${p.source_name}` : ''}</div>
                 </td>
                 <td style={cell}>{[p.district, p.neighborhood].filter(Boolean).join(', ') || '—'}</td>
-                <td style={cell}><StatusBadge status={p.listing_status} statuses={LISTING_STATUSES} /></td>
+                <td style={cell}>
+                  <StatusBadge status={p.listing_status} statuses={LISTING_STATUSES} />
+                  {p.approval_status && (
+                    <div style={{ fontSize: 11, marginTop: 4, color: (APPROVAL_STATUS_LABELS[p.approval_status] || {}).color }}>
+                      {(APPROVAL_STATUS_LABELS[p.approval_status] || {}).label}
+                    </div>
+                  )}
+                </td>
                 <td style={cell}>{formatTL(p.price_min) || '—'}</td>
                 <td style={cell}>{formatDelivery(p.delivery_year, p.delivery_month) || '—'}</td>
                 <td style={{ ...cell, textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -110,9 +120,13 @@ export async function getServerSideProps(context) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('properties')
-    .select('id, name, district, neighborhood, listing_status, price_min, delivery_year, delivery_month, source_name, updated_at')
+    .select('id, name, district, neighborhood, listing_status, price_min, delivery_year, delivery_month, source_name, updated_at, project_approvals(status, sent_at)')
     .order('id', { ascending: false });
 
   if (error) console.error('[admin] list error', error.message);
-  return { props: { projects: data || [] } };
+  const projects = (data || []).map(({ project_approvals: ap, ...p }) => {
+    const latest = (ap || []).sort((a, b) => String(b.sent_at).localeCompare(String(a.sent_at)))[0];
+    return { ...p, approval_status: latest?.status || null };
+  });
+  return { props: { projects } };
 }

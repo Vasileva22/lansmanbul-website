@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import AdminLayout, { StatusBadge } from '../../../components/admin/AdminLayout';
+import ApprovalPanel from '../../../components/admin/ApprovalPanel';
+import { siteOrigin } from '../../../lib/approvals';
 import { requireAdminPage } from '../../../lib/adminAuth';
 import { getSupabaseAdmin } from '../../../lib/supabaseAdmin';
 import { FIELD_GROUPS, ALL_FIELDS, LISTING_STATUSES, toFormValue } from '../../../lib/adminFields';
@@ -49,7 +51,7 @@ function Field({ field, value, onChange, error, developers = [] }) {
   );
 }
 
-export default function EditProject({ project, developers }) {
+export default function EditProject({ project, developers, approvals, origin }) {
   const initial = Object.fromEntries(ALL_FIELDS.map((f) => [f.key, toFormValue(f, project[f.key])]));
   const [values, setValues] = useState(initial);
   const [savedValues, setSavedValues] = useState(initial);
@@ -105,6 +107,20 @@ export default function EditProject({ project, developers }) {
           </div>
         </div>
 
+        <ApprovalPanel
+          projectId={project.id}
+          projectName={values.name}
+          approvals={approvals}
+          origin={origin}
+          onLinkCreated={() => {
+            // ссылка переводит проект в «Ждёт одобрения» — синхронизируем форму, чтобы не затереть статус
+            if (values.listing_status !== 'confirmed') {
+              setValues((v) => ({ ...v, listing_status: 'pending_approval' }));
+              setSavedValues((v) => ({ ...v, listing_status: 'pending_approval' }));
+            }
+          }}
+        />
+
         {FIELD_GROUPS.map((group) => (
           <section key={group.title} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 800, margin: '0 0 14px', color: '#064e3b' }}>{group.title}</h2>
@@ -148,5 +164,11 @@ export async function getServerSideProps(context) {
 
   if (error || !data) return { notFound: true };
   const { data: developers } = await supabase.from('developers').select('id, name, is_verified').order('name');
-  return { props: { project: data, developers: developers || [] } };
+  const { data: approvals } = await supabase
+    .from('project_approvals')
+    .select('id, token, status, sent_to_phone, sent_at, opened_at, decided_at, expires_at, approver_name, approver_title, company_name, tax_number, approver_phone, allow_photos, allow_prices, correction_note')
+    .eq('property_id', id)
+    .order('sent_at', { ascending: false })
+    .limit(5);
+  return { props: { project: data, developers: developers || [], approvals: approvals || [], origin: siteOrigin(context.req) } };
 }
