@@ -15,6 +15,7 @@ export default function ApprovalPanel({ projectId, projectName, approvals: initi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false); // двухшаговое подтверждение вместо системного окна
 
   const latest = approvals[0];
   const latestUrl = latest ? `${origin}/onay/${latest.token}` : '';
@@ -33,7 +34,7 @@ export default function ApprovalPanel({ projectId, projectName, approvals: initi
   }
 
   async function publish(id) {
-    if (!confirm('Опубликовать как подтверждённую карточку?')) return;
+    if (!confirmPublish) { setConfirmPublish(true); return; }
     setBusy(true); setError('');
     try {
       const res = await fetch(`/api/admin/approvals/${id}/publish`, { method: 'POST' });
@@ -93,7 +94,10 @@ export default function ApprovalPanel({ projectId, projectName, approvals: initi
             <div style={{ marginTop: 12, padding: 12, background: '#fffbeb', borderRadius: 8, fontSize: 13 }}>
               Перед публикацией проверьте vergi no на <a href="https://ivd.gib.gov.tr/" target="_blank" rel="noopener noreferrer">ivd.gib.gov.tr</a> (Vergi Kimlik Numarası Sorgulama) и что компания действительно строит этот проект.
               <div style={{ marginTop: 10 }}>
-                <button type="button" disabled={busy} onClick={() => publish(latest.id)} style={btn('#059669')}>Проверено — опубликовать</button>
+                <button type="button" disabled={busy} onClick={() => publish(latest.id)} style={btn(confirmPublish ? '#b45309' : '#059669')}>
+                  {confirmPublish ? 'Точно опубликовать? Нажмите ещё раз' : 'Проверено — опубликовать'}
+                </button>
+                {confirmPublish && <button type="button" onClick={() => setConfirmPublish(false)} style={{ ...btn('#fff'), color: '#475569', border: '1px solid #cbd5e1', marginLeft: 8 }}>Отмена</button>}
               </div>
             </div>
           )}
