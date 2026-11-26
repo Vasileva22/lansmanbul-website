@@ -15,15 +15,24 @@ function daysAgoText(iso) {
   return `${months} ay önce güncellendi`;
 }
 
-export function StageBar({ stage, updatedAt, deliveryText }) {
-  const idx = STAGE_ORDER.indexOf(stage);
-  if (idx < 0) return null;
-  const parts = [STAGE_LABELS[stage], daysAgoText(updatedAt), deliveryText].filter(Boolean);
+export function StageBar({ stage, updatedAt, deliveryText, projectStatus }) {
+  let idx = STAGE_ORDER.indexOf(stage);
+  let label = STAGE_LABELS[stage];
+  let inProgress = false; // точный этап неизвестен, но стройка идёт
+  if (idx < 0) {
+    const st = String(projectStatus || '').toLowerCase();
+    if (st.includes('tamam')) { idx = 4; label = 'Teslim edildi'; }
+    else if (st.includes('lansman')) { idx = 0; label = 'Lansman'; }
+    else if (st.includes('devam')) { idx = 0; inProgress = true; label = 'İnşaat devam ediyor'; }
+    else return null;
+    updatedAt = null;
+  }
+  const parts = [label, daysAgoText(updatedAt), deliveryText].filter(Boolean);
   return (
     <div style={{ margin: '8px 0 6px' }} title="İnşaat aşaması">
       <div style={{ display: 'flex', gap: 3 }}>
         {STAGE_ORDER.map((st, i) => (
-          <div key={st} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= idx ? '#0F6E56' : '#dfe5e3' }} />
+          <div key={st} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= idx ? '#0F6E56' : (inProgress && i < 4 ? 'repeating-linear-gradient(90deg, #9FE1CB 0 6px, #dfe5e3 6px 10px)' : '#dfe5e3') }} />
         ))}
       </div>
       <div style={{ fontSize: 12, color: '#5B6B68', marginTop: 4 }}>{parts.join(' · ')}</div>
@@ -354,7 +363,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
           <p className="ln">
             {[locationText, badgeLabel, deliveryText].filter(Boolean).join(' · ')}
           </p>
-          <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} />
+          <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} projectStatus={property?.konutcesit} />
 
           {listGroupArray.length > 0 && (
             <div className="tbl">
@@ -460,9 +469,11 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         <span className={`bdg-pill ${isCompleted ? 'bdg-completed' : 'bdg-active'}`}>
           {badgeLabel}
         </span>
-        <span style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 3, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: isReference ? 'rgba(255,255,255,.9)' : '#04342C', color: isReference ? '#5B6B68' : '#E1F5EE' }}>
-          {isReference ? 'Bilgi kartı' : '✓ Onaylı proje'}
-        </span>
+        {!isReference && (
+          <span style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 3, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: '#04342C', color: '#E1F5EE' }}>
+            ✓ Onaylı proje
+          </span>
+        )}
 
         {/* Стрелочки переключения фото в изумрудных цветах сайта */}
         {photos.length > 1 && (
@@ -487,52 +498,66 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
         )}
       </div>
 
-      {/* 2. ТЕЛО КАРТОЧКИ (КЛИКАБЕЛЬНО ПОЛНОСТЬЮ: КЛИК ПО ЛЮБОМУ МЕСТУ ОТКРЫВАЕТ ПРОЕКТ) */}
+      {/* 2. ТЕЛО КАРТОЧКИ (по утверждённому макету; клик по карточке открывает проект) */}
       <div 
         className="card-content-modern"
         onClick={() => {
           window.location.href = detailLink;
         }}
       >
-        {/* Название проекта (ровно 2 строки, не пляшет по высоте) */}
-       <h3 className="card-title-modern">
-          {projectName}
-        </h3>
+        {/* Название */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <h3 className="card-title-modern" style={{ margin: 0 }}>
+            {projectName}
+          </h3>
+          {isReference && (
+            <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, background: '#f1f5f4', color: '#5B6B68', marginTop: 2 }}>Bilgi kartı</span>
+          )}
+        </div>
 
-        {isReference ? (
-          <p style={refNoteStyle}>Fiyat bilgisi geliştiriciden onay bekliyor</p>
-        ) : (
-          <>
-            {/* Цена (крупная изумрудная 22px) */}
-            <p className="card-price-modern">
-              {cardPrice || 'Fiyat sorunuz'}
-            </p>
+        {/* Застройщик */}
+        <p style={{ fontSize: 13, color: '#5B6B68', margin: '2px 0 0' }}>
+          {property?.developer?.name ? (
+            <>
+              {property.developer.name}
+              {property.developer.is_verified && (
+                <span style={{ color: '#0F6E56', fontWeight: 700, marginLeft: 6, whiteSpace: 'nowrap' }}>✓ Doğrulanmış firma</span>
+              )}
+            </>
+          ) : (
+            'Geliştirici: belirtilmemiş'
+          )}
+        </p>
 
-            {/* Подстрочник для комнат (зеленый 13px как в прототипе) */}
-            <p className="card-price-note">
-              {selectedRooms.length === 1 ? `${selectedRooms[0]} için başlangıç fiyatı` : ''}
-            </p>
-          </>
-        )}
+        {/* Шкала стройки + срок сдачи */}
+        <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} deliveryText={deliveryText} projectStatus={property?.konutcesit} />
 
-        {/* Строка планировок и квадратуры */}
-        {/* Строка планировок + кнопка со стрелочкой (если 2 и более планировки) */}
-        <div className="lay-row">
-          <p className="card-line-meta">
-            {cardRooms ? `${cardRooms}` : ''}
-            {cardArea ? ` · ${cardArea}${!String(cardArea).includes('m²') ? ' m²' : ''}` : ''}
-          </p>
-
+        {/* Планировки и площадь — плашками; стрелка раскрывает все планы */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          {(selectedRooms.length === 1 ? [cardRooms] : String(cardRooms || '').split(/\s*[·,]\s*/)).filter(Boolean).map((r) => (
+            <span key={r} style={{ fontSize: 12, padding: '3px 8px', border: '1px solid #d6dedc', borderRadius: 6, color: '#1f2d2a' }}>{r}</span>
+          ))}
+          {cardArea && (
+            <span style={{ fontSize: 12, padding: '3px 8px', border: '1px solid #d6dedc', borderRadius: 6, color: '#1f2d2a' }}>
+              {String(cardArea).replace(" m²'den", '')}{!String(cardArea).includes('m²') ? ' m²' : ''}
+            </span>
+          )}
+          {!isReference && (property?.Ilk_Pesinat || property?.Vade_Secenegi || property?.Kredi_Durumu) && (
+            <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, background: '#FAEEDA', color: '#633806' }}>
+              {[property.Ilk_Pesinat && `${property.Ilk_Pesinat} peşin`, property.Vade_Secenegi && property.Vade_Secenegi.replace(' Vade', ''), property.Kredi_Durumu].filter(Boolean).join(' · ').replace(/Ay/g, 'ay').replace(/Faiz/g, 'faiz')}
+            </span>
+          )}
           {layouts && layouts.length >= 2 && (
             <button 
               type="button" 
               className="lay-btn" 
               aria-expanded={isExpanded}
               onClick={(e) => {
-                e.stopPropagation(); // Не переходить на страницу проекта
+                e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
-              title="Planları ve fiyatları göster"
+              title={isReference ? 'Planları göster' : 'Planları ve fiyatları göster'}
+              style={{ marginLeft: 'auto' }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m6 9 6 6 6-6"/>
@@ -541,92 +566,64 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
           )}
         </div>
 
-       {/* Раскрывающаяся таблица планировок строго по прототипу */}
-        {isExpanded && layouts && layouts.length >= 2 && (() => {
-          // 1. Группируем планировки по типу комнат (1+1, 2+1, 3+1...), собирая min/max площадь и min цену
-          const groups = {};
-          layouts.forEach((u) => {
-            const rawRoom = String(u.rooms || '').replace(/[\r\n]+/g, ' ').trim();
-            const roomType = rawRoom.split(/[-–\s]/)[0].trim() || rawRoom; // Извлекаем "2+1"
-            const areaNum = parseInt(String(u.area || '').replace(/\D/g, '')) || 0;
-            const priceNum = parseInt(String(u.price || '').replace(/\D/g, '')) || 0;
+        {/* Раскрывающаяся таблица планировок */}
+        {isExpanded && layouts && layouts.length >= 2 && (
+          <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="lay-h">{isReference ? 'Planlar' : 'Planlar ve fiyatlar (başlangıç)'}</div>
+            {listGroupArray.map((g, idx) => {
+              const areaString = g.minArea > 0 ? (g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`) : '';
+              const priceString = isReference ? 'Onay bekliyor' : (g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz');
+              const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
+              return (
+                <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
+                  <b>{g.room}</b>
+                  <span>{areaString}</span>
+                  <span>{priceString}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-            if (!groups[roomType]) {
-              groups[roomType] = {
-                room: roomType,
-                minArea: areaNum,
-                maxArea: areaNum,
-                minPrice: priceNum
-              };
-            } else {
-              if (areaNum > 0) {
-                if (groups[roomType].minArea === 0 || areaNum < groups[roomType].minArea) groups[roomType].minArea = areaNum;
-                if (areaNum > groups[roomType].maxArea) groups[roomType].maxArea = areaNum;
-              }
-              if (priceNum > 0) {
-                if (groups[roomType].minPrice === 0 || priceNum < groups[roomType].minPrice) groups[roomType].minPrice = priceNum;
-              }
-            }
-          });
-
-          const groupList = Object.values(groups);
-
-          return (
-            <div className="lay-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="lay-h">{isReference ? 'Planlar' : 'Planlar ve fiyatlar (başlangıç)'}</div>
-              {groupList.map((g, idx) => {
-                // Метраж в формате "52–94 m²" или "85 m²"
-                let areaString = '';
-                if (g.minArea > 0 && g.maxArea > 0) {
-                  areaString = g.minArea === g.maxArea ? `${g.minArea} m²` : `${g.minArea}–${g.maxArea} m²`;
-                }
-
-                // Цена без 'den строго в TL (как в прототипе)
-                const priceString = isReference ? 'Onay bekliyor' : (g.minPrice > 0 ? `${g.minPrice.toLocaleString('tr-TR')} TL` : 'Fiyat sorunuz');
-
-                // Подсветка строки, если комната выбрана в фильтре
-                const isMatched = selectedRooms.some(r => g.room.includes(r.replace(' ve üzeri', '').trim()));
-
-                return (
-                  <div key={idx} className={`tr ${isMatched ? 'on' : ''}`}>
-                    <b>{g.room}</b>
-                    <span>{areaString}</span>
-                    <span>{priceString}</span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
-
-       {/* Шкала стройки, район и срок сдачи */}
-        <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} />
-        <p className="card-line-sub">
-          <span>{[locationText, deliveryText].filter(Boolean).join(' · ')}</span>
-        </p>
-        {/* Кнопка WhatsApp на всю ширину (клик по ней открывает чат, а не страницу проекта) */}
+        {/* Цена или честная плашка */}
         {isReference ? (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 8 }}>
-            <Link href={detailLink} className="card-wa-full-btn" style={{ background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', flex: 1 }} onClick={(e) => e.stopPropagation()}>
-              <span>Detaylar</span>
+          <p style={refNoteStyle}>Fiyat bilgisi geliştiriciden onay bekliyor</p>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, margin: '6px 0 8px' }}>
+            <span className="card-price-modern" style={{ margin: 0 }}>{cardPrice || 'Fiyat sorunuz'}</span>
+            {selectedRooms.length === 1 && <span style={{ fontSize: 12, color: '#0F6E56' }}>{selectedRooms[0]} için</span>}
+          </div>
+        )}
+
+        {/* Кнопки */}
+        {isReference ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 'auto' }}>
+            <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', fontWeight: 700, fontSize: 14, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+              Detaylar
             </Link>
             <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, color: '#0F6E56', whiteSpace: 'nowrap' }}>
               Projenin sahibi misiniz?
             </a>
           </div>
         ) : (
-          <a 
-            href={finalWaLink} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="card-wa-full-btn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
-            </svg>
-            <span>WhatsApp</span>
-          </a>
+          <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+            <a 
+              href={finalWaLink} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="card-wa-full-btn"
+              style={{ flex: 1 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
+              </svg>
+              <span>WhatsApp</span>
+            </a>
+            <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#1f2d2a', border: '1px solid #d6dedc', fontWeight: 700, fontSize: 14, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+              Detaylar
+            </Link>
+          </div>
         )}
       </div>
     </article>

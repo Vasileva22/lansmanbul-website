@@ -7,10 +7,17 @@ import { FIELD_GROUPS, ALL_FIELDS, LISTING_STATUSES, toFormValue } from '../../.
 
 const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #cbd5e1', fontSize: 14, background: '#fff', fontFamily: 'inherit' };
 
-function Field({ field, value, onChange, error }) {
+function Field({ field, value, onChange, error, developers = [] }) {
   let control;
   if (field.type === 'textarea') {
     control = <textarea rows={field.key === 'description' ? 8 : 4} value={value} onChange={(e) => onChange(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} />;
+  } else if (field.type === 'developer') {
+    control = (
+      <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
+        <option value="">— не указан —</option>
+        {developers.map((d) => <option key={d.id} value={String(d.id)}>{d.name}{d.is_verified ? ' ✓' : ''}</option>)}
+      </select>
+    );
   } else if (field.type === 'select' || field.type === 'bool3') {
     control = (
       <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
@@ -42,7 +49,7 @@ function Field({ field, value, onChange, error }) {
   );
 }
 
-export default function EditProject({ project }) {
+export default function EditProject({ project, developers }) {
   const initial = Object.fromEntries(ALL_FIELDS.map((f) => [f.key, toFormValue(f, project[f.key])]));
   const [values, setValues] = useState(initial);
   const [savedValues, setSavedValues] = useState(initial);
@@ -103,7 +110,7 @@ export default function EditProject({ project }) {
             <h2 style={{ fontSize: 15, fontWeight: 800, margin: '0 0 14px', color: '#064e3b' }}>{group.title}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
               {group.fields.map((f) => (
-                <Field key={f.key} field={f} value={values[f.key]} onChange={(v) => set(f.key, v)} error={errors[f.key]} />
+                <Field key={f.key} field={f} value={values[f.key]} onChange={(v) => set(f.key, v)} error={errors[f.key]} developers={developers} />
               ))}
             </div>
           </section>
@@ -140,5 +147,6 @@ export async function getServerSideProps(context) {
     .single();
 
   if (error || !data) return { notFound: true };
-  return { props: { project: data } };
+  const { data: developers } = await supabase.from('developers').select('id, name, is_verified').order('name');
+  return { props: { project: data, developers: developers || [] } };
 }

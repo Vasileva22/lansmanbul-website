@@ -27,7 +27,7 @@ export default function FavoritesPage() {
       // Запрашиваем только те проекты, чьи ID находятся в массиве избранного
       const { data, error } = await supabase
         .from('properties')
-        .select('*, property_images(*)')
+        .select('*, property_images(*), developer:developers(name, is_verified)')
         .in('id', favIds)
         .neq('listing_status', 'archived');
 
