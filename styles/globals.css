@@ -3470,3 +3470,56 @@ details .chips {
 .mini .wa:hover {
     background: var(--e6, #1F6B61) !important;
 }
+
+/* ==========================================================================
+   ТЕЛЕФОНЫ И ПЛАНШЕТЫ: шапка, главный поиск, полоса преимуществ
+   (раньше у шапки и поиска не было мобильных правил вообще)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .modern-nav { display: none !important; }
+  .contact-phone span { display: none !important; }
+  .header-container { padding: 10px 16px !important; gap: 8px !important; }
+  .logo-text { font-size: 18px !important; }
+  .header-contact { gap: 10px !important; }
+  .mobile-burger-btn {
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    width: 38px !important; height: 38px !important; border-radius: 50% !important;
+    background: rgba(255,255,255,.12) !important; border: 1px solid rgba(255,255,255,.15) !important; cursor: pointer !important;
+  }
+  .burger-icon-svg { width: 20px !important; height: 20px !important; stroke: #fff !important; stroke-width: 2.2 !important; fill: none !important; }
+
+  /* выезжающее меню */
+  .header-mobile-overlay.show {
+    display: block !important; position: fixed !important; inset: 0 !important;
+    background: rgba(4, 52, 44, .45) !important; z-index: 999998 !important;
+  }
+  .mobile-nav-panel {
+    display: block !important; position: fixed !important; top: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: min(320px, 86vw) !important; background: #fff !important; z-index: 999999 !important;
+    padding: 64px 22px 24px !important; box-sizing: border-box !important; overflow-y: auto !important;
+    transform: translateX(105%) !important; transition: transform .25s ease !important;
+    box-shadow: -12px 0 32px rgba(0,0,0,.18) !important;
+  }
+  .mobile-nav-panel.open { transform: translateX(0) !important; }
+  .mobile-nav-close {
+    position: absolute !important; top: 14px !important; right: 18px !important; font-size: 30px !important;
+    line-height: 1 !important; color: #04342C !important; cursor: pointer !important;
+  }
+  .mobile-nav-links { display: flex !important; flex-direction: column !important; gap: 4px !important; }
+  .mobile-nav-item {
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+    padding: 14px 4px !important; font-size: 16px !important; font-weight: 700 !important; color: #04342C !important;
+    text-decoration: none !important; border-bottom: 1px solid #eef2f0 !important;
+  }
+
+  /* главный поиск: в одну колонку, обычная высота кнопки */
+  .hero { padding: 14px 0 16px !important; }
+  .hero h1 { font-size: 22px !important; margin-bottom: 10px !important; }
+  .search { grid-template-columns: 1fr !important; padding: 10px !important; gap: 8px !important; }
+  .search .fld { width: 100% !important; }
+  .search .go { padding: 14px 20px !important; width: 100% !important; font-size: 16px !important; }
+}
+
+@media (max-width: 480px) {
+  .contact-phone { display: none !important; }
+}
