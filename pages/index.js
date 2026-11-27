@@ -901,7 +901,8 @@ export default function Home({ initialProperties }) {
 
 export async function getServerSideProps() {
   try {
-    const properties = await fetchCatalogProjects();
+    const { getCatalogProjects } = await import('../lib/projectsServer');
+    const properties = await getCatalogProjects();
     return { props: { initialProperties: properties || [] } };
   } catch (err) {
     console.error("Server-side properties fetch error:", err);

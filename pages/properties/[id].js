@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../../supabase'; // Путь к вашему клиенту Supabase
 import { toCardShape } from '../../lib/projects';
 import { LISTING_STATUSES } from '../../lib/adminFields';
 import Header from '../../components/Header';
@@ -911,22 +910,12 @@ export async function getServerSideProps(context) {
 
   // Администратор видит любую карточку (черновики, архив) — для предпросмотра
   const { isAdminRequest } = await import('../../lib/adminAuth');
+  const { getProjectRow } = await import('../../lib/projectsServer');
   const adminPreview = isAdminRequest(context.req);
 
   try {
-    let query;
-    if (adminPreview) {
-      const { getSupabaseAdmin } = await import('../../lib/supabaseAdmin');
-      query = getSupabaseAdmin().from('properties').select('*, property_images(*), developer:developers(name, is_verified, founded_year, completed_projects_count, website)').eq('id', id);
-    } else {
-      query = supabase.from('properties').select('*, property_images(*), developer:developers(name, is_verified, founded_year, completed_projects_count, website)').eq('id', id).neq('listing_status', 'archived');
-    }
-    const { data: property, error } = await query.single();
-
-    if (error || !property) {
-      return { props: { property: null, error: true } };
-    }
-
+    const property = await getProjectRow(Number(id), { includeHidden: adminPreview });
+    if (!property) return { props: { property: null, error: true } };
     return { props: { property: toCardShape(property), error: false, adminPreview } };
   } catch (err) {
     console.error('Server side props error:', err);
