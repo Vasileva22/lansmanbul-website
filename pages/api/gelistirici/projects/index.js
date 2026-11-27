@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     is_project: true,
     city: 'Ankara',
     created_via: 'cabinet',
+    publish_prices: true, // застройщик может снять галочку на последнем шаге
     created_at: now,
     updated_at: now,
   }).select('id').single();

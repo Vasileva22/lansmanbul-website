@@ -73,6 +73,10 @@ function NewProject() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    getBrowserSupabase().auth.getSession().then(({ data }) => { if (!data?.session) router.replace('/gelistirici/giris'); });
+  }, [router]);
+
   async function create(e) {
     e.preventDefault();
     if (name.trim().length < 3) { setError('Proje adını yazın'); return; }
@@ -342,7 +346,7 @@ function ProjectForm({ id }) {
               );
             })}
             <button type="button" onClick={() => set('layouts', [...form.layouts, { rooms: '', area: '', price: '' }])} style={{ ...ghostBtn, justifySelf: 'start', color: C.green }}>+ Daire tipi ekle</button>
-            {missingByStep('planlar').length > 0 && <div className="lb-err" style={{ fontSize: 13, color: C.amberText }}>En az bir daire tipi ekleyin.</div>}
+            {!form.layouts.some((l) => l.rooms || l.area || l.price) && <div className="lb-err" style={{ fontSize: 13, color: C.amberText }}>En az bir daire tipi ekleyin.</div>}
           </>
         )}
 
@@ -426,7 +430,7 @@ function ProjectForm({ id }) {
       </div>
 
       {/* нижняя панель */}
-      <div style={{ position: 'sticky', bottom: 0, background: 'rgba(246,247,245,.96)', backdropFilter: 'blur(6px)', padding: '12px 0', marginTop: 12, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ position: 'sticky', bottom: 0, background: 'rgba(246,247,245,.96)', backdropFilter: 'blur(6px)', padding: '12px 0', marginTop: 12, zIndex: 1100, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         {idx > 0 && <button type="button" onClick={() => goTo(STEPS[idx - 1].key)} style={ghostBtn}>← Geri</button>}
         {!isLast && <button type="button" disabled={saving} onClick={() => goTo(STEPS[idx + 1].key)} style={primaryBtn(saving)}>{saving ? 'Kaydediliyor…' : 'Kaydet ve devam →'}</button>}
         {isLast && canSubmit && (
