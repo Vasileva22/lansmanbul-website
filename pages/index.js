@@ -63,8 +63,6 @@ export default function Home({ initialProperties, initialUsdRate }) {
   // === НАЧАЛО ВСТАВКИ ===
   const usdRate = initialUsdRate || null; // курс ЦБ Турции, обновляется на сервере раз в сутки
   const [sort, setSort] = useState('recommended');
-  const isForeigner = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') || filters.activeFeatureFilters.includes('İkamete Uygun');
-  const setIsForeigner = () => {};
   // === КОНЕЦ ВСТАВКИ ===
 
   const [lightboxState, setLightboxState] = useState({
@@ -74,6 +72,9 @@ export default function Home({ initialProperties, initialUsdRate }) {
   });
 
  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  // «Режим иностранца» включается сам, когда выбран один из двух флажков в блоке «Yabancı alıcılar için»
+  const isForeigner = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') || filters.activeFeatureFilters.includes('İkamete Uygun');
+  const setIsForeigner = () => {};
 
   // Безопасный клиентский fetch
   useEffect(() => {
