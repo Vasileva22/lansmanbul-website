@@ -1,4 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+
+// Бюджет: реальные диапазоны новостроек Анкары. Верхняя граница 50 млн = «и выше» (см. lib/filters.js)
+const BUDGETS = [
+  { key: 'a', label: '5 milyon TL\'ye kadar', range: [0, 5000000] },
+  { key: 'b', label: '5 – 10 milyon TL', range: [5000000, 10000000] },
+  { key: 'c', label: '10 – 20 milyon TL', range: [10000000, 20000000] },
+  { key: 'd', label: '20 – 35 milyon TL', range: [20000000, 35000000] },
+  { key: 'e', label: '35 milyon TL ve üzeri', range: [35000000, 50000000] },
+];
 import { useRouter } from 'next/router';
 
 export default function HeroSearch({
@@ -483,31 +492,17 @@ return (
                 id="budget"
                 aria-label="Bütçe"
                 value={(() => {
-                  const maxP = filters.priceRange[1];
-                  const minP = filters.priceRange[0];
-                  if (maxP <= 2000000) return 'a';
-                  if (minP >= 2000000 && maxP <= 4000000) return 'b';
-                  if (minP >= 4000000 && maxP <= 7000000) return 'c';
-                  if (minP >= 7000000 && maxP <= 12000000) return 'd';
-                  if (minP >= 12000000) return 'e';
-                  return '';
+                  const [lo, hi] = filters.priceRange;
+                  const hit = BUDGETS.find((x) => x.range[0] === lo && x.range[1] === hi);
+                  return hit ? hit.key : '';
                 })()}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'a') setFilters(prev => ({ ...prev, priceRange: [0, 2000000] }));
-                  else if (val === 'b') setFilters(prev => ({ ...prev, priceRange: [2000000, 4000000] }));
-                  else if (val === 'c') setFilters(prev => ({ ...prev, priceRange: [4000000, 7000000] }));
-                  else if (val === 'd') setFilters(prev => ({ ...prev, priceRange: [7000000, 12000000] }));
-                  else if (val === 'e') setFilters(prev => ({ ...prev, priceRange: [12000000, 50000000] }));
-                  else setFilters(prev => ({ ...prev, priceRange: [0, 50000000] }));
+                  const hit = BUDGETS.find((x) => x.key === e.target.value);
+                  setFilters((prev) => ({ ...prev, priceRange: hit ? hit.range : [0, 50000000] }));
                 }}
               >
                 <option value="">Hepsi</option>
-                <option value="a">2 milyon TL'ye kadar</option>
-                <option value="b">2 – 4 milyon TL</option>
-                <option value="c">4 – 7 milyon TL</option>
-                <option value="d">7 – 12 milyon TL</option>
-                <option value="e">12 milyon TL üstü</option>
+                {BUDGETS.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}
               </select>
             </div>
 

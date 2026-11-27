@@ -1,3 +1,4 @@
+import { hasFeature, FEATURE_RULES } from '../lib/filters';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
 export default function SidebarFilters({
@@ -81,42 +82,8 @@ export default function SidebarFilters({
   }, [filteredProperties?.length, isTagsExpanded]);
   // СВЕРХБЫСТРЫЙ КЭШ ПОДСЧЕТА ВСЕХ УДОБСТВ ЗА ОДИН ПРОХОД
   const featureCounts = useMemo(() => {
-    const featureStems = {
-      'Kapalı Otopark': ['kapalı otopark', 'yeraltı otopark', 'otopark'],
-      '24 Saat Güvenlik': ['güvenlik', 'kamera', '7/24'],
-      'Yüzme Havuzu': ['havuz', 'yüzme'],
-      'Çocuk Oyun Alanı': ['çocuk oyun', 'çocuk park', 'oyun park'],
-      'Spor Salonu': ['fitness', 'spor salonu', 'gym', 'spor alanı'],
-      'Sauna': ['sauna', 'hamam', 'buhar', 'spa'],
-      'Jeneratör': ['jeneratör', 'kesintisiz jeneratör'],
-      'Peyzaj': ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'],
-      'Deprem': ['deprem', 'radye', 'zemin etüd'],
-      'Şarj İstasyonu': ['şarj', 'elektrikli araç'],
-      'Yerden Isıtma': ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'],
-      'Ankastre Mutfak': ['ankastre', 'beyaz eşya', 'fırın', 'ocak'],
-      'Manzara': ['deniz', 'doğa', 'manzara', 'göl', 'orman'],
-      'Akıllı Ev': ['akıllı ev', 'smart home', 'otomasyon']
-    };
-
     const counts = {};
-    Object.keys(featureStems).forEach(k => counts[k] = 0);
-
-    if (!filteredProperties || filteredProperties.length === 0) return counts;
-
-    for (let i = 0; i < filteredProperties.length; i++) {
-      const p = filteredProperties[i];
-      const text = ((p.Özellikler || '') + ' ' + (p.Açıklama || '')).toLowerCase();
-
-      for (const [id, stems] of Object.entries(featureStems)) {
-        for (let s = 0; s < stems.length; s++) {
-          if (text.includes(stems[s])) {
-            counts[id]++;
-            break;
-          }
-        }
-      }
-    }
-
+    Object.keys(FEATURE_RULES).forEach((k) => { counts[k] = (filteredProperties || []).filter((p) => hasFeature(p, k)).length; });
     return counts;
   }, [filteredProperties]);
   // Локальные состояния для Цены
@@ -335,35 +302,7 @@ export default function SidebarFilters({
     }
   }, [filters.areaRange, filters.katRange, filters.priceRange]);
 
-  useEffect(() => {
-    if (!priceSliderInst.current) return;
-    
-    let minLimit = 0;
-    
-    if (isForeigner) {
-      const isVatandaslik = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun');
-      const isIkamet = filters.activeFeatureFilters.includes('İkamete Uygun');
-      
-      if (isVatandaslik && isIkamet) {
-        minLimit = Math.round(200000 * usdRate);
-      } else if (isVatandaslik && !isIkamet) {
-        minLimit = Math.round(400000 * usdRate);
-      } else if (isIkamet && !isVatandaslik) {
-        minLimit = Math.round(200000 * usdRate);
-      }
-    }
-    
-    priceSliderInst.current.updateOptions({
-      range: {
-        min: minLimit,
-        max: 50000000
-      }
-    });
 
-    if (isForeigner) {
-      setFilters(prev => ({ ...prev, priceRange: [minLimit, prev.priceRange[1]] }));
-    }
-  }, [isForeigner, usdRate, filters.activeFeatureFilters]);
 
   const handleTagToggle = (tag) => {
     const isSelected = filters.activeFeatureFilters.includes(tag);
@@ -426,6 +365,32 @@ return (
         {/* ТЕЛО САЙДБАРА С АККОРДЕОНАМИ DETAILS/SUMMARY */}
         <div className="sbb">
           
+          {isForeigner && (
+            <details open>
+              <summary>Yabancılar için</summary>
+              <div className="dl">
+                {[
+                  { tag: 'Vatandaşlığa Uygun', label: 'Vatandaşlık için uygun daire var', usd: 400000 },
+                  { tag: 'İkamete Uygun', label: 'İkamet izni için uygun daire var', usd: 200000 },
+                ].map((o) => (
+                  <label key={o.tag} className="row">
+                    <input type="checkbox" checked={filters.activeFeatureFilters.includes(o.tag)} onChange={() => handleTagToggle(o.tag)} />
+                    <span>
+                      {o.label}
+                      <small style={{ display: 'block', color: '#5B6B68', fontSize: 11.5 }}>
+                        {`${o.usd.toLocaleString('tr-TR')} $`}
+                        {usdRate ? ` ≈ ${Math.round((o.usd * usdRate) / 100000) / 10} milyon TL ve üzeri` : ' ve üzeri'}
+                      </small>
+                    </span>
+                  </label>
+                ))}
+                <p style={{ fontSize: 11.5, color: '#5B6B68', lineHeight: 1.45, margin: '6px 0 0' }}>
+                  Yabancılara satışa kapalı bölgelerdeki projeler gizlenir. Uygunluk liste fiyatına göre tahminidir; kesin karar resmi değerleme raporuna (ekspertiz) göre verilir.
+                </p>
+              </div>
+            </details>
+          )}
+
           {/* 1. СТАТУС ПРОЕКТА */}
           <details open>
             <summary>Proje durumu</summary>
@@ -659,9 +624,9 @@ return (
             <summary>Ödeme durumu</summary>
             <div className="dl">
               {[
-                { label: 'Krediye uygun', value: 'Krediye uygun' },
+                { label: 'Banka kredisine uygun', value: 'Krediye uygun' },
                 { label: 'Taksit imkanı', value: 'Taksit imkanı' },
-                { label: 'Peşin', value: 'Peşin' }
+                { label: 'Faizsiz taksit (%0)', value: 'Faizsiz taksit' }
               ].map((pay) => (
                 <label key={pay.value} className="row">
                   <input 
