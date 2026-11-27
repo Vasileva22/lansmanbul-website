@@ -39,14 +39,13 @@ export default function KullanımKosullari() {
                 <li><strong>“Portal”:</strong> www.lansmanbul.com isimli alan adından ve bu alan adına bağlı alt alan adlarından oluşan “LANSMANBUL”un “Hizmet”lerini sunduğu internet sitesini ifade eder.</li>
                 <li><strong>“Programatik Sistemler”:</strong> “Portal”a otomatik veya yarı otonom olarak erişim sağlayan tüm teknolojik sistemleri (botlar, crawler, scraper, yapay zekâ, makine öğrenmesi sistemleri vb.) ifade eder.</li>
                 <li><strong>“LANSMANBUL Arayüzü”:</strong> LANSMANBUL tarafından oluşturulan içeriğin "Kullanıcı”lar tarafından görüntülenebilmesi ve "LANSMANBUL Veri Tabanı"ndan sorgulanabilmesi amacıyla kullanılan tasarımları ve internet sayfalarını ifade eder.</li>
-                <li><strong>“LANSMANBUL Hizmetleri” ("Hizmet"):</strong> "Portal" içerisinde "Kullanıcı"ların konut projelerini incelemelerini, filtrelemelerini og inşaat firmalarıyla doğrudan/WhatsApp üzerinden iletişime geçmelerini sağlamak amacıyla “LANSMANBUL” tarafından sunulan uygulamaları ifade eder.</li>
+                <li><strong>“LANSMANBUL Hizmetleri” ("Hizmet"):</strong> "Portal" içerisinde "Kullanıcı"ların konut projelerini incelemelerini, filtrelemelerini ve inşaat firmalarıyla doğrudan/WhatsApp üzerinden iletişime geçmelerini sağlamak amacıyla “LANSMANBUL” tarafından sunulan uygulamaları ifade eder.</li>
                 <li><strong>“LANSMANBUL Veri Tabanı”:</strong> “Portal” dahilinde erişilen içeriklerin depolandığı, tasnif edildiği, sorgulanabildiği ve erişilebildiği “LANSMANBUL”a ait veri tabanını ifade eder.</li>
               </ul>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">3. LANSMANBUL HİZMETLERİ</h2>
               <p>
-                <strong>3.1.</strong> "LANSMANBUL", Türkiye'deki inşaat firmaları ve geliştiriciler tarafından sağlanan konut projelerine ait bilgilerin (ilan, fiyat, görsel, proje detayları vb.) "LANSMANBUL Veri Tabanı" üzerinde toplanarak, arayüzler kullanılmak suretiyle "Kullanıcı”lar tarafından görüntülenebilmesini temin etmektedir.
-              </p>
+                <strong>3.1.</strong> "LANSMANBUL", Ankara’daki yeni konut projelerine ait bilgileri tek yerde sunan bir bilgi platformudur. “Portal”da iki tür proje sayfası bulunur: (i) kamuya açık kaynaklardan derlenen temel bilgileri içeren “Bilgi kartı” sayfaları ve (ii) geliştirici firma tarafından eklenen veya onaylanan, “Onaylı proje” olarak işaretlenen sayfalar. Fiyat, fotoğraf ve satış koşulları yalnızca geliştirici firmanın onayıyla yayınlanır.</p>
               <p>
                 <strong>3.2.</strong> "LANSMANBUL", “Portal” içerisinde "Kullanıcı”ların aradığı konut projelerine daha kolay ulaşabilmelerini sağlamak üzere çeşitli filtreleme, arama ve listeleme hizmetleri sunmaktadır.
               </p>
@@ -54,7 +53,7 @@ export default function KullanımKosullari() {
                 <strong>3.3.</strong> "LANSMANBUL", “Portal” dahilinde verdiği hizmetlere yenilerini ekleme, mevcut hizmetlerin kapsam ve sunulma koşullarını her zaman değiştirme, üçüncü kişilerin erişimine kapatabilme ve silme hakkını saklı tutmaktadır.
               </p>
 
-              <h2 className="text-lg font-bold text-slate-900 pt-4">4. LANSMANBUL PORTALI KULLANIMINA İLİŞKİN KOШULLAR VE YÜKÜMLÜLÜKLER</h2>
+              <h2 className="text-lg font-bold text-slate-900 pt-4">4. LANSMANBUL PORTALI KULLANIMINA İLİŞKİN KOŞULLAR VE YÜKÜMLÜLÜKLER</h2>
               <p>
                 <strong>4.1.</strong> “Kullanıcı”lar, "Portal" üzerinde gerçekleştirdiği tüm işlem ve eylemlerden doğan hukuki ve cezai sorumluluğun kendisine ait olduğunu kabul eder.
               </p>
@@ -71,14 +70,12 @@ export default function KullanımKosullari() {
                 <strong>4.5.</strong> "Kullanıcı"lar, “Portal” dahilinde eriştikleri bilgileri yalnızca ticari olmayan, kişisel bilgilendirme amacıyla görüntülemekle yükümlüdür. Proje detaylarında veya ilanlarda yer alan kişisel veriler başka mecralarda doğrudan veya dolaylı olarak yayınlanamaz, işlenemez ve dağıtılamaz.
               </p>
               <p>
-                <strong>4.6.</strong> "LANSMANBUL", 5651 Sayılı Kanun kapsamında "Yer Sağlayıcı" konumundadır. İlgili mevzuat uyarınca "Yer Sağlayıcı"lara getirilen yükümlülüklere uymak amacıyla, "Kullanıcı"ların “Portal” üzerindeki erişim og işlem kayıtlarını yasal süresi içinde kayıt altına almakta ve saklamaktadır.
+                <strong>4.6.</strong> "LANSMANBUL", 5651 Sayılı Kanun kapsamında "Yer Sağlayıcı" konumundadır. İlgili mevzuat uyarınca "Yer Sağlayıcı"lara getirilen yükümlülüklere uymak amacıyla, "Kullanıcı"ların “Portal” üzerindeki erişim ve işlem kayıtlarını yasal süresi içinde kayıt altına almakta ve saklamaktadır.
               </p>
               <p>
-                <strong>4.7.</strong> "LANSMANBUL", "Kullanıcı" bilgilerini, IP adresini, “Portal”ın hangi bölümlerini ziyaret ettiğini istatistiki değerlendirme, pazar araştırması ve hizmet kalitesini iyileştirme amaçlarıyla kullanabilir veya işbirliği içinde olduğu iş ortaklarıyla paylaşabilir.
-              </p>
+                <strong>4.7.</strong> "LANSMANBUL", projelerin ilgi düzeyini kimlik belirlemeden, yalnızca sayı olarak (görüntülenme, WhatsApp tıklama, favoriye ekleme) ölçer ve bu toplam sayıları ilgili projenin geliştiricisine gösterebilir. Ziyaretçilerin kişisel verileri iş ortaklarıyla paylaşılmaz. Ayrıntılar Kişisel Verilerin Korunması Aydınlatma Metni’nde yer almaktadır.</p>
               <p>
-                <strong>4.8.</strong> “LANSMANBUL”, çevrimiçi davranışsal reklamcılık yapılabilmesi amacıyla tarayıcıda bulunan cookie'leri (çerezleri) kullanabilir. Google ve diğer analiz araçları bu kapsamda kullanıcının tarayıcısına çerez yerleştirebilir.
-              </p>
+                <strong>4.8.</strong> “Portal”da reklam veya davranışsal hedefleme amaçlı çerez kullanılmaz. Ziyaret istatistikleri için Google Analytics yalnızca “Kullanıcı”nın açık izni ile etkinleştirilir. Ayrıntılar Çerez Politikası’nda yer almaktadır.</p>
               <p>
                 <strong>4.9.</strong> “LANSMANBUL”un açık ve yazılı izni olmadan, "Portal" içeriği; yapay zekâ modellerini (büyük dil modelleri dahil) veya benzeri teknolojileri eğitmek, geliştirmek, iyileştirmek ya da test etmek amaçlarıyla herhangi bir şekilde kullanılamaz.
               </p>
@@ -86,6 +83,11 @@ export default function KullanımKosullari() {
                 <strong>4.10.</strong> “Portal”da verilen hizmetin kesintiye uğraması, bilgi iletiminde aksaklıklar, gecikmeler, veri kaybı halinde oluşabilecek her türlü doğrudan ve dolaylı zararlardan “LANSMANBUL” sorumlu tutulamaz.
               </p>
 
+              <h2 className="text-lg font-bold text-slate-900 pt-4">4A. GELİŞTİRİCİ FİRMALAR İÇİN EK KOŞULLAR</h2>
+              <p><strong>4A.1.</strong> Geliştirici paneline kayıt olan kişi, temsil ettiği firma adına işlem yapmaya yetkili olduğunu beyan eder. "LANSMANBUL", firmayı doğrulamak için vergi numarası ve ek belge isteyebilir; doğrulanmayan hesapları yayından kaldırabilir.</p>
+              <p><strong>4A.2.</strong> Geliştirici firma; eklediği proje bilgilerinin (fiyat, teslim tarihi, inşaat aşaması, ödeme koşulları, ruhsat durumu vb.) doğru ve güncel olmasından ve ilgili mevzuata (tüketici mevzuatı, ön satış ve ilan mevzuatı dahil) uygunluğundan sorumludur.</p>
+              <p><strong>4A.3.</strong> Geliştirici firma, yüklediği fotoğraf, görsel ve belgelerin kullanım hakkına sahip olduğunu; üçüncü kişilerin fikri mülkiyet haklarını ihlal etmediğini beyan eder ve bunların “Portal”da yayınlanması için "LANSMANBUL"a ücretsiz, münhasır olmayan kullanım izni verir. Hak ihlali iddialarından doğan sorumluluk geliştirici firmaya aittir.</p>
+              <p><strong>4A.4.</strong> Yeni projeler "LANSMANBUL" tarafından incelendikten sonra yayınlanır. Yayındaki projelerde yapılan değişiklikler derhal yayına girer ve kayıt altına alınır. "LANSMANBUL", yanıltıcı veya hukuka aykırı olduğunu değerlendirdiği içerikleri bildirimde bulunarak veya acil durumlarda bildirimsiz yayından kaldırabilir.</p>
               <h2 className="text-lg font-bold text-slate-900 pt-4">5. FİKRİ MÜLKİYET HAKLARI</h2>
               <p>
                 Bu “Portal” dahilinde erişilen bilgiler ve bu “Portal”ın tasarımı, metinleri, görselleri, kodları ve arayüzü "LANSMANBUL"un telif haklarına tabi çalışmalarıdır. "Kullanıcı"lar, "LANSMANBUL" hizmetlerini ve telif haklarına tabi çalışmalarını kopyalamak, paylaşmak, dağıtmak veya başkasının kullanımına açmak hakkına sahip değildirler.
