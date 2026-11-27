@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { track } from '../../lib/track';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -93,6 +94,11 @@ export default function PropertyDetail({ property, error, adminPreview = false }
     }
   }, [queryRoom]);
   // ===================================================================
+
+  // Учёт просмотра страницы (анонимно, один раз за сеанс вкладки; админский предпросмотр не считаем)
+  useEffect(() => {
+    if (property?.id && !adminPreview) track('view', property.id);
+  }, [property?.id, adminPreview]);
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -549,6 +555,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                                     : `Bu daire tipi ${layout.area} m² kullanım alanına sahiptir. Fiyatlar ${formatPrice(layout.price, true)} başlamaktadır. Güncel boş kat listesi için doğrudan müteahhit ile WhatsApp üzerinden iletişime geçebilirsiniz.`}
                                 </p>
                                 {!isReference && (<a 
+                                  data-lb-project={property.id}
                                   href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Merhaba, ${property.testproje || ''} projesindeki ${layout.rooms} tipi daireler hakkında detaylı bilgi alabilir miyim?`)}`}
                                   target="_blank" 
                                   rel="noopener noreferrer" 
@@ -591,7 +598,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                       Güncel boş dairelerin listesini, katlarını ve fiyatlarını doğrudan yapıcı firmadan (müteahhit) WhatsApp üzerinden öğrenebilirsiniz.
                     </p>
 
-                    <a id="whatsapp-plan-btn" href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
+                    <a id="whatsapp-plan-btn" data-lb-project={property.id} href={waPlanBtnLink} target="_blank" rel="noopener noreferrer" className="mt-4 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition duration-200 w-full md:w-auto uppercase tracking-wider font-bold text-xs">
                       Müsait Katları WhatsApp'tan Sor
                     </a>
                   </div>
@@ -747,7 +754,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                 </div>
 
                 <div className="space-y-2">
-                  <a id="whatsapp-btn" href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
+                  <a id="whatsapp-btn" data-lb-project={property.id} href={waBtnLink} target="_blank" rel="noopener noreferrer" className="w-full py-4 px-4 rounded-xl flex items-center justify-center gap-3 shadow-sm">
                     <span className="flex flex-col text-center leading-tight tracking-wider uppercase font-black">
                       <span className="text-xs text-white">Doğrudan Müteahhitten</span>
                       <span className="font-bold opacity-90 text-[10px] mt-0.5 text-white">Bilgi Al</span>

@@ -47,6 +47,8 @@ export default function Cabinet() {
   if (state.error) return <CabinetLayout title="Panel" right={right}><p style={{ color: C.danger }}>{state.error}</p></CabinetLayout>;
 
   const { developer, member, projects } = state.me;
+  const stats = state.me.stats || { days: 30, total: { view: 0, whatsapp: 0, favorite: 0 }, byProject: {} };
+  const hasLive = projects.some((p) => p.listing_status === 'confirmed' || p.listing_status === 'reference');
   const pending = developer.account_status === 'pending';
 
   return (
@@ -71,14 +73,16 @@ export default function Cabinet() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 18 }}>
-        {[['Görüntülenme · 30 gün', '—'], ['WhatsApp tıklaması', '—'], ['Favoriye ekleme', '—']].map(([k, v]) => (
+        {[['Görüntülenme', stats.total.view], ['WhatsApp tıklaması', stats.total.whatsapp], ['Favoriye ekleme', stats.total.favorite]].map(([k, v]) => (
           <div key={k} style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: 14 }}>
             <div style={{ fontSize: 12, color: C.muted }}>{k}</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{v}</div>
           </div>
         ))}
       </div>
-      <p style={{ fontSize: 12, color: C.muted, margin: '-8px 0 18px' }}>İstatistikler yakında burada görünecek.</p>
+      <p style={{ fontSize: 12, color: C.muted, margin: '-8px 0 18px' }}>
+        Son {stats.days} gün · {hasLive ? 'Aynı kişinin aynı oturumdaki tekrarları tek sayılır.' : 'İstatistikler projeniz yayına girdikten sonra burada görünür.'}
+      </p>
 
       <h2 style={{ fontSize: 17, fontWeight: 800, margin: '0 0 10px' }}>Projelerim</h2>
       <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14 }}>
@@ -94,6 +98,11 @@ export default function Cabinet() {
               <div style={{ minWidth: 200 }}>
                 <div style={{ fontWeight: 700 }}>{p.name || 'İsimsiz proje'}</div>
                 <div style={{ fontSize: 13, color: C.muted }}>{[p.district, STAGES[p.construction_stage] || p.project_status].filter(Boolean).join(' · ')}</div>
+                {stats.byProject[p.id] && (
+                  <div style={{ fontSize: 12, color: C.dark, marginTop: 4 }}>
+                    👁 {stats.byProject[p.id].view} görüntülenme · WhatsApp {stats.byProject[p.id].whatsapp} · ♥ {stats.byProject[p.id].favorite}
+                  </div>
+                )}
               </div>
               <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: st.bg, color: st.fg }}>{st.label}</span>
               <Link href={`/gelistirici/proje/${p.id}`} style={{ color: C.green, fontWeight: 700, fontSize: 14 }}>Düzenle</Link>

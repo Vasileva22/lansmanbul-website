@@ -337,6 +337,7 @@ export default function CatalogMapView({ properties = [] }) {
           ) : (
           <a 
             href={finalWaLink} 
+            data-lb-project={selectedProperty?.id}
             target="_blank" 
             rel="noopener noreferrer" 
             className="wa"
