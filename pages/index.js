@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { DEFAULT_FILTERS, matchProject, sortProjects, SORTS, unknownPriceCount, deliveryYear, isReady } from '../lib/filters';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -49,7 +50,7 @@ function Lightbox({ photos, activeIndex, onClose, onPrev, onRight }) {
   );
 }
 
-export default function Home({ initialProperties }) {
+export default function Home({ initialProperties, initialUsdRate }) {
   const router = useRouter();
 
   const [masterProperties, setMasterProperties] = useState(initialProperties || []);
@@ -60,7 +61,8 @@ export default function Home({ initialProperties }) {
   const [currentPage, setCurrentPage] = useState(1);
 
   // === НАЧАЛО ВСТАВКИ ===
-  const [usdRate, setUsdRate] = useState(47.2); // Курс доллара к лире (резервный)
+  const usdRate = initialUsdRate || null; // курс ЦБ Турции, обновляется на сервере раз в сутки
+  const [sort, setSort] = useState('recommended');
   const [isForeigner, setIsForeigner] = useState(false); // Включен ли режим иностранца
   // === КОНЕЦ ВСТАВКИ ===
 
@@ -70,32 +72,7 @@ export default function Home({ initialProperties }) {
     activeIndex: 0,
   });
 
- const [filters, setFilters] = useState({
-    selectedCity: 'Tümü', // Показываем все города
-    selectedPropertyType: 'all', // Показываем все типы (квартиры, виллы, таунхаусы)
-    selectedLocations: [],
-    selectedRooms: [],
-    selectedStatuses: [],
-    selectedYears: [],
-    areaRange: [0, 500],
-    katRange: [0, 40],
-    priceRange: [0, 50000000],
-    activeFeatureFilters: [],
-    activePaymentFilters: [],
-    listingType: 'all',
-  });
-
-  // Запрос курса Центробанка один раз при загрузке страницы
-  useEffect(() => {
-    fetch('https://open.er-api.com/v6/latest/USD')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.rates && data.rates.TRY) {
-          setUsdRate(data.rates.TRY);
-        }
-      })
-      .catch(err => console.error("Doviz kuru yukleme hatasi:", err));
-  }, []);
+ const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
   // Безопасный клиентский fetch
   useEffect(() => {
@@ -211,282 +188,21 @@ export default function Home({ initialProperties }) {
     return ["Lansman", "Devam ediyor", "Tamamlandı"];
   }, []);
 
-  // Очистка статуса от \n и лишних пробелов из базы
-  const cleanStatusText = (status) => {
-    const s = String(status || '').toLowerCase().replace(/[\r\n]+/g, ' ').trim();
-    if (s.includes('tamam')) return 'tamamlandı';
-    if (s.includes('lansman')) return 'lansman';
-    if (s.includes('devam')) return 'devam ediyor';
-    return s;
-  };
-
-  // Извлечение чистого года из поля Teslim_Yili или описания
-  const extractPropertyYear = (property) => {
-    const raw = String(property?.Teslim_Yili || property?.teslim_yili || '').trim();
-    if (raw) {
-      const match = raw.match(/\b(20\d\d)\b/);
-      if (match) return match[1];
-    }
-    const desc = String(property?.Açıklama || '');
-    const descMatch = desc.match(/\b(202\d)\b/);
-    if (descMatch) return descMatch[1];
-    return null;
-  };
-
-  // Проверка готовности объекта (Hazır)
-  const isPropertyReady = (property) => {
-    const status = cleanStatusText(property?.konutcesit);
-    if (status === 'tamamlandı') return true;
-    const yr = extractPropertyYear(property);
-    if (yr && parseInt(yr) <= 2025) return true;
-    const raw = String(property?.Teslim_Yili || '').toLowerCase();
-    if (raw.includes('hazır')) return true;
-    return false;
-  };
-
-  // Расчет кнопок годов: кнопка "Hazır" + реальные фактические года (2025, 2026, 2027, 2028...)
   const uniqueYears = useMemo(() => {
-    const relevantProperties = masterProperties.filter((property) => {
-      if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
-        const propCity = String(property.city || property.adress || 'Ankara').toLowerCase();
-        if (!propCity.includes(filters.selectedCity.toLowerCase())) return false;
-      }
-
-      if (filters.selectedStatuses && filters.selectedStatuses.length > 0) {
-        const propStatus = cleanStatusText(property?.konutcesit);
-        const matches = filters.selectedStatuses.some(
-          (st) => cleanStatusText(st) === propStatus
-        );
-        if (!matches) return false;
-      }
-
-      return true;
-    });
-
-    const yearsSet = new Set();
-    let hasReady = false;
-
-    relevantProperties.forEach((p) => {
-      if (isPropertyReady(p)) {
-        hasReady = true;
-      }
-      const y = extractPropertyYear(p);
-      if (y) {
-        yearsSet.add(y);
-      }
-    });
-
-    const sortedYears = Array.from(yearsSet).sort((a, b) => parseInt(a) - parseInt(b));
-    return hasReady ? ['Hazır', ...sortedYears] : sortedYears;
-  }, [masterProperties, filters.selectedCity, filters.selectedStatuses]);
+    const rel = masterProperties.filter((p) => !filters.selectedStatuses.length || filters.selectedStatuses.includes(String(p.project_status || p.konutcesit || '').trim()));
+    const years = Array.from(new Set(rel.map(deliveryYear).filter(Boolean))).sort();
+    return rel.some(isReady) ? ['Hazır', ...years] : years;
+  }, [masterProperties, filters.selectedStatuses]);
 // Логика фильтрации
-  const filteredProperties = useMemo(() => {
-   return masterProperties.filter((property) => {
-    // 1. Фильтрация по городу (со страховкой: если city null, проверяем адрес или берем Анкару)
-      if (filters.selectedCity && filters.selectedCity !== 'Tümü') {
-        const propCity = String(property.city || property.adress || 'Ankara').toLowerCase().trim();
-        const targetCity = String(filters.selectedCity).toLowerCase().trim();
-        if (!propCity.includes(targetCity)) {
-          return false;
-        }
-      }
-
-      // 2. Фильтрация по типу объекта (Проект / Квартира)
-      if (filters.listingType === 'project' && property.is_project !== true) {
-        return false;
-      }
-      if (filters.listingType === 'apartment' && property.is_project === true) {
-        return false;
-      }
-
-      // 3. Фильтрация по району (находит даже если в базе "Çankaya Çankaya" или "Çankaya / Ankara")
-      if (filters.selectedLocations && filters.selectedLocations.length > 0) {
-        const pDistrict = String(property.district || '').toLowerCase();
-        const pSemt = String(property['İlçe/Semt'] || property.address_district || '').toLowerCase();
-        const pMahalle = String(property.mahalle || '').toLowerCase();
-        const pAddress = String(property.adress || '').toLowerCase();
-
-        const isMatched = filters.selectedLocations.some((selectedLoc) => {
-          const locLower = String(selectedLoc).toLowerCase().trim();
-          return (
-            pDistrict.includes(locLower) ||
-            pSemt.includes(locLower) ||
-            pMahalle.includes(locLower) ||
-            pAddress.includes(locLower)
-          );
-        });
-
-        if (!isMatched) {
-          return false;
-        }
-      }
-// 4.1 Фильтрация по типу жилья (Daire, Villa, Penthouse)
-      if (filters.selectedPropertyType && filters.selectedPropertyType !== 'all') {
-        const pTypeRaw = String(property.property_type || '').toLowerCase();
-        const pTitle = String(property.testproje || '').toLowerCase();
-        const pRooms = String(property['card odalar'] || '').toLowerCase();
-        const pDesc = String(property.Açıklama || '').toLowerCase();
-
-        let realType = 'daire';
-        if (pTypeRaw.includes('villa') || pTitle.includes('villa') || pRooms.includes('villa')) {
-          realType = 'villa';
-        } else if (pTypeRaw.includes('penthouse') || pTitle.includes('penthouse') || pDesc.includes('penthouse')) {
-          realType = 'penthouse';
-        }
-
-        if (realType !== filters.selectedPropertyType.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // 4.2 Умная фильтрация по комнатам (находит и в строке, и в массиве планировок)
-      if (filters.selectedRooms && filters.selectedRooms.length > 0) {
-        const pRooms = String(property['card odalar'] || '').toLowerCase();
-        
-        // Читаем массив layouts, если он есть
-        let layouts = [];
-        if (Array.isArray(property.layouts)) layouts = property.layouts;
-        else if (typeof property.layouts === 'string') {
-          try { layouts = JSON.parse(property.layouts); } catch (e) {}
-        }
-
-        const isRoomMatched = filters.selectedRooms.some((selectedRoom) => {
-          const cleanRoom = selectedRoom.replace(' ve üzeri', '').trim().toLowerCase();
-          
-          // Проверяем строку комнат
-          if (pRooms.includes(cleanRoom)) return true;
-
-          // Проверяем каждую планировку в layouts
-          return layouts.some((l) => String(l.rooms || '').toLowerCase().includes(cleanRoom));
-        });
-
-        if (!isRoomMatched) {
-          return false;
-        }
-      }
-
-      // Фильтрация по годам сдачи и кнопке 'Hazır'
-      if (filters.selectedYears && filters.selectedYears.length > 0) {
-        const pYear = extractPropertyYear(property);
-        const pReady = isPropertyReady(property);
-
-        const matchesYear = filters.selectedYears.some((selectedY) => {
-          if (selectedY === 'Hazır') return pReady;
-          return pYear === selectedY;
-        });
-
-        if (!matchesYear) return false;
-      }
-
-      // Фильтрация по статусу (чистая, без ошибок из-за \n)
-      if (filters.selectedStatuses.length > 0) {
-        const propStatus = cleanStatusText(property.konutcesit);
-        const isMatched = filters.selectedStatuses.some((status) => {
-          return propStatus === cleanStatusText(status);
-        });
-        if (!isMatched) return false;
-      }
-
-      const area = parseInt(property['card-area']) || 0;
-      if (area < filters.areaRange[0] || area > filters.areaRange[1]) {
-        return false;
-      }
-
-      const katRaw = property['Kat Sayısı'] || property.Kat_Sayisi || property.katsayisi || 0;
-      const kat = parseInt(String(katRaw).replace(/\D/g, '')) || 0;
-      if (kat < filters.katRange[0] || kat > filters.katRange[1]) {
-        return false;
-      }
-
-      const priceRaw = String(property.Fiyat || "").replace(/\./g, '');
-      const price = parseInt(priceRaw.replace(/\D/g, '')) || 0;
-      if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-        return false;
-      }
-
-    // 10. Умная фильтрация по эталонным удобствам через матрицу синонимов
-      if (filters.activeFeatureFilters && filters.activeFeatureFilters.length > 0) {
-        const featureStemsMap = {
-          'Kapalı Otopark': ['kapalı otopark', 'yeraltı otopark', 'otopark'],
-          '24 Saat Güvenlik': ['güvenlik', 'kamera', '7/24'],
-          'Yüzme Havuzu': ['havuz', 'yüzme'],
-          'Çocuk Oyun Alanı': ['çocuk oyun', 'çocuk park', 'oyun park'],
-          'Spor Salonu': ['fitness', 'spor salonu', 'gym', 'spor alanı'],
-          'Sauna': ['sauna', 'hamam', 'buhar', 'spa'],
-          'Jeneratör': ['jeneratör', 'kesintisiz jeneratör'],
-          'Peyzaj': ['peyzaj', 'yeşil alan', 'yürüyüş parkuru', 'park'],
-          'Deprem': ['deprem', 'radye', 'zemin etüd'],
-          'Şarj İstasyonu': ['şarj', 'elektrikli araç'],
-          'Yerden Isıtma': ['yerden ısıtma', 'zeminden ısıtma', 'alttan ısıtma'],
-          'Ankastre Mutfak': ['ankastre', 'beyaz eşya', 'fırın', 'ocak'],
-          'Manzara': ['deniz', 'doğa', 'manzara', 'göl', 'orman'],
-          'Akıllı Ev': ['akıllı ev', 'smart home', 'otomasyon']
-        };
-
-        const activePhysical = filters.activeFeatureFilters.filter(
-          (f) => f !== 'Vatandaşlığa Uygun' && f !== 'İkamete Uygun'
-        );
-
-        if (activePhysical.length > 0) {
-          const fullText = (
-            String(property.Özellikler || '') + ' ' +
-            String(property.Açıklama || '')
-          ).toLowerCase();
-
-          const allMatched = activePhysical.every((featKey) => {
-            const stems = featureStemsMap[featKey] || [featKey.toLowerCase()];
-            return stems.some((stem) => fullText.includes(stem));
-          });
-
-          if (!allMatched) {
-            return false;
-          }
-        }
-      }
-      if (filters.activePaymentFilters.length > 0) {
-        const matchesAny = filters.activePaymentFilters.some((pay) => {
-          const normPay = pay.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's');
-          const krediDurumu = String(property.Kredi_Durumu || "").trim();
-          const vadeSecenegi = String(property.Vade_Secenegi || "").trim();
-          const ilkPesinat = String(property.Ilk_Pesinat || "").trim();
-
-          if (normPay.includes("kredi")) return krediDurumu !== "";
-          if (normPay.includes("taksit")) return vadeSecenegi !== "" || ilkPesinat !== "";
-          if (normPay.includes("pesin")) return vadeSecenegi === "" && ilkPesinat === "";
-          return false;
-        });
-        if (!matchesAny) return false;
-      }
-
-      if (isForeigner) {
-        if (property.is_open_area === false) {
-          return false;
-        }
-
-        const isVatandaslikChecked = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun');
-        const isIkametChecked = filters.activeFeatureFilters.includes('İkamete Uygun');
-
-        if (isVatandaslikChecked && isIkametChecked) {
-          if (property.is_citizenship_eligible === false && property.is_residence_eligible === false) {
-            return false;
-          }
-        } else {
-          if (isVatandaslikChecked && property.is_citizenship_eligible === false) {
-            return false;
-          }
-          if (isIkametChecked && property.is_residence_eligible === false) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    });
-  }, [masterProperties, filters, isForeigner]);
+  const filteredProperties = useMemo(
+    () => sortProjects(masterProperties.filter((p) => matchProject(p, filters, { isForeigner })), sort),
+    [masterProperties, filters, isForeigner, sort],
+  );
+  const hiddenNoPrice = useMemo(() => unknownPriceCount(masterProperties, filters), [masterProperties, filters]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters]);
+  }, [filters, sort, isForeigner]);
 
  const itemsPerPage = 12;
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
@@ -497,20 +213,8 @@ export default function Home({ initialProperties }) {
   }, [filteredProperties, currentPage, itemsPerPage]);
 
  const handleClearFilters = () => {
-    setFilters({
-      selectedCity: 'Tümü',
-      selectedPropertyType: 'all',
-      selectedLocations: [],
-      selectedRooms: [],
-      selectedStatuses: [],
-      selectedYears: [],
-      areaRange: [0, 500],
-      katRange: [0, 40],
-      priceRange: [0, 50000000],
-      activeFeatureFilters: [],
-      activePaymentFilters: [],
-      listingType: 'all',
-    });
+    setFilters(DEFAULT_FILTERS);
+    setSort('recommended');
     router.push('/', undefined, { shallow: true });
   };
 
@@ -629,7 +333,6 @@ export default function Home({ initialProperties }) {
                     setIsForeigner(false);
                     setFilters(prev => ({
                       ...prev,
-                      priceRange: [0, prev.priceRange[1]],
                       activeFeatureFilters: prev.activeFeatureFilters.filter(
                         t => t !== 'Vatandaşlığa Uygun' && t !== 'İkamete Uygun'
                       )
@@ -681,9 +384,23 @@ export default function Home({ initialProperties }) {
 
           {/* Строка количества и активные чипсы-фильтры */}
           <div className="catalog-meta-row">
-            <h2 className="catalog-count-text">
-              {filteredProperties.length} proje listeleniyor
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', width: '100%' }}>
+              <h2 className="catalog-count-text">
+                {filteredProperties.length} proje listeleniyor
+              </h2>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#475569' }}>
+                Sırala:
+                <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sıralama"
+                  style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #d6dfdb', background: '#fff', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, color: '#04342C', cursor: 'pointer' }}>
+                  {SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+            </div>
+            {hiddenNoPrice > 0 && (
+              <p style={{ fontSize: 13, color: '#5B6B68', margin: '4px 0 0', width: '100%' }}>
+                Fiyatı henüz onaylanmamış {hiddenNoPrice} proje fiyat filtresinde gösterilmiyor.
+              </p>
+            )}
 
             {/* Активные чипсы фильтров с возможностью удаления нажатием на × */}
             {(filters.selectedLocations.length > 0 || filters.selectedRooms.length > 0 || filters.selectedStatuses.length > 0 || filters.activeFeatureFilters.length > 0) && (
@@ -869,8 +586,9 @@ export default function Home({ initialProperties }) {
 export async function getServerSideProps() {
   try {
     const { getCatalogProjects } = await import('../lib/projectsServer');
-    const properties = await getCatalogProjects();
-    return { props: { initialProperties: properties || [] } };
+    const { getUsdRate } = await import('../lib/fx');
+    const [properties, fx] = await Promise.all([getCatalogProjects(), getUsdRate().catch(() => ({ rate: null }))]);
+    return { props: { initialProperties: properties || [], initialUsdRate: fx.rate || null } };
   } catch (err) {
     console.error("Server-side properties fetch error:", err);
     return { props: { initialProperties: [] } };
