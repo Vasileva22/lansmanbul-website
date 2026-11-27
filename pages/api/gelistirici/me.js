@@ -14,6 +14,15 @@ export default async function handler(req, res) {
     .neq('listing_status', 'archived')
     .order('updated_at', { ascending: false });
 
+  // Запросы «Bu proje benim», которые ещё ждут решения или отклонены недавно
+  const { data: claims } = await getSupabaseAdmin()
+    .from('project_claims')
+    .select('id, status, created_at, admin_note, property:properties(id, name, district)')
+    .eq('developer_id', ctx.developer.id)
+    .in('status', ['pending', 'rejected'])
+    .order('created_at', { ascending: false })
+    .limit(20);
+
   // Статистика за 30 дней: по каждому проекту и всего
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
   const { data: rows } = await getSupabaseAdmin().rpc('developer_stats', { dev_id: ctx.developer.id, since });
@@ -34,5 +43,6 @@ export default async function handler(req, res) {
     member: { contact_name: ctx.member.contact_name, contact_title: ctx.member.contact_title, phone: ctx.member.phone, role: ctx.member.role },
     developer: ctx.developer,
     projects: projects || [],
+    claims: claims || [],
   });
 }

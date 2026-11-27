@@ -27,6 +27,7 @@ export default function AdminLayout({ title, children }) {
             <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
               <Link href="/admin" style={{ color: '#fff', textDecoration: 'none' }}>Проекты</Link>
               <Link href="/admin/developers" style={{ color: '#fff', textDecoration: 'none' }}>Застройщики</Link>
+              <Link href="/admin/claims" style={{ color: '#fff', textDecoration: 'none' }}>Запросы</Link>
               <Link href="/" target="_blank" style={{ color: '#e7d3a7', textDecoration: 'none' }}>Открыть сайт ↗</Link>
               <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,.4)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13 }}>
                 Выйти

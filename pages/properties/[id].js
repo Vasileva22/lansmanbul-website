@@ -321,6 +321,13 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                     {property.konutcesit}
                   </span>
                 )}
+                {property.ruhsatli && (
+                  <span title="Yapı ruhsatı LansmanBul ekibi tarafından kontrol edildi"
+                    className="text-[11px] font-extrabold px-3 py-1 rounded-full inline-block ml-2"
+                    style={{ color: '#085041', background: '#E1F5EE', border: '1px solid #9FE1CB' }}>
+                    📄 Ruhsatlı · LansmanBul kontrol etti
+                  </span>
+                )}
                 <h1 className="text-3xl font-black text-gray-900 mt-2">
                   {property.testproje || ''}
                 </h1>
@@ -715,8 +722,11 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                     <p className="text-sm text-slate-500 leading-relaxed">
                       Bu sayfadaki bilgiler kamuya açık kaynaklardan derlenmiştir. Fiyat, fotoğraf ve satış koşulları geliştirici firma tarafından onaylandığında yayınlanır.
                     </p>
-                    <a href={claimWaLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 px-4 rounded-xl font-bold text-sm" style={{ border: '1.5px solid #0F6E56', color: '#0F6E56' }}>
+                    <a href={`/gelistirici/sahiplen/${property.id}`} className="block w-full text-center py-3 px-4 rounded-xl font-bold text-sm" style={{ border: '1.5px solid #0F6E56', color: '#0F6E56' }}>
                       Projenin sahibi misiniz? Sayfayı onaylayın
+                    </a>
+                    <a href={claimWaLink} target="_blank" rel="noopener noreferrer" className="block text-center text-xs" style={{ color: '#5B6B68' }}>
+                      veya WhatsApp ile yazın
                     </a>
                   </div>
                 ) : (
