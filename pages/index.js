@@ -514,9 +514,9 @@ export default function Home({ initialProperties, initialUsdRate }) {
           <div id="about-us-container">
             <section className="v1-section">
               <div className="v1-intro">
-                <span className="v1-badge">Aracısız • Komisyonsuz • Doğrudan</span>
-                <h2 className="v1-title">Konutbudur ile <span>Yeni Nesil</span> Konut Keşfi</h2>
-                <p className="v1-desc">Türkiye'nin önde gelen inşaat firmalarını tek platformda topladık. Klasik emlakçı süreçlerini tamamen devre dışı bırakarak hayalinizdeki eve doğrudan, güvenle ulaşmanızı sağlıyoruz.</p>
+                <span className="v1-badge">Alıcıdan komisyon yok • Onaylı projeler • Şeffaf bilgi</span>
+                <h2 className="v1-title">LansmanBul ile <span>güvenle</span> yeni konut keşfi</h2>
+                <p className="v1-desc">Ankara'daki yeni konut projelerini tek yerde topluyoruz. Fiyat, fotoğraf ve ödeme koşullarını geliştirici firma onaylar; inşaat aşamasını ve teslim tarihini açıkça görürsünüz.</p>
               </div>
 
               <div className="v1-grid v-grid">
@@ -524,24 +524,24 @@ export default function Home({ initialProperties, initialUsdRate }) {
                   <div className="v1-icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
                   </div>
-                  <h3 className="v1-card-title">%0 Emlakçı Komisyonu</h3>
-                  <p className="v1-card-desc">Sıfır aracı, sıfır komisyon. Satın alım bütçenizin tek bir kuruşu bile emlakçı komisyonuna gitmez, doğrudan kendi yatırımınızda kalır.</p>
+                  <h3 className="v1-card-title">Alıcıdan %0 Komisyon</h3>
+                  <p className="v1-card-desc">LansmanBul alıcıdan komisyon almaz. Satın alma bütçeniz tamamen kendi yatırımınızda kalır.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
                   <div className="v1-icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   </div>
-                  <h3 className="v1-card-title">Müteahhitle Birebir İletişim</h3>
-                  <p className="v1-card-desc">Hiçbir engel yok. Tek tıkla doğrudan inşaat projesinin resmi temsilcisine bağlanır, tüm teknik ve mali detayları birinci elden öğrenirsiniz.</p>
+                  <h3 className="v1-card-title">Firmayla Doğrudan İletişim</h3>
+                  <p className="v1-card-desc">Onaylı projelerde WhatsApp butonu sizi doğrudan projenin satış ekibine bağlar. Arada aracı yoktur.</p>
                 </div>
 
                 <div className="v1-card scroll-3d-target">
                   <div className="v1-icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                   </div>
-                  <h3 className="v1-card-title">Referanslı İnşaat Firmaları</h3>
-                  <p className="v1-card-desc">Güvenliğiniz önceliğimizdir. Platformumuzda sadece doğrulanmış firmalar ve güvenilir geliştiriciler yer alır.</p>
+                  <h3 className="v1-card-title">Doğrulanmış Firmalar</h3>
+                  <p className="v1-card-desc">«✓ Onaylı proje» rozeti, bilgileri firmanın kendisi tarafından onaylanan projelerde görünür. Firmaları vergi kaydına göre doğruluyoruz.</p>
                 </div>
               </div>
 

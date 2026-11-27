@@ -116,7 +116,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         window.ymaps.ready(() => {
           mapInstance.current = new window.ymaps.Map(mapRef.current, {
             center: [lat, lng],
-            zoom: 14,
+            zoom: property.is_reference ? 13 : 15,
             controls: ['zoomControl'],
           });
 
@@ -125,7 +125,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
             balloonContent: property.testproje || 'Proje Konumu',
           }, {
             preset: 'islands#dotIcon',
-            iconColor: '#00A4A6',
+            iconColor: '#0F6E56',
           });
 
           mapInstance.current.geoObjects.add(placemark);
@@ -160,7 +160,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
           <h2 className="text-2xl font-black text-slate-800 mb-2">Proje Bulunamadı</h2>
           <p className="text-slate-500 mb-6">Aradığınız ilan yayından kaldırılmış veya silinmiş olabilir.</p>
-          <Link href="/" className="px-6 py-3 bg-[#00A4A6] text-white rounded-xl font-bold hover:bg-[#00898B] transition">
+          <Link href="/" className="px-6 py-3 bg-[#0F6E56] text-white rounded-xl font-bold hover:bg-[#00898B] transition">
             Anasayfaya Dön
           </Link>
         </div>
@@ -219,7 +219,11 @@ export default function PropertyDetail({ property, error, adminPreview = false }
     return String(featuresVal).split(/[\/,]/).map(s => s.trim()).filter(Boolean);
   };
 
-  const featuresList = parseFeatures(property.Özellikler);
+  // Парсер смешивает удобства проекта и объекты рядом (cami, eczane, metro…) — разделяем
+  const NEARBY_RE = /\b(cami|eczane|hastane|okul|lise|üniversite|ilkokul|anaokul|kreş|avm|alışveriş merkezi|market|metro|otobüs|durak|istasyon|banka|restoran|cafe|kafe|kuaför|kuru temizleme|park|karakol|itfaiye|postane|spor kompleksi|stadyum)/i;
+  const allFeatures = parseFeatures(property.Özellikler);
+  const featuresList = allFeatures.filter((f) => !NEARBY_RE.test(f) || /otopark|oyun parkı|çocuk park/i.test(f));
+  const nearbyList = allFeatures.filter((f) => NEARBY_RE.test(f) && !/otopark|oyun parkı|çocuk park/i.test(f));
 
   const distancesRaw = property['Konum Mesafeler'] || property['Konum_Mesafeler'] || '';
   const parsedDistances = distancesRaw
@@ -316,7 +320,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                 {property.konutcesit && (
                   <span 
                     className="text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider inline-block"
-                    style={{ backgroundColor: property.konutcesit.toLowerCase() === 'lansman' ? '#FF9800' : '#00A4A6' }}
+                    style={{ backgroundColor: property.konutcesit.toLowerCase() === 'lansman' ? '#FF9800' : '#0F6E56' }}
                   >
                     {property.konutcesit}
                   </span>
@@ -332,7 +336,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   {property.testproje || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-1 text-sm">
-                  <span className="text-[#00A4A6] text-base leading-none">📍</span>
+                  <span className="text-[#0F6E56] text-base leading-none">📍</span>
                   <span className="break-words max-w-full">
                     {property['İlçe/Semt'] ? `${property['İlçe/Semt']}, Ankara` : 'Ankara, Türkiye'}
                   </span>
@@ -422,7 +426,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                         <div 
                           key={idx}
                           onClick={() => setActivePhotoIndex(idx)}
-                          className={`w-20 h-14 rounded-xl overflow-hidden cursor-pointer shrink-0 transition-all ${idx === activePhotoIndex ? 'border-2 border-[#00A4A6] scale-102' : 'border border-transparent opacity-70 hover:opacity-100'}`}
+                          className={`w-20 h-14 rounded-xl overflow-hidden cursor-pointer shrink-0 transition-all ${idx === activePhotoIndex ? 'border-2 border-[#0F6E56] scale-102' : 'border border-transparent opacity-70 hover:opacity-100'}`}
                         >
                           <img src={url} className="w-full h-full object-cover" />
                         </div>
@@ -441,7 +445,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                     <div className="text-2xl text-slate-400 mt-0.5">📐</div>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Toplam Alan</div>
-                      <div className="text-base font-black text-slate-800">{property['card-area'] ? `${property['card-area']} m²` : 'Esnek'}</div>
+                      <div className="text-base font-black text-slate-800">{property.area_min ? (property.area_max && property.area_max > property.area_min ? `${property.area_min}–${property.area_max} m²` : `${property.area_min} m²`) : 'Belirtilmemiş'}</div>
                     </div>
                   </div>
 
@@ -467,7 +471,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                     <div className="text-2xl text-slate-400 mt-0.5">🔑</div>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Teslim Yılı</div>
-                      <div className="text-base font-black text-slate-800">{property.Teslim_Yili || property.teslim_yili || '2027'}</div>
+                      <div className="text-base font-black text-slate-800">{property.Teslim_Yili || 'Belirtilmemiş'}</div>
                     </div>
                   </div>
 
@@ -475,17 +479,10 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                     <div className="text-2xl text-slate-400 mt-0.5">🏢</div>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Proje Durumu</div>
-                      <div className="text-base font-black text-slate-800">{property.konutcesit || 'Devam Ediyor'}</div>
+                      <div className="text-base font-black text-slate-800">{property.konutcesit || 'Belirtilmemiş'}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">🖌️</div>
-                    <div>
-                      <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">İç Dekorasyon</div>
-                      <div className="text-base font-black text-slate-800">{property.Dekorasyon || 'Anahtar Teslim'}</div>
-                    </div>
-                  </div>
 
                 </div>
               </section>
@@ -507,7 +504,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                           key={idx} 
                           className={`border rounded-xl transition-all ${
                             isExpanded 
-                              ? 'border-[#00A4A6] bg-slate-50/50 shadow-sm' 
+                              ? 'border-[#0F6E56] bg-slate-50/50 shadow-sm' 
                               : 'border-slate-100 hover:border-slate-200'
                           }`}
                         >
@@ -517,17 +514,17 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                             className={`p-4 flex items-center justify-between select-none ${isSold ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-base font-extrabold text-slate-800">{layout.rooms}</span>
-                              <span className="text-xs text-slate-400 font-semibold">• {layout.area} m²'den</span>
+                              <span className="text-base font-extrabold text-slate-800">{String(layout.rooms || '').replace(/\s*-\s*[A-Z]$/, '')}</span>
+                              {layout.area ? <span className="text-xs text-slate-400 font-semibold">• {layout.area} m²'den</span> : null}
                             </div>
 
                             <div className="flex items-center gap-4">
-                              <span className={`text-sm font-black ${isSold ? 'text-red-500' : 'text-[#00A4A6]'}`}>
+                              <span className={`text-sm font-black ${isSold ? 'text-red-500' : 'text-[#0F6E56]'}`}>
                                 {isSold ? 'Satıldı' : (isReference ? 'Onay bekliyor' : formatPrice(layout.price, true))}
                               </span>
                               {!isSold && (
                                 <svg 
-                                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#00A4A6]' : ''}`} 
+                                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#0F6E56]' : ''}`} 
                                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"
                                 >
                                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -587,7 +584,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   <p className="text-sm text-gray-500 mb-4">Aşağıdaki plandan daire içi yerleşim detaylarını inceleyebilirsiniz:</p>
                   <div className="border border-gray-100 rounded-xl p-4 flex flex-col items-center bg-gray-50">
                     {property['card odalar'] && (
-                      <span className="bg-[#00A4A6] text-white text-xs font-bold px-3 py-1 rounded mb-4 inline-block">
+                      <span className="bg-[#0F6E56] text-white text-xs font-bold px-3 py-1 rounded mb-4 inline-block">
                         Örnek {property['card odalar']} Planı {property['card-area'] ? `(${property['card-area']} m²)` : ''}
                       </span>
                     )}
@@ -627,7 +624,17 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                       )}
                     </div>
 
-                    {parsedDistances.length > 0 ? (
+                    {isReference ? (
+                      <div className="flex flex-col justify-center gap-2 text-sm text-slate-500 leading-relaxed">
+                        <p className="font-semibold text-slate-700">Konum yaklaşıktır</p>
+                        <p>Bu bilgi kartındaki konum kamuya açık adres bilgisine göre gösterilmektedir. Kesin konum ve yakın çevre mesafeleri, geliştirici firma projeyi onayladığında yayınlanır.</p>
+                        {nearbyList.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {nearbyList.map((n) => <span key={n} className="bg-slate-50 border border-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full">{n}</span>)}
+                          </div>
+                        )}
+                      </div>
+                    ) : parsedDistances.length > 0 ? (
                       <div className="space-y-3 justify-center flex flex-col">
                         {parsedDistances.map((item, idx) => {
                           const isWalk = item.value.includes('🚶') || item.value.toLowerCase().includes('walk');
@@ -668,12 +675,16 @@ export default function PropertyDetail({ property, error, adminPreview = false }
               )}
 
               {/* Описание */}
-              {property.Açıklama && (
+              {(property.Açıklama || featuresList.length > 0) && (
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                  <h2>Proje Hakkında</h2>
-                  <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words text-sm md:text-base">
-                    {property.Açıklama}
-                  </div>
+                  <h2>{isReference ? 'Proje Özellikleri' : 'Proje Hakkında'}</h2>
+                  {isReference ? (
+                    <p className="text-sm text-slate-500 leading-relaxed">Projenin detaylı tanıtımı, geliştirici firma sayfayı onayladığında yayınlanır. Aşağıda kamuya açık kaynaklarda belirtilen özellikler yer almaktadır.</p>
+                  ) : (
+                    <div className="text-gray-600 leading-relaxed whitespace-pre-line break-words text-sm md:text-base">
+                      {property.Açıklama}
+                    </div>
+                  )}
                   {featuresList.length > 0 && (
                     <div className="flex flex-wrap gap-2.5 mt-6">
                       {featuresList.map((feat, index) => (
@@ -733,7 +744,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                 <>
                 <div>
                   <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Başlangıç Fiyatı</span>
-                  <div className="text-3xl font-black text-[#00A4A6] mt-1">
+                  <div className="text-3xl font-black text-[#0F6E56] mt-1">
                     {formatPrice(property.Fiyat)}
                   </div>
                 </div>
@@ -881,8 +892,8 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         }
 
         #whatsapp-btn {
-          background-color: #00A4A6 !important;
-          border: 2px solid #00A4A6 !important;
+          background-color: #0F6E56 !important;
+          border: 2px solid #0F6E56 !important;
           color: #ffffff !important;
           transition: all 0.25s ease !important;
         }
@@ -893,8 +904,8 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         }
 
         #whatsapp-plan-btn {
-          background-color: #00A4A6 !important;
-          border: 2px solid #00A4A6 !important;
+          background-color: #0F6E56 !important;
+          border: 2px solid #0F6E56 !important;
           color: #ffffff !important;
           transition: all 0.25s ease !important;
         }
