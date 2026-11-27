@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import AdminLayout, { StatusBadge } from '../../../components/admin/AdminLayout';
 import ApprovalPanel from '../../../components/admin/ApprovalPanel';
+import CabinetReviewPanel from '../../../components/admin/CabinetReviewPanel';
 import { siteOrigin } from '../../../lib/approvals';
 import { requireAdminPage } from '../../../lib/adminAuth';
 import { getSupabaseAdmin } from '../../../lib/supabaseAdmin';
@@ -51,7 +52,7 @@ function Field({ field, value, onChange, error, developers = [] }) {
   );
 }
 
-export default function EditProject({ project, developers, approvals, origin }) {
+export default function EditProject({ project, developers, approvals, origin, cabinet }) {
   const initial = Object.fromEntries(ALL_FIELDS.map((f) => [f.key, toFormValue(f, project[f.key])]));
   const [values, setValues] = useState(initial);
   const [savedValues, setSavedValues] = useState(initial);
@@ -107,7 +108,9 @@ export default function EditProject({ project, developers, approvals, origin }) 
           </div>
         </div>
 
-        <ApprovalPanel
+        {cabinet && <CabinetReviewPanel cabinet={cabinet} status={values.listing_status} />}
+
+        {!cabinet && <ApprovalPanel
           projectId={project.id}
           projectName={values.name}
           approvals={approvals}
@@ -119,7 +122,7 @@ export default function EditProject({ project, developers, approvals, origin }) 
               setSavedValues((v) => ({ ...v, listing_status: 'pending_approval' }));
             }
           }}
-        />
+        />}
 
         {FIELD_GROUPS.map((group) => (
           <section key={group.title} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 16 }}>
@@ -170,5 +173,20 @@ export async function getServerSideProps(context) {
     .eq('property_id', id)
     .order('sent_at', { ascending: false })
     .limit(5);
-  return { props: { project: data, developers: developers || [], approvals: approvals || [], origin: siteOrigin(context.req) } };
+  // Проект из кабинета застройщика: фото, документ, журнал изменений
+  let cabinet = null;
+  const { data: extra } = await supabase.from('properties')
+    .select('created_via, submitted_at, building_permit_path, photo_rights_confirmed_at, latitude, longitude, layouts')
+    .eq('id', id).single();
+  if (extra?.created_via === 'cabinet') {
+    const { data: imgs } = await supabase.from('property_images').select('image_url, Construction').eq('property_id', id).order('id').limit(1);
+    const { data: log } = await supabase.from('project_changes').select('id, changes, created_at').eq('property_id', id).order('created_at', { ascending: false }).limit(20);
+    let permitUrl = null;
+    if (extra.building_permit_path) {
+      const { data: signed } = await supabase.storage.from('documents').createSignedUrl(extra.building_permit_path, 3600);
+      permitUrl = signed?.signedUrl || null;
+    }
+    cabinet = { ...extra, photos: imgs?.[0]?.image_url || [], construction: imgs?.[0]?.Construction || [], log: log || [], permitUrl };
+  }
+  return { props: { project: data, developers: developers || [], approvals: approvals || [], origin: siteOrigin(context.req), cabinet } };
 }

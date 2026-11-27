@@ -31,6 +31,11 @@ export default async function handler(req, res) {
       data.stage_updated_at = new Date().toISOString();
     }
   }
+  // Адрес поменялся — старая точка на карте больше не верна, пусть пересчитается
+  if ('address' in data) {
+    const { data: cur } = await supabase.from('properties').select('address').eq('id', id).single();
+    if (cur && (cur.address || '') !== (data.address || '')) { data.latitude = null; data.longitude = null; }
+  }
   data.updated_at = new Date().toISOString();
 
   const { data: saved, error } = await supabase
