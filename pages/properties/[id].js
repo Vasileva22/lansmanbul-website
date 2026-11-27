@@ -220,7 +220,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
   };
 
   // Парсер смешивает удобства проекта и объекты рядом (cami, eczane, metro…) — разделяем
-  const NEARBY_RE = /\b(cami|eczane|hastane|okul|lise|üniversite|ilkokul|anaokul|kreş|avm|alışveriş merkezi|market|metro|otobüs|durak|istasyon|banka|restoran|cafe|kafe|kuaför|kuru temizleme|park|karakol|itfaiye|postane|spor kompleksi|stadyum)/i;
+  const NEARBY_RE = /(cami|eczane|hastane|okul|lise|üniversite|anaokul|kreş|avm|alışveriş merkezi|market|metro|otobüs|durak|istasyon|banka|restoran|cafe|kafe|kuaför|kuru temizleme|park|karakol|itfaiye|postane|stadyum|doğa)/i;
   const allFeatures = parseFeatures(property.Özellikler);
   const featuresList = allFeatures.filter((f) => !NEARBY_RE.test(f) || /otopark|oyun parkı|çocuk park/i.test(f));
   const nearbyList = allFeatures.filter((f) => NEARBY_RE.test(f) && !/otopark|oyun parkı|çocuk park/i.test(f));
