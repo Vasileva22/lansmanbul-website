@@ -87,6 +87,11 @@ export default function Footer({ setFilters }) {
                   Gizlilik politikası
                 </Link>
               </li>
+              <li>
+                <button type="button" className="btn-reset" onClick={() => window.dispatchEvent(new Event('lb-open-consent'))}>
+                  Çerez tercihleri
+                </button>
+              </li>
             </ul>
           </div>
 

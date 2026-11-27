@@ -48,7 +48,7 @@ export default function CerezPolitikasi() {
               </p>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">A. Hangi Çerezleri ve Tarayıcı Kayıtlarını Kullanıyoruz?</h2>
-              <p>LANSMANBUL internet sitesinde <strong>reklam, hedefleme veya ziyaretçi takibi amaçlı çerez kullanılmamaktadır</strong>. Google Analytics, Yandex Metrica, Meta (Facebook) Pixel, Google Ads veya benzeri analiz ve reklam araçları sitemizde yer almamaktadır.</p>
+              <p>LANSMANBUL internet sitesinde <strong>reklam veya hedefleme amaçlı çerez kullanılmamaktadır</strong>. Meta (Facebook) Pixel, Google Ads, Yandex Metrica veya benzeri reklam araçları sitemizde yer almamaktadır. Ziyaret istatistikleri için yalnızca, açık rızanızı vermeniz halinde Google Analytics kullanılır.</p>
               <ul className="space-y-4 pt-2">
                 <li>
                   <strong className="text-slate-900">1. Zorunlu ve İşlevsel Kayıtlar</strong>
@@ -59,20 +59,25 @@ export default function CerezPolitikasi() {
                   <p className="mt-1">Projelerin ne kadar ilgi gördüğünü (sayfa görüntülenme, WhatsApp butonuna tıklama, favoriye ekleme) yalnızca sayı olarak tutarız. Bu sayım çerez kullanmadan yapılır; IP adresiniz, cihaz bilgileriniz veya sizi tanımlayabilecek herhangi bir bilgi kaydedilmez. Kaydedilen bilgi yalnızca “hangi proje, hangi işlem, ne zaman” bilgisidir.</p>
                 </li>
                 <li>
-                  <strong className="text-slate-900">3. Üçüncü Taraf Harita Hizmeti</strong>
+                  <strong className="text-slate-900">3. Analitik Çerezler (yalnızca izninizle)</strong>
+                  <p className="mt-1">Bilgilendirme mesajında “Kabul Et” seçeneğini işaretlemeniz halinde Google Analytics 4 etkinleştirilir. Bu hizmet; ziyaret sayısı, ziyaretçilerin siteye hangi kaynaktan geldiği (ör. arama motoru, sosyal medya), kullanılan cihaz türü, yaklaşık konum (şehir/ülke düzeyinde), görüntülenen sayfalar ve WhatsApp butonuna tıklama gibi bilgileri toplar. Google Analytics 4 IP adreslerini kaydetmez; reklam ve kişiselleştirme sinyalleri kapalıdır. “Reddet” seçeneğini işaretlerseniz Google Analytics yüklenmez ve site aynı şekilde çalışmaya devam eder. Tercihinizi istediğiniz zaman sayfanın alt kısmındaki “Çerez tercihleri” bağlantısından değiştirebilirsiniz.</p>
+                </li>
+                <li>
+                  <strong className="text-slate-900">4. Üçüncü Taraf Harita Hizmeti</strong>
                   <p className="mt-1">Proje konumlarını göstermek için Yandex Haritalar hizmeti kullanılmaktadır. Harita görüntülendiğinde Yandex, kendi politikaları çerçevesinde cihazınıza çerez yerleştirebilir. Geliştirici panelindeki konum seçme haritası OpenStreetMap altyapısını kullanır. Bu hizmetlerin topladığı bilgiler ilgili sağlayıcıların gizlilik politikalarına tabidir.</p>
                 </li>
               </ul>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">B. Hukuki Sebep</h2>
               <p>Zorunlu ve işlevsel kayıtlar, Kanun’un 5’inci maddesinin (2) numaralı fıkrasının (c) ve (f) bentleri kapsamında, sitenin sunulması ve meşru menfaatlerimiz için gerekli olduğundan işlenmektedir. Anonim proje istatistikleri kişisel veri niteliği taşımamaktadır.</p>
-              <p>İleride analiz veya reklam amaçlı çerez kullanmaya karar vermemiz halinde, bu çerezler yalnızca açık rızanızı aldıktan sonra etkinleştirilecek ve bu metin güncellenecektir.</p>
+              <p>Analitik çerezler, Kanun’un 5’inci maddesinin (1) numaralı fıkrası kapsamında açık rızanıza dayanılarak kullanılır. Rızanızı dilediğiniz zaman “Çerez tercihleri” bağlantısından geri alabilirsiniz.</p>
+              <p>İleride reklam amaçlı çerez kullanmaya karar vermemiz halinde, bu çerezler de yalnızca açık rızanızı aldıktan sonra etkinleştirilecek ve bu metin güncellenecektir.</p>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">C. Toplama Yöntemi</h2>
               <p>Yukarıdaki bilgiler, sitemizi kullanırken tarayıcınız aracılığıyla otomatik olarak oluşturulur.</p>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">D. Aktarım</h2>
-              <p>Tarayıcınızda saklanan kayıtlar üçüncü kişilere aktarılmaz. Anonim proje istatistikleri, ilgili projenin geliştiricisine toplam sayılar olarak gösterilebilir. Harita hizmetinin topladığı bilgiler doğrudan ilgili sağlayıcıya (Yandex) iletilir. Yasal yükümlülüklerin yerine getirilmesi amacıyla, hukuken yetkili kamu kurumlarına talep halinde bilgi verilebilir.</p>
+              <p>Tarayıcınızda saklanan kayıtlar üçüncü kişilere aktarılmaz. Anonim proje istatistikleri, ilgili projenin geliştiricisine toplam sayılar olarak gösterilebilir. Harita hizmetinin topladığı bilgiler doğrudan ilgili sağlayıcıya (Yandex) iletilir. Google Analytics’e izin vermeniz halinde, analitik veriler Google LLC’ye ve Google’ın yurt dışındaki (ör. ABD) sunucularına aktarılır; bu aktarım, Kanun’un 9’uncu maddesi kapsamında açık rızanıza dayanır. Yasal yükümlülüklerin yerine getirilmesi amacıyla, hukuken yetkili kamu kurumlarına talep halinde bilgi verilebilir.</p>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">E. Çerez Tercihleri Nasıl Yönetilir?</h2>
               <p>Ziyaretçilerimizin kendilerine ait hangi kişisel verilerin toplanabildiği konusunda tercihlerini serbestçe kullanabilmesi LANSMANBUL için son derece önemlidir.</p>
