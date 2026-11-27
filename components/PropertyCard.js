@@ -393,8 +393,8 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
           {isReference ? (
             <>
               <p style={refNoteStyle}>Fiyat bilgisi geliştiriciden onay bekliyor</p>
-              <Link href={detailLink} className="wa" style={{ background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56' }}>
-                <span>Detaylar</span>
+              <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                Detaylar
               </Link>
               <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#0F6E56', textAlign: 'center', marginTop: 6 }}>
                 Projenin sahibi misiniz?

@@ -4,8 +4,7 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PropertyCard from '../components/PropertyCard';
-import { supabase } from '../supabase';
-import { toCardShape } from '../lib/projects';
+import { fetchProjectsByIds } from '../lib/projects';
 
 export default function FavoritesPage() {
   const [favoriteProperties, setFavoriteProperties] = useState([]);
@@ -23,19 +22,23 @@ export default function FavoritesPage() {
       return;
     }
 
+    // 1) мгновенно показываем из каталога, который пользователь уже открывал
     try {
-      // Запрашиваем только те проекты, чьи ID находятся в массиве избранного
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*, property_images(*), developer:developers(name, is_verified)')
-        .in('id', favIds)
-        .neq('listing_status', 'archived');
-
-      if (!error && data) {
-        setFavoriteProperties(data.map(toCardShape));
+      const cached = JSON.parse(sessionStorage.getItem('lb-catalog') || '[]');
+      const fromCache = favIds.map((id) => cached.find((p) => p.id === id)).filter(Boolean);
+      if (fromCache.length) {
+        setFavoriteProperties(fromCache);
+        setIsLoading(false);
       }
+    } catch (e) { /* нет кэша — просто ждём сеть */ }
+
+    // 2) и обновляем свежими данными из базы
+    try {
+      const data = await fetchProjectsByIds(favIds);
+      const order = new Map(favIds.map((id, i) => [id, i]));
+      setFavoriteProperties(data.sort((x, y) => (order.get(x.id) ?? 0) - (order.get(y.id) ?? 0)));
     } catch (err) {
-      console.error("Error fetching favorites from Supabase:", err);
+      console.error("Error fetching favorites:", err);
     } finally {
       setIsLoading(false);
     }

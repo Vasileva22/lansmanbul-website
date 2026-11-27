@@ -45,7 +45,7 @@ function Check({ checked, onChange, children, error }) {
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, marginTop: 2, accentColor: C.green, flexShrink: 0 }} />
       <span>
         {children}
-        {error && <span style={{ display: 'block', color: C.danger, fontSize: 12 }}>{error}</span>}
+        {error && <span className="lb-err" style={{ display: 'block', color: C.danger, fontSize: 12 }}>{error}</span>}
       </span>
     </label>
   );
@@ -78,7 +78,12 @@ export default function ApprovalPage({ state, token, project }) {
       const decision = mode;
       const res = await fetch(`/api/onay/${token}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, decision }) });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setErrors(json.fields || {}); throw new Error(json.error || 'Bir hata oluştu.'); }
+      if (!res.ok) {
+        setErrors(json.fields || {});
+        // прокручиваем к первому полю с ошибкой, чтобы было видно, что исправить
+        setTimeout(() => document.querySelector('.lb-err')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+        throw new Error(json.error || 'Bir hata oluştu.');
+      }
       setDone(json.status);
       window.scrollTo(0, 0);
     } catch (err) {
@@ -92,7 +97,7 @@ export default function ApprovalPage({ state, token, project }) {
     <div>
       <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{label}</label>
       <input value={form[key]} onChange={(e) => set(key, e.target.value)} style={{ ...input, borderColor: errors[key] ? C.danger : '#cbd5e1' }} {...props} />
-      {errors[key] && <div style={{ fontSize: 12, color: C.danger, marginTop: 4 }}>{errors[key]}</div>}
+      {errors[key] && <div className="lb-err" style={{ fontSize: 12, color: C.danger, marginTop: 4 }}>{errors[key]}</div>}
     </div>
   );
 
@@ -172,7 +177,7 @@ export default function ApprovalPage({ state, token, project }) {
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Neyin düzeltilmesini istiyorsunuz? *</label>
                 <textarea rows={5} value={form.correction_note} onChange={(e) => set('correction_note', e.target.value)} style={{ ...input, resize: 'vertical', borderColor: errors.correction_note ? C.danger : '#cbd5e1' }} />
-                {errors.correction_note && <div style={{ fontSize: 12, color: C.danger, marginTop: 4 }}>{errors.correction_note}</div>}
+                {errors.correction_note && <div className="lb-err" style={{ fontSize: 12, color: C.danger, marginTop: 4 }}>{errors.correction_note}</div>}
               </div>
             )}
 

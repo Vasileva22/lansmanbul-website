@@ -37,7 +37,7 @@ export default function Footer({ setFilters }) {
               </span>
             </a>
             <p className="v3-description">
-              En yeni konut projelerini doğrudan geliştiriciden, komisyonsuz ve şeffaf fiyatlarla sunan dijital vitrindir.
+              Ankara'daki yeni konut projelerini tek yerde toplayan, onaylı projeleri öne çıkaran bilgi platformu.
             </p>
           </div>
 
@@ -100,12 +100,12 @@ export default function Footer({ setFilters }) {
                 </svg>
                 <span>+90 545 941 85 36</span>
               </a>
-              <a href="mailto:olesyav03@mail.ru" className="v3-contact-item">
+              <a href="mailto:info@lansmanbul.com" className="v3-contact-item">
                 <svg className="v3-contact-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
-                <span>posta : olesyav03@mail.ru</span>
+                <span>info@lansmanbul.com</span>
               </a>
               <a href="https://wa.me/905459418536" target="_blank" rel="noopener noreferrer" className="v3-wa-button">
                 <svg className="v3-wa-icon" viewBox="0 0 24 24" width="16" height="16">
