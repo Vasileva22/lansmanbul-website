@@ -27,7 +27,9 @@ const parseNewLocation = (str) => {
 };
 // --- КОНЕЦ ВСТАВКИ ---
 
-export default function PropertyDetail({ property, error, adminPreview = false }) {
+import PropertyCard from '../../components/PropertyCard';
+
+export default function PropertyDetail({ property, similar = [], error, adminPreview = false }) {
   const router = useRouter();
 
   // Безопасный парсинг фото
@@ -59,21 +61,21 @@ export default function PropertyDetail({ property, error, adminPreview = false }
   };
 
   // Вспомогательная функция сопоставления иконок у удобств
-  const getFeatureIcon = (feat) => {
-    const lower = feat.toLowerCase().trim()
-      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c')
-      .replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u');
-    if (lower.includes('havuz')) return '🏊‍♂️';
-    if (lower.includes('fitness') || lower.includes('spor') || lower.includes('salon')) return '🏋️‍♀️';
-    if (lower.includes('guvenlik')) return '🛡️';
-    if (lower.includes('otopark') || lower.includes('park yeri')) return '🚗';
-    if (lower.includes('cocuk') || lower.includes('oyun') || lower.includes('parki')) return '🌳';
-    if (lower.includes('site')) return '🏡';
-    if (lower.includes('asansor')) return '🛗';
-    if (lower.includes('jenerator')) return '⚡';
-    if (lower.includes('yesil') || lower.includes('bahce') || lower.includes('peyzaj')) return '🌳';
-    if (lower.includes('sauna') || lower.includes('hamam')) return '🧖‍♀️';
-    return '✨';
+  const getFeatureIcon = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  );
+
+
+  const [shareCopied, setShareCopied] = useState(false);
+  const shareProject = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href.split('?')[0] : '';
+    const title = `${property?.testproje || 'Proje'} | LansmanBul`;
+    try {
+      if (navigator.share) { await navigator.share({ title, url }); return; }
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch { /* пользователь закрыл меню «Поделиться» */ }
   };
 
   // Состояния для интерактивной галереи и лайтбокса
@@ -310,9 +312,16 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         </div>
       )}
 
-      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-28 pb-12">
+      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-20 pb-12">
         <div className="max-w-[1400px] mx-auto px-5">
           
+          {/* «Хлебные крошки»: понятно, где ты, и можно вернуться к району */}
+          <nav aria-label="breadcrumb" className="text-sm text-slate-500 mb-3 flex flex-wrap items-center gap-1.5">
+            <Link href="/" className="hover:text-[#0F6E56]">Ana sayfa</Link>
+            {property.district && (<><span aria-hidden="true">›</span><Link href={`/?ilce=${encodeURIComponent(property.district)}`} className="hover:text-[#0F6E56]">{property.district}</Link></>)}
+            <span aria-hidden="true">›</span><span className="text-slate-700 font-semibold">{property.testproje}</span>
+          </nav>
+
           {/* ШАПКА КАРТОЧКИ */}
           <header className="mb-6">
             <div className="flex justify-between items-start w-full">
@@ -343,9 +352,15 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                 </p>
               </div>
 
+              <div className="flex items-center gap-2 shrink-0">
+              <button type="button" onClick={shareProject} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0F6E56] border border-[#9FE1CB] bg-white rounded-full px-3.5 py-1.5 hover:bg-[#E1F5EE]" aria-label="Paylaş">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+                {shareCopied ? 'Bağlantı kopyalandı' : 'Paylaş'}
+              </button>
               <Link href={`/?scrollto=${property.id}`} className="back-button" id="back-button">
                 ◀ Kataloğa Dön
               </Link>
+              </div>
             </div>
           </header>
 
@@ -442,7 +457,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
                   
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">📐</div>
+                    <svg className="mt-0.5 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 21 21 3M3 21h6M3 21v-6M7 17l2 2M11 13l2 2M15 9l2 2"/></svg>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Toplam Alan</div>
                       <div className="text-base font-black text-slate-800">{property.area_min ? (property.area_max && property.area_max > property.area_min ? `${property.area_min}–${property.area_max} m²` : `${property.area_min} m²`) : 'Belirtilmemiş'}</div>
@@ -450,7 +465,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">🚪</div>
+                    <svg className="mt-0.5 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M14 12h.01"/></svg>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Oda Sayısı</div>
                       <div className="text-base font-black text-slate-800">{property['card odalar'] || 'Belirtilmemiş'}</div>
@@ -458,7 +473,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">🪜</div>
+                    <svg className="mt-0.5 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5ZM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Toplam Kat</div>
                       <div className="text-base font-black text-slate-800">
@@ -468,7 +483,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">🔑</div>
+                    <svg className="mt-0.5 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Teslim Yılı</div>
                       <div className="text-base font-black text-slate-800">{property.Teslim_Yili || 'Belirtilmemiş'}</div>
@@ -476,7 +491,7 @@ export default function PropertyDetail({ property, error, adminPreview = false }
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl text-slate-400 mt-0.5">🏢</div>
+                    <svg className="mt-0.5 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
                     <div>
                       <div className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Proje Durumu</div>
                       <div className="text-base font-black text-slate-800">{property.konutcesit || 'Belirtilmemiş'}</div>
@@ -842,6 +857,18 @@ export default function PropertyDetail({ property, error, adminPreview = false }
         </div>
       )}
 
+      {similar.length > 0 && (
+        <section className="bg-slate-50 pb-14">
+          <div className="max-w-[1400px] mx-auto px-5">
+            <h2 className="text-xl font-black text-slate-800 mb-1">Benzer projeler</h2>
+            <p className="text-sm text-slate-500 mb-5">{property.district ? `${property.district} ve çevresindeki diğer projeler` : 'Göz atabileceğiniz diğer projeler'}</p>
+            <div className="grid-layout" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+              {similar.map((p) => <PropertyCard key={p.id} property={p} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
       <Footer setFilters={() => {}} />
 
       {/* ЛОКАЛЬНЫЕ ИЗОЛИРОВАННЫЕ СТИЛИ СТРАНИЦЫ */}
@@ -944,7 +971,18 @@ export async function getServerSideProps(context) {
   try {
     const property = await getProjectRow(Number(id), { includeHidden: adminPreview });
     if (!property) return { props: { property: null, error: true } };
-    return { props: { property: toCardShape(property), error: false, adminPreview } };
+    // Похожие: тот же район, затем близкие по цене/планировкам; подтверждённые первыми
+    let similar = [];
+    try {
+      const { getCatalogProjects } = await import('../../lib/projectsServer');
+      const all = (await getCatalogProjects()).filter((p) => p.id !== property.id);
+      const sameDistrict = all.filter((p) => p.district && p.district === property.district);
+      const rooms = new Set(property.room_types || []);
+      const others = all.filter((p) => !sameDistrict.includes(p)).sort((a, b) =>
+        (b.room_types || []).filter((r) => rooms.has(r)).length - (a.room_types || []).filter((r) => rooms.has(r)).length);
+      similar = [...sameDistrict, ...others].slice(0, 3);
+    } catch { similar = []; }
+    return { props: { property: toCardShape(property), similar, error: false, adminPreview } };
   } catch (err) {
     console.error('Server side props error:', err);
     return { props: { property: null, error: true } };

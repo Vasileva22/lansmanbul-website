@@ -48,7 +48,7 @@ function ReferenceCover({ area, compact = false }) {
       <svg width={compact ? 26 : 30} height={compact ? 26 : 30} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
       </svg>
-      <span style={{ fontSize: 12, fontWeight: 600 }}>{area}</span>
+      <span style={{ fontSize: compact ? 12 : 14, fontWeight: 700, letterSpacing: 0.2 }}>{area}</span>
     </div>
   );
 }
@@ -60,7 +60,7 @@ function RuhsatBadge({ show }) {
   return (
     <span title="Yapı ruhsatı LansmanBul ekibi tarafından kontrol edildi"
       style={{ display: 'inline-flex', alignSelf: 'flex-start', width: 'fit-content', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700, color: '#085041', background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 999, padding: '2px 9px', margin: '6px 0 2px' }}>
-      📄 Ruhsatlı
+      Ruhsatlı
     </span>
   );
 }
@@ -439,7 +439,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
     <article className="custom-card" data-id={property?.id} style={isReference ? undefined : { outline: '2px solid #0F6E56', outlineOffset: -2 }}>
       {/* 1. БЛОК ФОТОГРАФИИ (клик открывает полноэкранный просмотр фото) */}
       <div 
-        className="img-container" 
+        className={`img-container${isReference ? ' is-ref' : ''}`} 
         onClick={() => !isReference && onImageClick && onImageClick(photos, currentSlide)}
         title={isReference ? undefined : 'Büyük görseli incele'}
         style={isReference ? { cursor: 'default' } : undefined}

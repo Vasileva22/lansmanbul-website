@@ -267,13 +267,17 @@ export default function Header({ setFilters }) {
             Hakkımızda
           </Link>
 
+          <Link href="/gelistirici" className="mobile-nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+            Geliştirici girişi
+          </Link>
+
          {/* КНОПКА PROJE EKLE В МОБИЛЬНОМ МЕНЮ */}
           <button 
             onClick={() => { setIsMobileMenuOpen(false); setIsAddProjectOpen(true); }}
-            className="mobile-nav-item btn-reset"
+            className="mobile-nav-item mobile-add-btn btn-reset"
             style={{ 
-              color: '#00A4A6', 
-              border: '2px solid #00A4A6', 
+              color: '#0F6E56', 
+              border: '2px solid #0F6E56', 
               borderRadius: '9999px', 
               padding: '10px 20px', 
               fontWeight: '800',
