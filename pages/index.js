@@ -523,12 +523,7 @@ export default function Home({ initialProperties }) {
   };
 
   const handleCookieAccept = () => {
-    localStorage.setItem('cookie_consent', 'accepted');
-    setShowCookieBanner(false);
-  };
-
-  const handleCookieReject = () => {
-    localStorage.setItem('cookie_consent', 'rejected');
+    localStorage.setItem('cookie_consent', 'informed');
     setShowCookieBanner(false);
   };
 
@@ -866,13 +861,11 @@ export default function Home({ initialProperties }) {
         <div className="cookie-consent-banner show" id="cookie-banner">
           <div className="cookie-consent-container">
             <p className="cookie-consent-text">
-              Size daha iyi bir deneyim sunabilmek için web sitemizde çerezler kullanıyoruz. Sitemizi kullanmaya devam ederek çerez kullanımını kabul etmiş sayılırsınız. Detaylı bilgi için <a href="https://increase-fine-snappea.tilda.ws/gizlilik-politikasi" target="_blank" rel="noopener noreferrer">Gizlilik Politikamızı</a> inceleyebilirsiniz.
+              Sitemiz reklam veya takip çerezi kullanmaz. Yalnızca sitenin çalışması için gerekli bilgileri (ör. favorileriniz) tarayıcınızda saklarız. Harita hizmeti Yandex tarafından sağlanır. Ayrıntılar: <a href="/cerez-politikasi">Çerez Politikası</a>
             </p>
             <div className="cookie-consent-buttons">
-              <button className="cookie-btn cookie-btn-reject" onClick={handleCookieReject}>Reddet</button>
-              <button className="cookie-btn cookie-btn-accept" onClick={handleCookieAccept}>Kabul Et</button>
+              <button className="cookie-btn cookie-btn-accept" onClick={handleCookieAccept}>Anladım</button>
             </div>
-            <span className="cookie-consent-close" onClick={() => setShowCookieBanner(false)}>&times;</span>
           </div>
         </div>
       )}

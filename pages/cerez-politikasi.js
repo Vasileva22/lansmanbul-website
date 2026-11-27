@@ -38,7 +38,7 @@ export default function CerezPolitikasi() {
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">Çerez (“Cookie”) Nedir?</h2>
               <p>
-                Günümüzde neredeyse her internet sitesinde çerez kullanılmaktadır. Size daha iyi, hızlı ve güvenli bir deneyim sağlamak için biz de LANSMANBUL olarak çerez kullanmaktayız.
+                Günümüzde neredeyse her internet sitesinde çerez kullanılmaktadır. Aşağıda LANSMANBUL internet sitesinde hangi bilgilerin tarayıcınızda saklandığını açıkça belirtiyoruz.
               </p>
               <p>
                 Çerezler, ziyaret ettiğiniz internet siteleri tarafından tarayıcılar aracılığıyla bilgisayarınıza (ya da akıllı telefon veya tablet gibi diğer cihazlarınıza) kaydedilen ve genelde harf ve rakamlardan oluşan çok küçük metin dosyalarıdır. Çerezler, ziyaretçilere ilişkin isim, cinsiyet veya adres gibi doğrudan kişisel verileri içermezler.
@@ -47,41 +47,32 @@ export default function CerezPolitikasi() {
                 Çerezler, ziyaret ettiğiniz internet sitesini yöneten sunucular tarafından oluşturulurlar. Böylelikle ziyaretçi aynı siteyi ziyaret ettiğinde sunucu bunu anlayabilir. Çerezler, internet sitesi sahiplerine aynı ziyaretçinin siteyi yeniden ziyaret ettiğini gösteren kimlik kartlarına benzetilebilir.
               </p>
 
-              <h2 className="text-lg font-bold text-slate-900 pt-4">A. Kişisel Verilerin Hangi Amaçlarla İşleneceği</h2>
-              <p>Çerezler; (i) tarafları, (ii) kullanım süreleri ve (iii) kullanım amaçları bakımından sınıflandırılabilir. Bu kapsamda, LANSMANBUL internet sitesinde kullanılan çerezlere dair detaylı açıklamalar aşağıda yer almaktadır:</p>
-              
+              <h2 className="text-lg font-bold text-slate-900 pt-4">A. Hangi Çerezleri ve Tarayıcı Kayıtlarını Kullanıyoruz?</h2>
+              <p>LANSMANBUL internet sitesinde <strong>reklam, hedefleme veya ziyaretçi takibi amaçlı çerez kullanılmamaktadır</strong>. Google Analytics, Yandex Metrica, Meta (Facebook) Pixel, Google Ads veya benzeri analiz ve reklam araçları sitemizde yer almamaktadır.</p>
               <ul className="space-y-4 pt-2">
                 <li>
-                  <strong className="text-slate-900">1. Zorunlu Çerezler</strong>
-                  <p className="mt-1">Zorunlu çerezler internet sitesinin çalışması, sitede gezinti yapmanız, arama/filtreleme yapmanız, form doldurmanız ve gizlilik tercihlorinin hatırlanması için zorunlu olarak kullanılmaktadırlar. Bu çerezler internet sitemizin çalışması için gerekli temel fonksiyonları gerçekleştirmek, kullanıcıların güvenliğini sağlamak ve yasal yükümlülüklerimizi yerine getirebilmek amacıyla kullanılmaktadır.</p>
+                  <strong className="text-slate-900">1. Zorunlu ve İşlevsel Kayıtlar</strong>
+                  <p className="mt-1">Sitenin çalışması için gerekli bazı bilgiler yalnızca sizin tarayıcınızda (yerel depolama alanında) saklanır: favorilerinize eklediğiniz projeler, bu bilgilendirme mesajını gördüğünüz, arama ve filtre tercihleriniz. Geliştirici (müteahhit) paneline giriş yapan kullanıcılar için oturumun açık kalmasını sağlayan giriş bilgisi de tarayıcıda saklanır. Bu kayıtlar bizim sunucularımıza gönderilmez ve sizi tanımlamak için kullanılmaz.</p>
                 </li>
                 <li>
-                  <strong className="text-slate-900">2. Analitik Çerezler</strong>
-                  <p className="mt-1">Analitik çerezler, internet sitemizdeki ziyaretçilerin sayılması ve trafiğin ölçülmesi, buna göre performans ayarlarının yapılması, sitemizin optimize edilmesi/geliştirilmesi ve ziyaretçilerin aradıklarını (örneğin aradıkları konut projelerini) bulmalarının kolaylaştırılması için kullanılan çerezlerdir. Bu amaçla Google Analytics, Yandex Metrica ve Yandex Harita çerezleri kullanılmaktadır.</p>
+                  <strong className="text-slate-900">2. Anonim Proje İstatistikleri</strong>
+                  <p className="mt-1">Projelerin ne kadar ilgi gördüğünü (sayfa görüntülenme, WhatsApp butonuna tıklama, favoriye ekleme) yalnızca sayı olarak tutarız. Bu sayım çerez kullanmadan yapılır; IP adresiniz, cihaz bilgileriniz veya sizi tanımlayabilecek herhangi bir bilgi kaydedilmez. Kaydedilen bilgi yalnızca “hangi proje, hangi işlem, ne zaman” bilgisidir.</p>
                 </li>
                 <li>
-                  <strong className="text-slate-900">3. İşlevsellik Çerezleri</strong>
-                  <p className="mt-1">İşlevsellik çerezleri internet sitemizde size bir kullanıcı olarak kolaylık sağlamak, seçimlerinizi hatırlayarak hizmetleri sizin için kişiselleştirmek (örneğin yaptığınız son aramaları, filtre ayarlarını veya tercih ettiğiniz dil seçeneğini hatırlamak) amacıyla kullanılmaktadır.</p>
-                </li>
-                <li>
-                  <strong className="text-slate-900">4. Hedefleme/Reklam Çerezleri</strong>
-                  <p className="mt-1">Hedefleme/reklam çerezleri internet sitemizde yer alan konut projelerinin tanıtım ve reklamlarını yapmak, size özel ve/veya ilgi alanlarınızla ilgili kişiselleştirilmiş reklamlar sunmak, reklam faaliyetlerimizi analiz etmek ve zaten görüntülenmiş reklamların tekrar gösterilmesini engellemek amacıyla kullanılan çerezlerdir (Örn: Facebook/Meta Pixel, Google Ads).</p>
+                  <strong className="text-slate-900">3. Üçüncü Taraf Harita Hizmeti</strong>
+                  <p className="mt-1">Proje konumlarını göstermek için Yandex Haritalar hizmeti kullanılmaktadır. Harita görüntülendiğinde Yandex, kendi politikaları çerçevesinde cihazınıza çerez yerleştirebilir. Geliştirici panelindeki konum seçme haritası OpenStreetMap altyapısını kullanır. Bu hizmetlerin topladığı bilgiler ilgili sağlayıcıların gizlilik politikalarına tabidir.</p>
                 </li>
               </ul>
 
-              <h2 className="text-lg font-bold text-slate-900 pt-4">B. Kişisel Verilerinizin Toplanmasının Hukuki Sebepleri</h2>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Zorunlu Çerezler:</strong> Bu çerezler aracılığıyla toplanan kişisel verileriz, Kanun’un 5’inci maddesinin (2) numaralı fıkrasının (c) bendi “Bir sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması kaydıyla, sözleşmenin taraflarına ait kişisel verilerin işlenmesinin gerekli olması”, (ç) bendi “Veri sorumlusunun hukuki yükümlülüğünü yerine getirebilmesi için zorunlu olması” ve (f) bendi “İlgili kişinin temel hak ve özgürlüklerine zarar vermemek kaydıyla, veri sorumlusunun meşru menfaatleri için veri işlenmesinin zorunlu olması” kapsamında işlenmektedir.</li>
-                <li><strong>Analitik, İşlevsellik ve Hedefleme/Reklam Çerezleri:</strong> Bu çerezler aracılığıyla toplanan kişisel verileriniz, Kanun’un 5’inci maddesinin (1) numaralı fıkrası kapsamında açık rızanızın alınması (çerezlere izin vermeniz) suretiyle işlenmektedir.</li>
-              </ul>
+              <h2 className="text-lg font-bold text-slate-900 pt-4">B. Hukuki Sebep</h2>
+              <p>Zorunlu ve işlevsel kayıtlar, Kanun’un 5’inci maddesinin (2) numaralı fıkrasının (c) ve (f) bentleri kapsamında, sitenin sunulması ve meşru menfaatlerimiz için gerekli olduğundan işlenmektedir. Anonim proje istatistikleri kişisel veri niteliği taşımamaktadır.</p>
+              <p>İleride analiz veya reklam amaçlı çerez kullanmaya karar vermemiz halinde, bu çerezler yalnızca açık rızanızı aldıktan sonra etkinleştirilecek ve bu metin güncellenecektir.</p>
 
-              <h2 className="text-lg font-bold text-slate-900 pt-4">C. Kişisel Verilerinizin Toplama Yöntemleri</h2>
-              <p>Yukarıda belirtilen kişisel verileriniz, internet sitemizde bulunan çerezler (cookies) aracılığıyla otomatik araçlarla (tarayıcınız üzerinden) toplanmaktadır.</p>
+              <h2 className="text-lg font-bold text-slate-900 pt-4">C. Toplama Yöntemi</h2>
+              <p>Yukarıdaki bilgiler, sitemizi kullanırken tarayıcınız aracılığıyla otomatik olarak oluşturulur.</p>
 
-              <h2 className="text-lg font-bold text-slate-900 pt-4">D. İşlenen Kişisel Verilerin Kimlere ve Hangi Amaçla Aktarılabileceği</h2>
-              <p>Kişisel verileriniz açık rızanız olmaksızın veya mevzuatta öngörülmesi hali dışında işbu Çerez Aydınlatma Metni’nde belirtilenler haricinde üçüncü kişilerle paylaşılmayacaktır.</p>
-              <p>Çerezler aracılığıyla toplanan ve analiz edilen anonim trafik verileriniz, analiz hizmetlerinin yürütülmesi amacıyla bu hizmetleri sağlayan analiz ortaklarımıza (Google, Yandex) ve reklam süreçlerinin planlanması amacıyla yurt dışında mukim reklam sağlayıcı (Meta/Facebook) firmalara aktarılmaktadır.</p>
-              <p>Ayrıca kişisel verileriniz, yasal yükümlülüklerimizin yerine getirilmesi amacıyla hukuken yetkili kamu kurumlarına ve yargı mercilerine talep halinde aktarılabilecektir.</p>
+              <h2 className="text-lg font-bold text-slate-900 pt-4">D. Aktarım</h2>
+              <p>Tarayıcınızda saklanan kayıtlar üçüncü kişilere aktarılmaz. Anonim proje istatistikleri, ilgili projenin geliştiricisine toplam sayılar olarak gösterilebilir. Harita hizmetinin topladığı bilgiler doğrudan ilgili sağlayıcıya (Yandex) iletilir. Yasal yükümlülüklerin yerine getirilmesi amacıyla, hukuken yetkili kamu kurumlarına talep halinde bilgi verilebilir.</p>
 
               <h2 className="text-lg font-bold text-slate-900 pt-4">E. Çerez Tercihleri Nasıl Yönetilir?</h2>
               <p>Ziyaretçilerimizin kendilerine ait hangi kişisel verilerin toplanabildiği konusunda tercihlerini serbestçe kullanabilmesi LANSMANBUL için son derece önemlidir.</p>
