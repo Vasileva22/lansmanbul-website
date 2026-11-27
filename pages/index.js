@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -539,8 +540,19 @@ export default function Home({ initialProperties }) {
     });
   };
 
+  // Сохраняем каталог на время визита — «Избранное» откроется мгновенно
+  useEffect(() => {
+    try {
+      if (masterProperties.length) sessionStorage.setItem('lb-catalog', JSON.stringify(masterProperties));
+    } catch (e) { /* хранилище недоступно — не страшно */ }
+  }, [masterProperties]);
+
   return (
     <>
+      <Head>
+        <title>Ankara Yeni Konut Projeleri | LansmanBul</title>
+        <meta name="description" content="Ankara'daki yeni konut projeleri tek yerde: inşaat aşaması, teslim tarihi, planlar ve onaylı projeler. Alıcıdan komisyon alınmaz." />
+      </Head>
       <Header setFilters={setFilters} />
 
       <HeroSearch 

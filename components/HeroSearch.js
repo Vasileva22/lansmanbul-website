@@ -279,7 +279,7 @@ return (
       {/* 1. ИЗУМРУДНЫЙ БЛОК HERO: ЗАГОЛОВОК И ПОИСКОВАЯ ПАНЕЛЬ ПОЛНОСТЬЮ ВНУТРИ */}
       <section className="hero" ref={dropdownRef}>
         <div className="w">
-          <h1>Doğrudan müteahhitten komisyonsuz yeni konut projeleri</h1>
+          <h1>Ankara'nın yeni konut projeleri tek yerde</h1>
 
           <div className="search" role="search">
             
@@ -528,7 +528,7 @@ return (
                 <path d="m8 12 3 3 5-6"/>
               </svg>
             </i>
-            <b>Komisyon yok</b>
+            <b>Alıcıdan komisyon yok</b>
           </div>
 
           <div className="tr">
@@ -537,7 +537,7 @@ return (
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
             </i>
-            <b>Doğrudan müteahhit</b>
+            <b>Onaylı projeler öne çıkar</b>
           </div>
 
           <div className="tr">
@@ -546,7 +546,7 @@ return (
                 <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.7-5.2A8.5 8.5 0 1 1 21 12z"/>
               </svg>
             </i>
-            <b>WhatsApp ile hızlı yanıt</b>
+            <b>İnşaat aşaması ve teslim tarihi</b>
           </div>
         </div>
       </section>

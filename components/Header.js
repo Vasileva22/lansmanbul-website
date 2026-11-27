@@ -144,7 +144,7 @@ export default function Header({ setFilters }) {
                 e.currentTarget.style.color = 'var(--c4)';
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: '800' }}>+</span> 0 TL'ye İlan Ver
+              <span style={{ fontSize: '16px', fontWeight: '800' }}>+</span> Projenizi ücretsiz ekleyin
             </button>
           </nav>
 
@@ -288,7 +288,7 @@ export default function Header({ setFilters }) {
               boxSizing: 'border-box'
             }}
           >
-            <span style={{ fontSize: '18px', fontWeight: '900' }}>+</span> 0 TL'ye İlan Ver
+            <span style={{ fontSize: '18px', fontWeight: '900' }}>+</span> Projenizi ücretsiz ekleyin
           </button>
         </div>
       </div>
@@ -314,9 +314,9 @@ export default function Header({ setFilters }) {
             
             <div className="text-center space-y-4">
               <div className="text-5xl" style={{ marginBottom: '10px' }}>🏢</div>
-              <h3 className="text-2xl font-black text-slate-800" style={{ margin: '0 0 10px 0' }}>Projenizi Lansmanbul'da Yayınlayın</h3>
+              <h3 className="text-2xl font-black text-slate-800" style={{ margin: '0 0 10px 0' }}>Projenizi LansmanBul'a ücretsiz ekleyin</h3>
               <p className="text-sm text-slate-500 leading-relaxed" style={{ marginBottom: '20px' }}>
-                İnşaat projenizi platformumuzda komisyonsuz ve doğrudan alıcılara ulaştıracak şekilde listelemek için bizimle hemen WhatsApp üzerinden iletişime geçebilirsiniz.
+                Konut projenizin geliştiricisi veya yetkilisiyseniz, projenizi fotoğraf, fiyat ve planlarla ücretsiz olarak yayınlayabilirsiniz. Onaylı projeler listede öne çıkar. Başlamak için bize WhatsApp'tan yazın.
               </p>
               <a 
                 href={`https://wa.me/905459418536?text=${encodeURIComponent("Merhaba, yeni inşaat projemizi lansmanbul.com portalına eklemek ve detayları görüşmek istiyoruz.")}`}
