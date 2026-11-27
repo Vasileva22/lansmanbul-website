@@ -217,10 +217,17 @@ export async function updatePropertyPOIs(propertyId) {
 
     if (fetchError || !property) return false;
 
-    const actualAddress = property.address || property.adress || '';
-    const fullAddress = `${property.city || 'Istanbul'}, ${actualAddress}`;
-    
-    const coordinates = await getCoordinatesFromAddress(fullAddress);
+    // Точка, которую застройщик поставил на карте, важнее геокодера.
+    // Геокодер вызываем, только если точки нет и есть адрес.
+    let coordinates = null;
+    if (Number.isFinite(property.latitude) && Number.isFinite(property.longitude)) {
+      coordinates = { lat: property.latitude, lng: property.longitude };
+    } else {
+      const actualAddress = property.address || property.adress || '';
+      if (!actualAddress.trim()) return false;
+      const fullAddress = `${property.city || 'Ankara'}, ${actualAddress}`;
+      coordinates = await getCoordinatesFromAddress(fullAddress);
+    }
     if (!coordinates) return false;
 
     const cityKey = normalizeCity(property.city);

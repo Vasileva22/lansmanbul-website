@@ -32,7 +32,8 @@ export default async function handler(req, res) {
 
       // Если адрес и город НЕ менялись — это технический апдейт координат или POI.
       // Прерываем выполнение немедленно, не тратя лимиты API сторонних сервисов.
-      if (newAddress === oldAddress && newCity === oldCity) {
+      const samePoint = record?.latitude === old_record?.latitude && record?.longitude === old_record?.longitude;
+      if (newAddress === oldAddress && newCity === oldCity && samePoint) {
         console.log(`[Webhook] Предотвращаем бесконечный цикл для ID: ${id} (адрес и город не менялись).`);
         return res.status(200).json({ message: 'Address and city did not change. Skipped calculation.' });
       }
