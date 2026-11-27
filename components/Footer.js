@@ -71,7 +71,8 @@ export default function Footer({ setFilters }) {
                 <li key={d}><Link href={`/?ilce=${encodeURIComponent(d)}`}>{d} projeleri</Link></li>
               ))}
             </ul>
-            <h4 className="v3-title" style={{ marginTop: 22 }}>Geliştiriciler için</h4>
+            <div style={{ height: 26 }} aria-hidden="true" />
+            <h4 className="v3-title">Geliştiriciler için</h4>
             <ul className="v3-links">
               <li><Link href="/gelistirici/kayit">Projenizi ücretsiz ekleyin</Link></li>
               <li><Link href="/gelistirici">Geliştirici girişi</Link></li>

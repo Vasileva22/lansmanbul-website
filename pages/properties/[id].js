@@ -312,7 +312,7 @@ export default function PropertyDetail({ property, similar = [], error, adminPre
         </div>
       )}
 
-      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-24 pb-12">
+      <div className="projeland-card-container bg-slate-50 text-slate-800 antialiased min-h-screen relative pt-20 pb-12">
         <div className="max-w-[1400px] mx-auto px-5">
           
           {/* «Хлебные крошки»: понятно, где ты, и можно вернуться к району */}
@@ -352,13 +352,15 @@ export default function PropertyDetail({ property, similar = [], error, adminPre
                 </p>
               </div>
 
-              <button type="button" onClick={shareProject} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0F6E56] border border-[#9FE1CB] bg-white rounded-full px-3.5 py-1.5 mr-3 hover:bg-[#E1F5EE]" aria-label="Paylaş">
+              <div className="flex items-center gap-2 shrink-0">
+              <button type="button" onClick={shareProject} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0F6E56] border border-[#9FE1CB] bg-white rounded-full px-3.5 py-1.5 hover:bg-[#E1F5EE]" aria-label="Paylaş">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
                 {shareCopied ? 'Bağlantı kopyalandı' : 'Paylaş'}
               </button>
               <Link href={`/?scrollto=${property.id}`} className="back-button" id="back-button">
                 ◀ Kataloğa Dön
               </Link>
+              </div>
             </div>
           </header>
 
