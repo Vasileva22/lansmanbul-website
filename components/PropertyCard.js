@@ -54,10 +54,20 @@ function ReferenceCover({ area, compact = false }) {
 }
 
 const refNoteStyle = { fontSize: 12.5, color: '#5B6B68', background: '#f1f5f4', borderRadius: 8, padding: '8px 10px', margin: '8px 0', lineHeight: 1.4 };
-const CLAIM_WA = '905459418536';
-function claimLink(name) {
-  const text = `Merhaba, lansmanbul.com'daki "${name || ''}" projesinin yetkilisiyim. Sayfayı onaylamak ve fiyat/fotoğraf eklemek istiyorum.`;
-  return `https://wa.me/${CLAIM_WA}?text=${encodeURIComponent(text)}`;
+// Значок «Ruhsatlı» — только если разрешение проверено администратором
+function RuhsatBadge({ show }) {
+  if (!show) return null;
+  return (
+    <span title="Yapı ruhsatı LansmanBul ekibi tarafından kontrol edildi"
+      style={{ display: 'inline-flex', alignSelf: 'flex-start', width: 'fit-content', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700, color: '#085041', background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 999, padding: '2px 9px', margin: '6px 0 2px' }}>
+      📄 Ruhsatlı
+    </span>
+  );
+}
+
+// «Projenin sahibi misiniz?» → страница, где застройщик забирает проект себе
+function claimLink(id) {
+  return `/gelistirici/sahiplen/${id}`;
 }
 
 export default function PropertyCard({ property, onImageClick, selectedRooms = [], layout = 'grid' }) {
@@ -366,6 +376,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
             {[locationText, badgeLabel, deliveryText].filter(Boolean).join(' · ')}
           </p>
           <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} projectStatus={property?.konutcesit} />
+          <RuhsatBadge show={property?.ruhsatli} />
 
           {listGroupArray.length > 0 && (
             <div className="tbl">
@@ -398,7 +409,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
               <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                 Detaylar
               </Link>
-              <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#0F6E56', textAlign: 'center', marginTop: 6 }}>
+              <a href={claimLink(property?.id)} style={{ fontSize: 12, color: '#0F6E56', textAlign: 'center', marginTop: 6 }}>
                 Projenin sahibi misiniz?
               </a>
             </>
@@ -533,6 +544,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
 
         {/* Шкала стройки + срок сдачи */}
         <StageBar stage={property?.construction_stage} updatedAt={property?.stage_updated_at} deliveryText={deliveryText} projectStatus={property?.konutcesit} />
+        <RuhsatBadge show={property?.ruhsatli} />
 
         {/* Планировки и площадь — плашками; стрелка раскрывает все планы */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '4px 0 8px' }}>
@@ -603,7 +615,7 @@ const cleanStatus = property?.konutcesit ? property.konutcesit.trim().toLowerCas
             <Link href={detailLink} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '10px 12px', borderRadius: 10, background: '#fff', color: '#0F6E56', border: '1.5px solid #0F6E56', fontWeight: 700, fontSize: 14, textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
               Detaylar
             </Link>
-            <a href={claimLink(projectName)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, color: '#0F6E56', whiteSpace: 'nowrap' }}>
+            <a href={claimLink(property?.id)} onClick={(e) => e.stopPropagation()} style={{ fontSize: 12, color: '#0F6E56', whiteSpace: 'nowrap' }}>
               Projenin sahibi misiniz?
             </a>
           </div>

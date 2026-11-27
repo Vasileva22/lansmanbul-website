@@ -4,6 +4,7 @@ import CabinetLayout, { C, Field, inputStyle, primaryBtn } from '../../component
 import { getBrowserSupabase } from '../../lib/supabaseBrowser';
 
 export default function DeveloperSignup() {
+  const claimId = (() => { const n = Number(typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('proje') : ''); return Number.isInteger(n) && n > 0 ? n : null; })();
   const [f, setF] = useState({ company_name: '', tax_number: '', contact_name: '', contact_title: '', phone: '', email: '', password: '', kvkk: false, terms: false });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
@@ -39,7 +40,7 @@ export default function DeveloperSignup() {
         email: f.email.trim(),
         password: f.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/gelistirici`,
+          emailRedirectTo: `${window.location.origin}${claimId ? `/gelistirici/sahiplen/${claimId}` : '/gelistirici'}`,
           data: {
             signup_type: 'developer',
             company_name: f.company_name.trim(),

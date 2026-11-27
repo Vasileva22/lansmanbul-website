@@ -84,6 +84,17 @@ export default function Cabinet() {
         Son {stats.days} gün · {hasLive ? 'Aynı kişinin aynı oturumdaki tekrarları tek sayılır.' : 'İstatistikler projeniz yayına girdikten sonra burada görünür.'}
       </p>
 
+      {(state.me.claims || []).length > 0 && (
+        <div style={{ marginBottom: 18, display: 'grid', gap: 8 }}>
+          {state.me.claims.map((c) => (
+            <div key={c.id} style={{ background: c.status === 'pending' ? C.amberBg : '#fef2f2', color: c.status === 'pending' ? C.amberText : '#991b1b', borderRadius: 12, padding: '10px 14px', fontSize: 14 }}>
+              <b>{c.property?.name || 'Proje'}</b>{c.property?.district ? ` · ${c.property.district}` : ''} —{' '}
+              {c.status === 'pending' ? 'sahiplenme talebiniz inceleniyor (genellikle 1 iş günü).' : `talep onaylanmadı${c.admin_note ? `: ${c.admin_note}` : '.'}`}
+            </div>
+          ))}
+        </div>
+      )}
+
       <h2 style={{ fontSize: 17, fontWeight: 800, margin: '0 0 10px' }}>Projelerim</h2>
       <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14 }}>
         {projects.length === 0 && (

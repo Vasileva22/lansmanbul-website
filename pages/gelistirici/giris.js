@@ -22,7 +22,8 @@ export default function DeveloperLogin() {
         if (/confirm/i.test(error.message)) throw new Error('E-posta adresiniz henüz onaylanmadı. Gelen kutunuzdaki bağlantıya tıklayın.');
         throw new Error('E-posta veya şifre hatalı.');
       }
-      router.push('/gelistirici');
+      const proje = Number(router.query.proje);
+      router.push(Number.isInteger(proje) && proje > 0 ? `/gelistirici/sahiplen/${proje}` : '/gelistirici');
     } catch (err) {
       setMessage(err.message);
       setSending(false);
