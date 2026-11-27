@@ -385,7 +385,7 @@ return (
                   </label>
                 ))}
                 <p style={{ fontSize: 11.5, color: '#5B6B68', lineHeight: 1.45, margin: '6px 0 0' }}>
-                  Yabancılara satışa kapalı bölgelerdeki projeler gizlenir. Uygunluk liste fiyatına göre tahminidir; kesin karar resmi değerleme raporuna (ekspertiz) göre verilir. Fiyatı onaylanmamış projelerde uygunluk bilinmez.
+                  Yabancılara satışa kapalı bölgelerdeki projeler gizlenir. Uygunluk liste fiyatına göre tahminidir; kesin karar resmi değerleme raporuna (ekspertiz) göre verilir.
                 </p>
               </div>
             </details>
