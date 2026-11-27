@@ -59,7 +59,7 @@ function RuhsatBadge({ show }) {
   if (!show) return null;
   return (
     <span title="Yapı ruhsatı LansmanBul ekibi tarafından kontrol edildi"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700, color: '#085041', background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 999, padding: '2px 9px', margin: '6px 0 2px' }}>
+      style={{ display: 'inline-flex', alignSelf: 'flex-start', width: 'fit-content', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700, color: '#085041', background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 999, padding: '2px 9px', margin: '6px 0 2px' }}>
       📄 Ruhsatlı
     </span>
   );
