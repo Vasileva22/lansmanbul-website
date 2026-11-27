@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const { data: projects } = await getSupabaseAdmin()
     .from('properties')
-    .select('id, name, district, neighborhood, listing_status, construction_stage, project_status, delivery_year, delivery_month, updated_at')
+    .select('id, name, district, neighborhood, listing_status, created_via, construction_stage, project_status, delivery_year, delivery_month, updated_at')
     .eq('developer_id', ctx.developer.id)
     .neq('listing_status', 'archived')
     .order('updated_at', { ascending: false });

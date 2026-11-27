@@ -48,7 +48,9 @@ export default function Cabinet() {
 
   const { developer, member, projects } = state.me;
   const stats = state.me.stats || { days: 30, total: { view: 0, whatsapp: 0, favorite: 0 }, byProject: {} };
-  const hasLive = projects.some((p) => p.listing_status === 'confirmed' || p.listing_status === 'reference');
+  // Справочная карточка (собрана парсером, created_via пусто) уже видна на сайте, даже в статусе draft
+  const isLive = (p) => p.listing_status === 'confirmed' || !p.created_via;
+  const hasLive = projects.some(isLive);
   const pending = developer.account_status === 'pending';
 
   return (
@@ -103,7 +105,7 @@ export default function Cabinet() {
           </div>
         )}
         {projects.map((p, i) => {
-          const st = STATUS[p.listing_status] || STATUS.draft;
+          const st = p.listing_status !== 'confirmed' && !p.created_via ? STATUS.reference : (STATUS[p.listing_status] || STATUS.draft);
           return (
             <div key={p.id} style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', padding: '12px 14px', borderTop: i ? `1px solid ${C.line}` : 'none' }}>
               <div style={{ minWidth: 200 }}>
