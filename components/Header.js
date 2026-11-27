@@ -316,17 +316,19 @@ export default function Header({ setFilters }) {
               <div className="text-5xl" style={{ marginBottom: '10px' }}>🏢</div>
               <h3 className="text-2xl font-black text-slate-800" style={{ margin: '0 0 10px 0' }}>Projenizi LansmanBul'a ücretsiz ekleyin</h3>
               <p className="text-sm text-slate-500 leading-relaxed" style={{ marginBottom: '20px' }}>
-                Konut projenizin geliştiricisi veya yetkilisiyseniz, projenizi fotoğraf, fiyat ve planlarla ücretsiz olarak yayınlayabilirsiniz. Onaylı projeler listede öne çıkar. Başlamak için bize WhatsApp'tan yazın.
+                Konut projenizin geliştiricisi veya yetkilisiyseniz, projenizi fotoğraf, fiyat ve planlarla ücretsiz olarak yayınlayabilirsiniz. Onaylı projeler listede öne çıkar.
               </p>
-              <a 
-                href={`https://wa.me/905459418536?text=${encodeURIComponent("Merhaba, yeni inşaat projemizi lansmanbul.com portalına eklemek ve detayları görüşmek istiyoruz.")}`}
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="block py-3.5 px-6 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl font-bold transition shadow-md hover:shadow-lg"
-                style={{ textDecoration: 'none', display: 'block', width: '100%', boxSizing: 'border-box' }}
+              <a
+                href="/gelistirici/kayit"
+                className="block py-3.5 px-6 text-white rounded-xl font-bold transition shadow-md hover:shadow-lg"
+                style={{ textDecoration: 'none', display: 'block', width: '100%', boxSizing: 'border-box', background: '#0F6E56' }}
               >
-                WhatsApp ile İletişime Geç
+                Ücretsiz kayıt ol
               </a>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 13 }}>
+                <a href="/gelistirici/giris" style={{ color: '#0F6E56', fontWeight: 700 }}>Giriş yap</a>
+                <a href={`https://wa.me/905459418536?text=${encodeURIComponent("Merhaba, projemizi LansmanBul'a eklemek istiyoruz.")}`} target="_blank" rel="noopener noreferrer" style={{ color: '#5B6B68' }}>WhatsApp ile sorun</a>
+              </div>
             </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ function toValue(field, v) {
   return String(v);
 }
 
-export default function EditDeveloper({ developer, isNew }) {
+export default function EditDeveloper({ developer, isNew, members = [] }) {
   const router = useRouter();
   const [values, setValues] = useState(Object.fromEntries(DEVELOPER_FIELDS.map((f) => [f.key, toValue(f, developer?.[f.key])])));
   const [errors, setErrors] = useState({});
@@ -48,6 +48,13 @@ export default function EditDeveloper({ developer, isNew }) {
         <Link href="/admin/developers" style={{ color: '#64748b', fontSize: 13, textDecoration: 'none' }}>← Все застройщики</Link>
         <h1 style={{ fontSize: 24, fontWeight: 800, margin: '6px 0 18px' }}>{isNew ? 'Новый застройщик' : values.name}</h1>
 
+        {members.length > 0 && (
+          <section style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 14, padding: 16, marginBottom: 16, fontSize: 14 }}>
+            <b>Зарегистрировался через кабинет.</b> Контакт: {members.map((m) => `${m.contact_name || '—'}${m.contact_title ? ', ' + m.contact_title : ''} · ${m.phone || '—'} · ${m.email || '—'}`).join('; ')}
+            <div style={{ marginTop: 6, color: '#92400e' }}>Проверьте vergi no на ivd.gib.gov.tr (Vergi Kimlik Numarası Sorgulama), затем поставьте «Статус кабинета: Проверен» и, если всё в порядке, «Проверен LansmanBul: Да».</div>
+          </section>
+        )}
+
         <section style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
             {DEVELOPER_FIELDS.map((f) => (
@@ -57,7 +64,7 @@ export default function EditDeveloper({ developer, isNew }) {
                 </label>
                 {f.type === 'textarea' ? (
                   <textarea rows={4} value={values[f.key]} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} style={{ ...inputStyle, resize: 'vertical' }} />
-                ) : f.type === 'bool3' ? (
+                ) : f.type === 'bool3' || f.type === 'select' ? (
                   <select value={values[f.key]} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} style={inputStyle}>
                     {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -92,7 +99,14 @@ export async function getServerSideProps(context) {
 
   const id = Number(context.params.id);
   if (!Number.isInteger(id)) return { notFound: true };
-  const { data } = await getSupabaseAdmin().from('developers').select('*').eq('id', id).single();
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from('developers').select('*').eq('id', id).single();
   if (!data) return { notFound: true };
-  return { props: { developer: data, isNew: false } };
+  const { data: memberRows } = await supabase.from('developer_members').select('user_id, contact_name, contact_title, phone').eq('developer_id', id);
+  const members = [];
+  for (const m of memberRows || []) {
+    const { data: u } = await supabase.auth.admin.getUserById(m.user_id);
+    members.push({ contact_name: m.contact_name, contact_title: m.contact_title, phone: m.phone, email: u?.user?.email || null });
+  }
+  return { props: { developer: data, isNew: false, members } };
 }
