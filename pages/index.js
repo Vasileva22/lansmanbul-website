@@ -101,6 +101,8 @@ export default function Home({ initialProperties, initialUsdRate }) {
     const params = new URLSearchParams(searchString);
     const status = params.get('status');
     const scrollto = params.get('scrollto');
+    const ilce = params.get('ilce');
+    setFilters((prev) => ({ ...prev, selectedLocations: ilce ? [ilce] : prev.selectedLocations }));
 
     if (status) {
       setFilters((prev) => ({

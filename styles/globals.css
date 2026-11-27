@@ -3523,3 +3523,8 @@ details .chips {
 @media (max-width: 480px) {
   .contact-phone { display: none !important; }
 }
+
+/* Справочная карточка: вместо высокого пустого блока — короткая плашка с районом */
+.custom-card .img-container.is-ref { aspect-ratio: auto !important; height: 120px !important; }
+@media (max-width: 700px) { .custom-card .img-container.is-ref { height: 92px !important; } }
+@media (max-width: 900px) { .mobile-nav-item.mobile-add-btn { justify-content: center !important; } }

@@ -63,6 +63,21 @@ export default function Footer({ setFilters }) {
             </ul>
           </div>
 
+          {/* КОЛОНКА: ПОПУЛЯРНЫЕ РАЙОНЫ И ДЛЯ ЗАСТРОЙЩИКОВ */}
+          <div className="v3-col">
+            <h4 className="v3-title">Popüler ilçeler</h4>
+            <ul className="v3-links">
+              {['Çankaya', 'Etimesgut', 'Gölbaşı', 'Yenimahalle', 'Keçiören'].map((d) => (
+                <li key={d}><Link href={`/?ilce=${encodeURIComponent(d)}`}>{d} projeleri</Link></li>
+              ))}
+            </ul>
+            <h4 className="v3-title" style={{ marginTop: 22 }}>Geliştiriciler için</h4>
+            <ul className="v3-links">
+              <li><Link href="/gelistirici/kayit">Projenizi ücretsiz ekleyin</Link></li>
+              <li><Link href="/gelistirici">Geliştirici girişi</Link></li>
+            </ul>
+          </div>
+
           {/* КОЛОНКА 3: ССЫЛКИ НА ПОЛИТИКИ */}
           <div className="v3-col">
             <h4 className="v3-title">Gizlilik ve Kullanım</h4>
@@ -146,7 +161,7 @@ export default function Footer({ setFilters }) {
         }
         .v3-grid {
           display: grid !important;
-          grid-template-columns: 1.5fr 1fr 1fr 1.2fr !important;
+          grid-template-columns: 1.4fr 0.9fr 1.1fr 1fr 1.2fr !important;
           gap: 30px !important;
           margin-bottom: 40px !important;
         }
@@ -178,7 +193,7 @@ export default function Footer({ setFilters }) {
         .v3-logo-icon {
           width: 34px !important;
           height: 34px !important;
-          background-color: #007a7c !important;
+          background-color: #0F6E56 !important;
           border-radius: 6px !important;
           display: flex !important;
           align-items: center !important;
@@ -201,7 +216,7 @@ export default function Footer({ setFilters }) {
           background-image: none !important;
         }
         .v3-logo-accent {
-          color: #007a7c !important;
+          color: #0F6E56 !important;
           font-weight: 900 !important;
         }
         .v3-description {
@@ -241,12 +256,12 @@ export default function Footer({ setFilters }) {
           height: 1.5px !important;
           bottom: 0 !important;
           left: 0 !important;
-          background-color: #007a7c !important;
+          background-color: #0F6E56 !important;
           transform-origin: bottom left !important;
           transition: transform 0.2s ease-out !important;
         }
         .v3-links :global(a:hover), .v3-links :global(.btn-reset:hover) {
-          color: #007a7c !important;
+          color: #0F6E56 !important;
         }
         .v3-links :global(a:hover::after), .v3-links :global(.btn-reset:hover::after) {
           transform: scaleX(1) !important;
@@ -269,11 +284,11 @@ export default function Footer({ setFilters }) {
         .v3-contact-icon {
           width: 15px !important;
           height: 15px !important;
-          color: #007a7c !important;
+          color: #0F6E56 !important;
           flex-shrink: 0 !important;
         }
         .v3-contact-item:hover {
-          color: #007a7c !important;
+          color: #0F6E56 !important;
         }
         .v3-wa-button {
           display: inline-flex !important;
