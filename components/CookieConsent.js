@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { getConsent, setConsent, loadAnalytics, disableAnalytics } from '../lib/analytics';
 
 // Баннер согласия на всех страницах. Аналитика — только после «Kabul Et».
 // Открыть снова можно ссылкой «Çerez tercihleri» в подвале (событие lb-open-consent).
 export default function CookieConsent() {
   const [show, setShow] = useState(false);
+  const { pathname } = useRouter();
+  const isAdmin = pathname.startsWith('/admin');
 
   useEffect(() => {
+    if (isAdmin) return undefined; // в админке не спрашиваем и не считаем
     const c = getConsent();
     if (c === 'accepted') loadAnalytics();
     if (!c) {
@@ -15,7 +19,7 @@ export default function CookieConsent() {
       return () => clearTimeout(t);
     }
     return undefined;
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     const open = () => setShow(true);
@@ -23,7 +27,7 @@ export default function CookieConsent() {
     return () => window.removeEventListener('lb-open-consent', open);
   }, []);
 
-  if (!show) return null;
+  if (!show || isAdmin) return null;
 
   const accept = () => { setConsent('accepted'); loadAnalytics(); setShow(false); };
   const reject = () => { setConsent('rejected'); disableAnalytics(); setShow(false); };
