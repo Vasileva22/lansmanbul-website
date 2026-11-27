@@ -58,7 +58,6 @@ export default function Home({ initialProperties }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [layout, setLayout] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [showCookieBanner, setShowCookieBanner] = useState(false);
 
   // === НАЧАЛО ВСТАВКИ ===
   const [usdRate, setUsdRate] = useState(47.2); // Курс доллара к лире (резервный)
@@ -164,13 +163,6 @@ export default function Home({ initialProperties }) {
       router.events.off('routeChangeComplete', syncFiltersFromUrl);
     };
   }, [router]);
-
-  useEffect(() => {
-    const consent = localStorage.getItem('cookie_consent');
-    if (!consent) {
-      setTimeout(() => setShowCookieBanner(true), 1500);
-    }
-  }, []);
 
   // 3D скролл анимация
   useEffect(() => {
@@ -522,11 +514,6 @@ export default function Home({ initialProperties }) {
     router.push('/', undefined, { shallow: true });
   };
 
-  const handleCookieAccept = () => {
-    localStorage.setItem('cookie_consent', 'informed');
-    setShowCookieBanner(false);
-  };
-
   const handleOpenLightbox = (photos, index) => {
     setLightboxState({
       isOpen: true,
@@ -856,19 +843,6 @@ export default function Home({ initialProperties }) {
 
         </div>
       </section>
-
-      {showCookieBanner && (
-        <div className="cookie-consent-banner show" id="cookie-banner">
-          <div className="cookie-consent-container">
-            <p className="cookie-consent-text">
-              Sitemiz reklam veya takip çerezi kullanmaz. Yalnızca sitenin çalışması için gerekli bilgileri (ör. favorileriniz) tarayıcınızda saklarız. Harita hizmeti Yandex tarafından sağlanır. Ayrıntılar: <a href="/cerez-politikasi">Çerez Politikası</a>
-            </p>
-            <div className="cookie-consent-buttons">
-              <button className="cookie-btn cookie-btn-accept" onClick={handleCookieAccept}>Anladım</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ПРЕДСТАВЛЕНИЕ ЛАЙТБОКСА ПО КЛИКУ НА ФОТО */}
       {lightboxState.isOpen && (
