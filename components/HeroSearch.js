@@ -360,7 +360,7 @@ return (
 
             {/* ОТСЕК 2: ПЛАНИРОВКИ В СТРОКУ + КНОПКА + TÜMÜ С ТАБЛИЦЕЙ */}
             <div className="fld" style={{ position: 'relative' }}>
-              <small>Plan (birden fazla seçilebilir)</small>
+              <small>Oda sayısı</small>
               <div className="chips" id="pl">
                 {['1+1', '2+1', '3+1', '4+1', '5+1'].map((plan) => {
                   const isSelected = (filters.selectedRooms || []).includes(plan);
@@ -380,14 +380,14 @@ return (
                 <button
                   type="button"
                   className="chip"
-                  aria-pressed={activeDropdown === 'room' || (filters.selectedPropertyType && filters.selectedPropertyType !== 'Daire')}
+                  aria-pressed={activeDropdown === 'room' || (filters.selectedPropertyType && !['Daire', 'all'].includes(filters.selectedPropertyType))}
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveDropdown(activeDropdown === 'room' ? null : 'room');
                   }}
                   title="Tüm konut tipleri ve geniş planlar"
                 >
-                  {filters.selectedPropertyType && filters.selectedPropertyType !== 'Daire'
+                  {filters.selectedPropertyType && !['Daire', 'all'].includes(filters.selectedPropertyType)
                     ? filters.selectedPropertyType
                     : '+ Tümü'}
                 </button>

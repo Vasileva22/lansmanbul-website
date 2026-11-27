@@ -63,7 +63,6 @@ export default function Home({ initialProperties, initialUsdRate }) {
   // === НАЧАЛО ВСТАВКИ ===
   const usdRate = initialUsdRate || null; // курс ЦБ Турции, обновляется на сервере раз в сутки
   const [sort, setSort] = useState('recommended');
-  const [isForeigner, setIsForeigner] = useState(false); // Включен ли режим иностранца
   // === КОНЕЦ ВСТАВКИ ===
 
   const [lightboxState, setLightboxState] = useState({
@@ -73,6 +72,9 @@ export default function Home({ initialProperties, initialUsdRate }) {
   });
 
  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  // «Режим иностранца» включается сам, когда выбран один из двух флажков в блоке «Yabancı alıcılar için»
+  const isForeigner = filters.activeFeatureFilters.includes('Vatandaşlığa Uygun') || filters.activeFeatureFilters.includes('İkamete Uygun');
+  const setIsForeigner = () => {};
 
   // Безопасный клиентский fetch
   useEffect(() => {
@@ -200,6 +202,14 @@ export default function Home({ initialProperties, initialUsdRate }) {
     () => sortProjects(masterProperties.filter((p) => matchProject(p, filters, { isForeigner })), sort),
     [masterProperties, filters, isForeigner, sort],
   );
+  const activeFilterCount = useMemo(() => {
+    const f = filters;
+    return f.selectedLocations.length + f.selectedRooms.length + f.selectedStatuses.length + f.selectedYears.length
+      + f.activeFeatureFilters.length + f.activePaymentFilters.length
+      + (f.priceRange[0] > 0 || f.priceRange[1] < 50000000 ? 1 : 0)
+      + (f.areaRange[0] > 0 || f.areaRange[1] < 500 ? 1 : 0)
+      + (f.katRange[0] > 0 || f.katRange[1] < 40 ? 1 : 0);
+  }, [filters]);
   const hiddenNoPrice = useMemo(() => unknownPriceCount(masterProperties, filters), [masterProperties, filters]);
 
   useEffect(() => {
@@ -299,53 +309,15 @@ export default function Home({ initialProperties, initialUsdRate }) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M4 6h16M7 12h10M10 18h4"/>
                 </svg>
-                <span>{isSidebarHidden ? 'Filtreleri Göster' : 'Filtreleri Gizle'}</span>
+                <span>Filtreler</span>
+                {activeFilterCount > 0 && (
+                  <span style={{ marginLeft: 6, minWidth: 20, height: 20, borderRadius: 999, background: '#0F6E56', color: '#fff', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px' }}>{activeFilterCount}</span>
+                )}
               </button>
 
-              {/* Переключатель типов: Tüm | Projeler | Tek Daireler */}
-              <div className="type-toggle-group">
-                <button 
-                  className={filters.listingType === 'all' ? 'active' : ''}
-                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'all' }))}
-                >
-                  Tüm İlanlar
-                </button>
-                <button 
-                  className={filters.listingType === 'project' ? 'active' : ''}
-                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'project' }))}
-                >
-                  Projeler
-                </button>
-                <button 
-                  className={filters.listingType === 'apartment' ? 'active' : ''}
-                  onClick={() => setFilters(prev => ({ ...prev, listingType: 'apartment' }))}
-                >
-                  Tek Daireler
-                </button>
-              </div>
             </div>
 
             <div className="tb-right">
-              {/* КНОПКА ДЛЯ ИНОСТРАНЦЕВ В ПРАВОМ ВЕРХНЕМ УГЛУ */}
-              <button
-                type="button"
-                className={`foreigner-btn-top ${isForeigner ? 'active' : ''}`}
-                onClick={() => {
-                  if (isForeigner) {
-                    setIsForeigner(false);
-                    setFilters(prev => ({
-                      ...prev,
-                      activeFeatureFilters: prev.activeFeatureFilters.filter(
-                        t => t !== 'Vatandaşlığa Uygun' && t !== 'İkamete Uygun'
-                      )
-                    }));
-                  } else {
-                    setIsForeigner(true);
-                  }
-                }}
-              >
-                {isForeigner ? '‹ Genel İlanlar' : 'Yabancılar İçin ›'}
-              </button>
 
               {/* Переключатель вида: Galeri / Liste / Harita */}
               <div className="view-toggle-modern">
