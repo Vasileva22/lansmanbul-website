@@ -365,9 +365,9 @@ return (
         {/* ТЕЛО САЙДБАРА С АККОРДЕОНАМИ DETAILS/SUMMARY */}
         <div className="sbb">
           
-          {isForeigner && (
-            <details open>
-              <summary>Yabancılar için</summary>
+          {/* Иностранным покупателям: всегда на виду, без скрытого «режима» */}
+            <details>
+              <summary>Yabancı alıcılar için</summary>
               <div className="dl">
                 {[
                   { tag: 'Vatandaşlığa Uygun', label: 'Vatandaşlık için uygun daire var', usd: 400000 },
@@ -389,7 +389,6 @@ return (
                 </p>
               </div>
             </details>
-          )}
 
           {/* 1. СТАТУС ПРОЕКТА */}
           <details open>
